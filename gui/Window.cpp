@@ -3,14 +3,6 @@
 #include <stdlib.h>
 
 namespace Gui {
-/*
-int Window::DND_TARGET_TEXT = 50;
-int Window::DND_TARGET_JPG  = 51;
-int Window::DND_TARGET_PNG  = 52;
-int Window::DND_TARGET_XDIR  = 53;
-int Window::DND_TARGET_INODE  = 54;
-int Window::DND_TARGET_URILIST = 55;
-int Window::DND_TARGET_MOZURL = 56;*/
 
 Window::Window(std::string title):
 	window(0),
@@ -84,9 +76,6 @@ void Window::dragDataReceivedCb(GtkWidget* widget, GdkDragContext* dragCtx,
 	std::string filename;
 	Window* self = (Window*)obj;
 
-	printf("dragDataReceivedCb\n");
-	printf("Got: %s\n",data->data);
-
 	if(type == DND_TARGET_URILIST || type == DND_TARGET_MOZURL) {
 		filename = (const char*)data->data;
 	}
@@ -97,39 +86,13 @@ void Window::dragDataReceivedCb(GtkWidget* widget, GdkDragContext* dragCtx,
 	}
 
 	if(filename.length() < 1) {
+		fprintf(stderr, "Window drag and drop err: Filename too short.\n");
 		return;
 	}	
 
+	// TODO: Do a check to ensure this is a file. Don't try to set HTTP URIs
+	// unless I add libcurl or libsoup or something.
 	self->image->setFile(filename);
-
-
-	/*def data_received_cb(self, widget, context, x, y, selection, targetType, time):
-		"""This completes the drag by receiving
-		the data. We will also decide what to do
-		with whatever we get.
-		"""
-		print selection.data
-		filename = None
-		if targetType == self.DND_TARGET_URILIST \
-		or targetType == self.DND_TARGET_MOZURL:
-			filename = selection.data
-		elif targetType == self.DND_TARGET_TEXT:
-			# We may need to add extra parsing...
-			# I'll save that for later, though
-			filename = selection.data
-
-		if not filename:
-			return False
-		
-		filename = filename.strip()
-		filename = filename.replace("file:///", "/") # file:/// is abs path anyway...
-
-		if not os.path.isfile(filename):
-			return
-
-		factory(filename)*/
-
-
 }
 
 Window::~Window()
@@ -153,6 +116,5 @@ Gui::Image* Window::getImage()
 {
 	return image;
 }
-
 
 } // end namespace Gui
