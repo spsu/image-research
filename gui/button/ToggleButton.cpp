@@ -3,16 +3,16 @@
 namespace Gtk {
 
 ToggleButton::ToggleButton():
-	Widget()
+	Button(false, false)
 {
 	
 }
 
 ToggleButton::ToggleButton(std::string label, bool mnemonic):
-	Widget()
+	Button(false, false)
 {
 	if(mnemonic) {
-		widget =  gtk_toggle_button_new_with_mnemonic(
+		widget = gtk_toggle_button_new_with_mnemonic(
 						(const gchar*)label.c_str());
 	}
 	else {
@@ -21,16 +21,14 @@ ToggleButton::ToggleButton(std::string label, bool mnemonic):
 }
 
 ToggleButton::ToggleButton(bool a, bool b):
-	Widget()
+	Button(false, false)
 {
 	// NOTHING
 }
 
 ToggleButton::~ToggleButton()
 {
-	if(widget != NULL) {
-		// TODO
-	}
+	// TODO
 }
 
 bool ToggleButton::getActive()

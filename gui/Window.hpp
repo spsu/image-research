@@ -16,6 +16,7 @@
 
 namespace Gtk {
 	class Image;
+	class VBox;
 	class CheckButton;
 }
 
@@ -50,6 +51,11 @@ class Window
 		 */
 		Image* getImage();
 
+		/**
+		 * Get the vbox.
+		 */
+		VBox* getVbox();
+
 		// TODO TEST
 		static void resizeToggleCb(GtkToggleButton* button, gpointer data);
 		static void checkResizeCb(GtkContainer* container, gpointer data);
@@ -81,6 +87,11 @@ class Window
 		 * Main window widget.
 		 */
 		GtkWidget* window;
+
+		/**
+		 * Main VBox.
+		 */
+		VBox* vbox;
 
 		/**
 		 * Image editing pane.

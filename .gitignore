@@ -3,6 +3,7 @@
 # Compilation targets
 fourier
 wavelet
+grayscale
 
 # Images (Don't add to repo: unnecessary!)
 *png

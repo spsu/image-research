@@ -16,6 +16,28 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <string>
 
+/** 
+ * Following canvas code adapted from "Introduction to programming with OpenCV"
+ * http://www.cs.iit.edu/~agam/cs512/lect-notes/opencv-intro/opencv-intro.html
+ */
+template<class T> class Canvas
+{
+	private:
+		IplImage* imgp;
+	public:
+		Canvas(IplImage* img=0) {imgp=img;}
+		~Canvas(){imgp=0;}
+		void operator=(IplImage* img) {imgp=img;}
+		inline T* operator[](const int rowIndx) {
+		return ((T *)(imgp->imageData + rowIndx*imgp->widthStep));}
+};
+
+typedef struct{
+	unsigned char b,g,r;
+} RgbPixel;
+
+typedef Canvas<RgbPixel> RgbImage;
+
 namespace Cv {
 class Image
 {
@@ -44,10 +66,29 @@ class Image
 		~Image();
 
 		/**
+		 * Get a pointer to the underlying IplImage.
+		 */
+		IplImage* getPtr();
+
+		/**
 		 * Get the pixbuf representation of the IplImage.
 		 * Caller must deallocate pixbuf.
 		 */
 		GdkPixbuf* getPixbuf();
+
+		/**
+		 * Get size of the image.
+		 */
+		int getWidth();
+		int getHeight();
+
+		/**
+		 * Pixel access.
+		 */
+		inline RgbPixel* operator[](const int rowIndex) {
+			return ((RgbPixel*)(image->imageData + rowIndex*image->widthStep));
+		}
+
 
 	protected:
 		/**

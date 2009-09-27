@@ -32,6 +32,18 @@ GtkWidget* Image::getPtr()
 	return image;
 }
 
+GdkPixbuf* Image::getPixbuf()
+{
+	if(GTK_IMAGE_PIXBUF != gtk_image_get_storage_type(GTK_IMAGE(image))) {
+		printf("Gtk::Image::getPixbuf() err: No internal pixbuf!\n");
+		return NULL;
+	}
+
+	// TODO: Should I return the cached unscaled image if it exists?
+	// probably not...
+	return gtk_image_get_pixbuf(GTK_IMAGE(image));
+}
+
 void Image::setPixbuf(GdkPixbuf* pixbuf)
 {
 	GdkPixbuf* oldPb = 0;

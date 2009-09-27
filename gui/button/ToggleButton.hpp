@@ -10,11 +10,11 @@
  * The toggle button wrapper.
  */
 
-#include "Widget.hpp"
+#include "Button.hpp"
 #include <string>
 
 namespace Gtk {
-class ToggleButton : public Widget
+class ToggleButton : public Button
 {
 	public:
 		/**

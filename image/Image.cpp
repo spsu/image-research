@@ -34,9 +34,13 @@ Image::Image(GdkPixbuf* pixbuf):
 	bitsPerSamp = gdk_pixbuf_get_bits_per_sample(pixbuf);
 	numChannels = gdk_pixbuf_get_n_channels(pixbuf);
 
+	printf("Width: %d, height: %d, bits: %d, channels: %d\n", width, height, 
+				bitsPerSamp, numChannels);
+
 	// TODO: Catch errors.
 	//sz = cvSize(gdk_pixbuf_get_width(pixbuf), gdk_pixbuf_get_height(pixbuf));
-	image = cvCreateImageHeader(cvSize(width, height), 8, numChannels);
+	//image = cvCreateImageHeader(cvSize(width, height), 8, numChannels);
+	image = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, numChannels);
 	
 	//image->imageData = gdk_pixbuf_get_pixels(pixbuf);
 
@@ -47,7 +51,6 @@ Image::Image(GdkPixbuf* pixbuf):
 	copyBytes += width * ((numChannels * bitsPerSamp + 7) / 8); // final row
 
 	memcpy(image->imageData, gdk_pixbuf_get_pixels(pixbuf), copyBytes); // TODO TEST
-
 }
 
 Image::~Image()
@@ -55,6 +58,11 @@ Image::~Image()
 	if(image != NULL) {
 		cvReleaseImage(&image);
 	}
+}
+
+IplImage* Image::getPtr()
+{
+	return image;
 }
 
 GdkPixbuf* Image::getPixbuf()
@@ -78,6 +86,22 @@ GdkPixbuf* Image::getPixbuf()
 	);
 
 	return pb;
+}
+
+int Image::getWidth()
+{
+	if(image == NULL) {
+		return 0;
+	}
+	return image->width;
+}
+
+int Image::getHeight()
+{
+	if(image == NULL) {
+		return 0;
+	}
+	return image->height;
 }
 
 // Closure for destroying copy IplImages used in creating pixbufs

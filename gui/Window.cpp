@@ -9,24 +9,25 @@
 
 #include "Window.hpp"
 #include "Image.hpp"
-#include "CheckButton.hpp"
-#include "ToggleButton.hpp"
-#include "Widget.hpp"
-#include "HBox.hpp"
-#include "VBox.hpp"
+#include "button/CheckButton.hpp"
+#include "button/Button.hpp"
+#include "Label.hpp"
+#include "box/HBox.hpp"
+#include "box/VBox.hpp"
+#include "entry/SpinButton.hpp"
 #include <stdlib.h>
 
 namespace Gtk {
 
 Window::Window(std::string title):
 	window(0),
+	vbox(0),
 	image(0),
 	resize(0),
 	curWidth(0),
 	curHeight(0)
 {
 	HBox* hbox = 0;
-	VBox* vbox = 0;
 
 	// For drag and drop
 	static const GtkTargetEntry dropTypes[] = {
@@ -56,11 +57,23 @@ Window::Window(std::string title):
 	vbox->packStart(hbox, false, false, 0);
 	gtk_container_add(GTK_CONTAINER(window), vbox->getPtr());
 
+	resize = new CheckButton("_f_it to window", true);
+	hbox->packStart(resize, false, false, 0);
+
 	image = new Image();
 	vbox->packStart(image->getPtr(), true, true, 0);
 	
-	resize = new CheckButton("_f_it to window", true);
-	hbox->packStart(resize, false, false, 0);
+	/*HBox* hbox2 = new HBox();
+	vbox->packStart(hbox2, false, false, 0);
+	
+	SpinButton* sb = new SpinButton(0.0, 255.0, 1.0);
+	hbox2->packStart(sb, false, false, 0);
+
+	Label* la = new Label("Value");
+	hbox2->packStart(la, false, false, 0);
+
+	Button* b = new Button("Click this");
+	hbox2->packStart(b, false, false, 0);*/
 
 	gtk_widget_show_all(window);
 	g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), 0);
@@ -128,8 +141,8 @@ void Window::start()
 	gdk_threads_enter();
 
 	// TODO: Better placement and initial values
-	gtk_widget_set_size_request(window, 150, 150);
-	gtk_window_resize(GTK_WINDOW(window), 150, 150);
+	gtk_widget_set_size_request(window, 250, 250);
+	gtk_window_resize(GTK_WINDOW(window), 250, 250);
 
 	gtk_main();
 	gdk_threads_leave();
@@ -145,6 +158,11 @@ Image* Window::getImage()
 	return image;
 }
 
+VBox* Window::getVbox()
+{
+	return vbox;
+}
+
 void Window::checkResizeCb(GtkContainer* container, gpointer data)
 {
 	Window* self = (Window*)data;
@@ -153,7 +171,7 @@ void Window::checkResizeCb(GtkContainer* container, gpointer data)
 
 	gtk_window_get_size(GTK_WINDOW(self->window), &width, &height);
 
-	printf("checkResizeCb: %dx%d\n", (int)width, (int)height);
+	//printf("checkResizeCb: %dx%d\n", (int)width, (int)height);
 
 	if(width == self->curWidth && height == self->curHeight) {
 		return;

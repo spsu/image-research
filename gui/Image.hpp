@@ -39,6 +39,12 @@ class Image
 		GtkWidget* getPtr();
 
 		/**
+		 * Get the internal pixbuf.
+		 * Caller does not own a reference!
+		 */
+		GdkPixbuf* getPixbuf();
+
+		/**
 		 * Set the pixbuf.
 		 */
 		void setPixbuf(GdkPixbuf* pixbuf);
