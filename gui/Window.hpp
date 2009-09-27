@@ -16,6 +16,7 @@
 
 namespace Gtk {
 	class Image;
+	class CheckButton;
 }
 
 namespace Gtk {
@@ -51,6 +52,7 @@ class Window
 
 		// TODO TEST
 		static void resizeToggleCb(GtkToggleButton* button, gpointer data);
+		static void checkResizeCb(GtkContainer* container, gpointer data);
 
 		/**
 		 * Drag and drop targets.
@@ -84,6 +86,17 @@ class Window
 		 * Image editing pane.
 		 */
 		Image* image;
+
+		/**
+		 * Resize checkbox.
+		 */
+		CheckButton* resize;
+
+		/**
+		 * Current size of the image.
+		 */
+		int curWidth;
+		int curHeight;
 };
 }
 

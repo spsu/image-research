@@ -20,11 +20,13 @@ namespace Gtk {
 
 Window::Window(std::string title):
 	window(0),
-	image(0)
+	image(0),
+	resize(0),
+	curWidth(0),
+	curHeight(0)
 {
 	HBox* hbox = 0;
 	VBox* vbox = 0;
-	CheckButton* resize = 0;
 
 	// For drag and drop
 	static const GtkTargetEntry dropTypes[] = {
@@ -57,16 +59,15 @@ Window::Window(std::string title):
 	image = new Image();
 	vbox->packStart(image->getPtr(), true, true, 0);
 	
-
 	resize = new CheckButton("_f_it to window", true);
 	hbox->packStart(resize, false, false, 0);
-
-	resize->addToggleCb(resizeToggleCb, this);
-
 
 	gtk_widget_show_all(window);
 	g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), 0);
 
+	// Resizing
+	resize->addToggleCb(resizeToggleCb, this);
+	g_signal_connect(window, "check-resize", G_CALLBACK(checkResizeCb), this);
 
 	// Drag and Drop images
 	gtk_drag_dest_set(window, GTK_DEST_DEFAULT_ALL, dropTypes, numDropTypes, 
@@ -144,21 +145,39 @@ Image* Window::getImage()
 	return image;
 }
 
+void Window::checkResizeCb(GtkContainer* container, gpointer data)
+{
+	Window* self = (Window*)data;
+	gint width = 0;
+	gint height = 0;
+
+	gtk_window_get_size(GTK_WINDOW(self->window), &width, &height);
+
+	printf("checkResizeCb: %dx%d\n", (int)width, (int)height);
+
+	if(width == self->curWidth && height == self->curHeight) {
+		return;
+	}
+
+	if(self->resize->getActive()) {
+		self->curWidth = width;
+		self->curHeight = height;
+		self->image->setScale((int)width, (int)height);
+	}
+}
+
 void Window::resizeToggleCb(GtkToggleButton* button, gpointer data)
 {
 	Window* self = (Window*)data;
-	bool active = false;
 
-	active = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
-
-	if(active) {
-		self->image->setScale(400, 500);
+	if(!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button))) {
+		self->image->removeScaling();
+		self->curWidth = 0;
+		self->curHeight = 0;
 	}
 	else {
-		self->image->removeScaling();
+		gtk_container_check_resize(GTK_CONTAINER(self->window));
 	}
-
 }
-
 
 } // end namespace Gtk
