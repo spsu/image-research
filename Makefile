@@ -19,13 +19,19 @@ all:
 .PHONY: clean
 clean:
 	$(RM) $(GEN) fourier wavelet
-	#cd ./ai && $(RM) -f *.o *.out
+	cd ./gui && $(RM) $(GEN)
+	cd ./image && $(RM) $(GEN)
 	
 
 ### FOURIER #########################
-fourier: fourier.cpp gui/Window.o gui/Image.o
+fourier: fourier.cpp gui/Window.o gui/Image.o image/Image.o \
+	gui/Widget.o gui/ToggleButton.o gui/CheckButton.o \
+	gui/Box.o gui/HBox.o gui/VBox.o
 	$(C) $(INC) -c fourier.cpp
-	$(LN) $(LIB) gui/Window.o gui/Image.o fourier.o -o fourier
+	$(LN) $(LIB) gui/Window.o gui/Image.o image/Image.o \
+	gui/Widget.o gui/ToggleButton.o gui/CheckButton.o \
+	gui/Box.o gui/HBox.o gui/VBox.o \
+	fourier.o -o fourier
 
 ### WAVELET ########################
 wavelet: wavelet.cpp
@@ -37,4 +43,25 @@ gui/Window.o: gui/Window.hpp gui/Window.cpp
 	$(CD) ./gui && $(C) $(INC) -c Window.cpp
 gui/Image.o: gui/Image.hpp gui/Image.cpp
 	$(CD) ./gui && $(C) $(INC) -c Image.cpp
+
+gui/Widget.o: gui/Widget.hpp gui/Widget.cpp
+	$(CD) ./gui && $(C) $(INC) -c Widget.cpp
+gui/ToggleButton.o: gui/Widget.o gui/ToggleButton.hpp gui/ToggleButton.hpp
+	$(CD) ./gui && $(C) $(INC) -c ToggleButton.cpp
+gui/CheckButton.o: gui/ToggleButton.o gui/CheckButton.hpp gui/CheckButton.hpp
+	$(CD) ./gui && $(C) $(INC) -c CheckButton.cpp
+gui/Box.o: gui/Widget.o gui/Box.hpp gui/Box.hpp
+	$(CD) ./gui && $(C) $(INC) -c Box.cpp
+gui/HBox.o: gui/Box.o gui/HBox.hpp gui/HBox.hpp
+	$(CD) ./gui && $(C) $(INC) -c HBox.cpp
+gui/VBox.o: gui/Box.o gui/VBox.hpp gui/VBox.hpp
+	$(CD) ./gui && $(C) $(INC) -c VBox.cpp
+
+
+### CV IMAGE WRAPPER ################
+image/Image.o: image/Image.hpp image/Image.cpp
+	$(CD) ./image && $(C) $(INC) -c Image.cpp
+
+
+
 

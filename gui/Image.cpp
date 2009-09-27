@@ -24,11 +24,23 @@ Image::~Image()
 
 void Image::setPixbuf(GdkPixbuf* pixbuf)
 {
-	if(pixbuf != NULL) {
+	GdkPixbuf* oldPb = 0;
+
+	if(pixbuf == NULL) {
 		fprintf(stderr, "Image::setPixbuf() err: Pixbuf is null!\n");
 		return;
 	}
+
+	if(GTK_IMAGE_PIXBUF == gtk_image_get_storage_type(GTK_IMAGE(image))) {
+		oldPb = gtk_image_get_pixbuf(GTK_IMAGE(image));
+	}
+
 	gtk_image_set_from_pixbuf(GTK_IMAGE(image), pixbuf);
+
+	if(oldPb == NULL) {
+		return;
+	}
+	g_object_unref(oldPb); // TODO: Make sure new pixbuf got set
 }
 
 void Image::setFile(std::string filename)

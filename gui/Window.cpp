@@ -1,5 +1,19 @@
+/**
+ * Copyright Brandon Thomas Suit 2009
+ * Available under the LGPL 2.
+ * <http://possibilistic.org> 
+ * <echelon@gmail.com>
+ * 
+ * The main gtk window. (Fairly rigid and unflexible class, however.)
+ */
+
 #include "Window.hpp"
 #include "Image.hpp"
+#include "CheckButton.hpp"
+#include "ToggleButton.hpp"
+#include "Widget.hpp"
+#include "HBox.hpp"
+#include "VBox.hpp"
 #include <stdlib.h>
 
 namespace Gui {
@@ -8,8 +22,11 @@ Window::Window(std::string title):
 	window(0),
 	image(0)
 {
-	GtkWidget* hbox = 0;
-	GtkWidget* vbox = 0;
+	//GtkWidget* hbox = 0;
+	//GtkWidget* vbox = 0;
+
+	Gtk::HBox* hbox = 0;
+	Gtk::VBox* vbox = 0;
 
 	// For drag and drop
 	static const GtkTargetEntry dropTypes[] = {
@@ -33,18 +50,35 @@ Window::Window(std::string title):
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title(GTK_WINDOW(window), title.c_str());
 
-	vbox = gtk_vbox_new(false, 0);
-	hbox = gtk_hbox_new(false, 0);
+	vbox = new Gtk::VBox(false, 0);
+	hbox = new Gtk::HBox(false, 0);
 
-	gtk_box_pack_start(GTK_BOX(vbox), hbox, false, false, 0);
-	gtk_container_add(GTK_CONTAINER(window), vbox);
+	//vbox = gtk_vbox_new(false, 0);
+	//hbox = gtk_hbox_new(false, 0);
+
+	//gtk_box_pack_start(GTK_BOX(vbox), hbox, false, false, 0);
+	//gtk_container_add(GTK_CONTAINER(window), vbox);
+
+	vbox->packStart(hbox, false, false, 0);
+	gtk_container_add(GTK_CONTAINER(window), vbox->getPtr());
 
 	image = new Gui::Image();
-	gtk_box_pack_start(GTK_BOX(vbox), image->getPtr(), true, true, 0);
+	//gtk_box_pack_start(GTK_BOX(vbox), image->getPtr(), true, true, 0);
+	vbox->packStart(image->getPtr(), true, true, 0);
 	
 	gtk_widget_show_all(window);
 
 	g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), 0);
+
+
+	Gtk::CheckButton* cb = new Gtk::CheckButton("Resize Image to Window");
+
+	
+	//gtk_box_pack_start(GTK_BOX(hbox), cb->getPtr(), false, false, 0);
+	hbox->packStart(cb, false, false, 0);
+	cb->show();
+
+
 
 	// Drag and Drop images
 	gtk_drag_dest_set(window, GTK_DEST_DEFAULT_ALL, dropTypes, numDropTypes, 

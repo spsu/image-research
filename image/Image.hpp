@@ -12,6 +12,7 @@
  */
 
 #include <cv.h>
+#include <highgui.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <string>
 
@@ -31,12 +32,20 @@ class Image
 		Image(std::string filename);
 
 		/**
+		 * Pixbuf load CTOR.
+		 * Convert a pixbuf to IplImage.
+		 * Does not assume ownership of the pixbuf.
+		 */
+		Image(GdkPixbuf* pixbuf);
+
+		/**
 		 * IplImage DTOR.
 		 */
 		~Image();
 
 		/**
 		 * Get the pixbuf representation of the IplImage.
+		 * Caller must deallocate pixbuf.
 		 */
 		GdkPixbuf* getPixbuf();
 
@@ -45,6 +54,11 @@ class Image
 		 * OpenCV IplImage.
 		 */
 		IplImage* image;
+
+		/**
+		 * Closure for destroying copied IplImage created in getPixbuf()
+		 */
+		static void destroyPixbufCb(guchar* pixels, gpointer data);
 
 };
 }
