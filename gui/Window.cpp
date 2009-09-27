@@ -16,17 +16,15 @@
 #include "VBox.hpp"
 #include <stdlib.h>
 
-namespace Gui {
+namespace Gtk {
 
 Window::Window(std::string title):
 	window(0),
 	image(0)
 {
-	//GtkWidget* hbox = 0;
-	//GtkWidget* vbox = 0;
-
-	Gtk::HBox* hbox = 0;
-	Gtk::VBox* vbox = 0;
+	HBox* hbox = 0;
+	VBox* vbox = 0;
+	CheckButton* resize = 0;
 
 	// For drag and drop
 	static const GtkTargetEntry dropTypes[] = {
@@ -50,34 +48,24 @@ Window::Window(std::string title):
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title(GTK_WINDOW(window), title.c_str());
 
-	vbox = new Gtk::VBox(false, 0);
-	hbox = new Gtk::HBox(false, 0);
-
-	//vbox = gtk_vbox_new(false, 0);
-	//hbox = gtk_hbox_new(false, 0);
-
-	//gtk_box_pack_start(GTK_BOX(vbox), hbox, false, false, 0);
-	//gtk_container_add(GTK_CONTAINER(window), vbox);
+	vbox = new VBox(false, 0);
+	hbox = new HBox(false, 0);
 
 	vbox->packStart(hbox, false, false, 0);
 	gtk_container_add(GTK_CONTAINER(window), vbox->getPtr());
 
-	image = new Gui::Image();
-	//gtk_box_pack_start(GTK_BOX(vbox), image->getPtr(), true, true, 0);
+	image = new Image();
 	vbox->packStart(image->getPtr(), true, true, 0);
 	
+
+	resize = new CheckButton("_f_it to window", true);
+	hbox->packStart(resize, false, false, 0);
+
+	resize->addToggleCb(resizeToggleCb, this);
+
+
 	gtk_widget_show_all(window);
-
 	g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), 0);
-
-
-	Gtk::CheckButton* cb = new Gtk::CheckButton("Resize Image to Window");
-
-	
-	//gtk_box_pack_start(GTK_BOX(hbox), cb->getPtr(), false, false, 0);
-	hbox->packStart(cb, false, false, 0);
-	cb->show();
-
 
 
 	// Drag and Drop images
@@ -137,6 +125,11 @@ Window::~Window()
 void Window::start()
 {
 	gdk_threads_enter();
+
+	// TODO: Better placement and initial values
+	gtk_widget_set_size_request(window, 150, 150);
+	gtk_window_resize(GTK_WINDOW(window), 150, 150);
+
 	gtk_main();
 	gdk_threads_leave();
 }
@@ -146,9 +139,26 @@ void Window::setTitle(std::string title)
 	gtk_window_set_title(GTK_WINDOW(window), title.c_str());
 }
 
-Gui::Image* Window::getImage()
+Image* Window::getImage()
 {
 	return image;
 }
 
-} // end namespace Gui
+void Window::resizeToggleCb(GtkToggleButton* button, gpointer data)
+{
+	Window* self = (Window*)data;
+	bool active = false;
+
+	active = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
+
+	if(active) {
+		self->image->setScale(400, 500);
+	}
+	else {
+		self->image->removeScaling();
+	}
+
+}
+
+
+} // end namespace Gtk

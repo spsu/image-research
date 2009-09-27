@@ -43,4 +43,10 @@ void ToggleButton::setActive(bool active)
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(widget), active);
 }
 
+void ToggleButton::addToggleCb(void(*userFunc)(GtkToggleButton*, gpointer), 
+		gpointer data)
+{
+	g_signal_connect(widget, "toggled", G_CALLBACK(userFunc), data);
+}
+
 } // end namespace Gtk

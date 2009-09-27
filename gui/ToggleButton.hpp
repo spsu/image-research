@@ -46,7 +46,11 @@ class ToggleButton : public Widget
 		bool getActive();
 		void setActive(bool active = true);
 
-
+		/**
+		 * Attach a signal handler callback to the "toggled" signal.
+		 */
+		void addToggleCb(void(*userFunc)(GtkToggleButton*, gpointer), 
+				gpointer data);
 };
 }
 

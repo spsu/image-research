@@ -8,11 +8,11 @@
  */
 int main(int argc, char *argv[])
 {
-	Gui::Window* win = 0;
+	Gtk::Window* win = 0;
+	Gtk::Image* pix = 0;
 	Cv::Image* img = 0;
-	Gui::Image* pix = 0;
 
-	win = new Gui::Window("Title here");
+	win = new Gtk::Window("Title here");
 	img = new Cv::Image("./discovery-small.jpg");
 
 	pix = win->getImage();

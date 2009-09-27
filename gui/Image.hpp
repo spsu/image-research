@@ -1,5 +1,5 @@
-#ifndef GUI_IMAGE
-#define GUI_IMAGE
+#ifndef GUI_GTK_IMAGE
+#define GUI_GTK_IMAGE
 
 /**
  * Copyright Brandon Thomas Suit 2009
@@ -14,7 +14,7 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <string>
 
-namespace Gui {
+namespace Gtk {
 class Image
 {
 	public:
@@ -48,11 +48,26 @@ class Image
 		 */
 		void setFile(std::string filename);
 
+		/**
+		 * Set scaling.
+		 */
+		void setScale(int width, int height);
+
+		/**
+		 * Remove any scaling.
+		 */
+		void removeScaling();
+
 	private:
 		/**
 		 * The image widget.
 		 */
 		GtkWidget* image;
+
+		/**
+		 * If the image is scaled, the original pixbuf is cached here.
+		 */
+		GdkPixbuf* unscaled;
 };
 }
 

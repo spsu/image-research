@@ -1,16 +1,18 @@
 #include "Image.hpp"
 #include <stdio.h>
 
-namespace Gui {
+namespace Gtk {
 
 Image::Image(): 
-	image(0)
+	image(0),
+	unscaled(0)
 {
 	image = gtk_image_new();
 }
 
 Image::Image(GdkPixbuf* pixbuf):
-	image(0)
+	image(0),
+	unscaled(0)
 {
 	image = gtk_image_new_from_pixbuf(pixbuf);
 }
@@ -20,6 +22,14 @@ Image::~Image()
 	if(image != NULL) {
 		gtk_widget_destroy(image);
 	}
+	if(unscaled != NULL) {
+		g_object_unref(unscaled);
+	}
+}
+
+GtkWidget* Image::getPtr()
+{
+	return image;
 }
 
 void Image::setPixbuf(GdkPixbuf* pixbuf)
@@ -37,10 +47,13 @@ void Image::setPixbuf(GdkPixbuf* pixbuf)
 
 	gtk_image_set_from_pixbuf(GTK_IMAGE(image), pixbuf);
 
-	if(oldPb == NULL) {
-		return;
+	if(unscaled != NULL) {
+		g_object_unref(unscaled);
 	}
-	g_object_unref(oldPb); // TODO: Make sure new pixbuf got set
+
+	if(oldPb != NULL) {
+		g_object_unref(oldPb); // TODO: Make sure new pixbuf got set
+	}
 }
 
 void Image::setFile(std::string filename)
@@ -80,11 +93,50 @@ void Image::setFile(std::string filename)
 
 	gtk_image_set_from_pixbuf(GTK_IMAGE(image), pixbuf);
 	g_object_unref(pixbuf);
+
+	if(unscaled != NULL) {
+		g_object_unref(unscaled);
+	}
 }
 
-GtkWidget* Image::getPtr()
+void Image::setScale(int width, int height)
 {
-	return image;
+	GdkPixbuf* orig = 0;
+	GdkPixbuf* scaled = 0;
+
+	if(GTK_IMAGE_PIXBUF != gtk_image_get_storage_type(GTK_IMAGE(image))) {
+		printf("Image::setScale() err: Cannot scale without internal pixbuf\n");
+		return;
+	}
+
+	if(unscaled == NULL) {
+		orig = gtk_image_get_pixbuf(GTK_IMAGE(image));
+		g_object_ref(orig);
+	}
+	else {
+		orig = unscaled;
+		unscaled = NULL; // it'd be unref'd in setPixbuf() otherwise
+	}
+
+	scaled = gdk_pixbuf_scale_simple(orig, width, height, 
+				GDK_INTERP_BILINEAR);
+
+	setPixbuf(scaled);
+	unscaled = orig; // now we can set
 }
 
-} // end namespace Gui
+void Image::removeScaling()
+{
+	GdkPixbuf* orig = 0;
+
+	if(unscaled == NULL) {
+		return;
+	}
+
+	orig = unscaled;
+	unscaled = NULL; // it'd be unref'd in setPixbuf() otherwise
+
+	setPixbuf(orig);
+}
+
+} // end namespace Gtk

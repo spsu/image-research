@@ -1,5 +1,5 @@
-#ifndef GUI_WINDOW
-#define GUI_WINDOW
+#ifndef GUI_GTK_WINDOW
+#define GUI_GTK_WINDOW
 
 /**
  * Copyright Brandon Thomas Suit 2009
@@ -14,11 +14,11 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <string>
 
-namespace Gui {
+namespace Gtk {
 	class Image;
 }
 
-namespace Gui {
+namespace Gtk {
 class Window
 {
 	public:
@@ -47,7 +47,10 @@ class Window
 		 * Get image so that we can work with it.
 		 * Window does nothing to the image except display it.
 		 */
-		Gui::Image* getImage();
+		Image* getImage();
+
+		// TODO TEST
+		static void resizeToggleCb(GtkToggleButton* button, gpointer data);
 
 		/**
 		 * Drag and drop targets.
@@ -80,7 +83,7 @@ class Window
 		/**
 		 * Image editing pane.
 		 */
-		Gui::Image* image;
+		Image* image;
 };
 }
 
