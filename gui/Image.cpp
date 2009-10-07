@@ -3,7 +3,7 @@
 
 // TODO: This shouldn't be here, or the semantics of the class should be split 
 // into two parts: Representing GtkWindow and representing the project. XXX
-#include "../image/Image.hpp" 
+#include "../cv/Image.hpp" 
 
 namespace Gtk {
 

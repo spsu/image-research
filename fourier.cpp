@@ -1,7 +1,7 @@
 
 #include "gui/Window.hpp"
 #include "gui/Image.hpp"
-#include "image/Image.hpp"
+#include "cv/Image.hpp"
 
 /**
  * Implement the FFT with a Gtk gui.

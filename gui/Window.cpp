@@ -16,7 +16,7 @@
 #include "box/VBox.hpp"
 #include "entry/SpinButton.hpp"
 #include <stdlib.h>
-#include "../image/Image.hpp" // NOTE: BAD! XXX
+#include "../cv/Image.hpp" // NOTE: BAD! XXX
 
 namespace Gtk {
 

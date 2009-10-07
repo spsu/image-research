@@ -4,7 +4,7 @@
 
 #include "gui/Window.hpp"
 #include "gui/Image.hpp"
-#include "image/Image.hpp"
+#include "cv/Image.hpp"
 
 #include "gui/box/HBox.hpp"
 #include "gui/box/VBox.hpp"

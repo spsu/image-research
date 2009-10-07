@@ -23,17 +23,17 @@ clean:
 	cd ./gui/box && $(RM) $(GEN)
 	cd ./gui/button && $(RM) $(GEN)
 	cd ./gui/entry && $(RM) $(GEN)
-	cd ./image && $(RM) $(GEN)
+	cd ./cv && $(RM) $(GEN)
 	
 
 ### FOURIER #########################
-fourier: fourier.cpp image/Image.o \
+fourier: fourier.cpp cv/Image.o \
 	gui/Window.o gui/Image.o gui/Widget.o gui/Label.o \
 	gui/button/Button.o gui/button/ToggleButton.o gui/button/CheckButton.o \
 	gui/box/Box.o gui/box/HBox.o gui/box/VBox.o \
 	gui/entry/Entry.o gui/entry/SpinButton.o
 	$(C) $(INC) -c fourier.cpp
-	$(LN) $(LIB) image/Image.o \
+	$(LN) $(LIB) cv/Image.o \
 	gui/Window.o gui/Image.o gui/Widget.o gui/Label.o \
 	gui/button/Button.o gui/button/ToggleButton.o gui/button/CheckButton.o \
 	gui/box/Box.o gui/box/HBox.o gui/box/VBox.o \
@@ -41,13 +41,13 @@ fourier: fourier.cpp image/Image.o \
 	fourier.o -o fourier
 
 ### FOURIER #########################
-grayscale: grayscale.cpp image/Image.o \
+grayscale: grayscale.cpp cv/Image.o \
 	gui/Window.o gui/Image.o gui/Widget.o gui/Label.o \
 	gui/button/Button.o gui/button/ToggleButton.o gui/button/CheckButton.o \
 	gui/box/Box.o gui/box/HBox.o gui/box/VBox.o \
 	gui/entry/Entry.o gui/entry/SpinButton.o
 	$(C) $(INC) -c grayscale.cpp
-	$(LN) $(LIB) image/Image.o \
+	$(LN) $(LIB) cv/Image.o \
 	gui/Window.o gui/Image.o gui/Widget.o gui/Label.o \
 	gui/button/Button.o gui/button/ToggleButton.o gui/button/CheckButton.o \
 	gui/box/Box.o gui/box/HBox.o gui/box/VBox.o \
@@ -91,8 +91,8 @@ gui/entry/SpinButton.o: gui/entry/Entry.o gui/entry/SpinButton.hpp \
 
 
 ### CV IMAGE WRAPPER ################
-image/Image.o: image/Image.hpp image/Image.cpp
-	$(CD) ./image && $(C) $(INC) -c Image.cpp
+cv/Image.o: cv/Image.hpp cv/Image.cpp
+	$(CD) ./cv && $(C) $(INC) -c Image.cpp
 
 
 
