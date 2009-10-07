@@ -19,6 +19,7 @@
 /** 
  * Following canvas code adapted from "Introduction to programming with OpenCV"
  * http://www.cs.iit.edu/~agam/cs512/lect-notes/opencv-intro/opencv-intro.html
+ * TODO: Integrate this with main Image class.
  */
 template<class T> class Canvas
 {
@@ -74,7 +75,7 @@ class Image
 		 * Get the pixbuf representation of the IplImage.
 		 * Caller must deallocate pixbuf.
 		 */
-		GdkPixbuf* getPixbuf();
+		GdkPixbuf* toPixbuf();
 
 		/**
 		 * Get size of the image.
@@ -88,7 +89,6 @@ class Image
 		inline RgbPixel* operator[](const int rowIndex) {
 			return ((RgbPixel*)(image->imageData + rowIndex*image->widthStep));
 		}
-
 
 	protected:
 		/**

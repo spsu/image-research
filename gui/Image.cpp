@@ -1,6 +1,10 @@
 #include "Image.hpp"
 #include <stdio.h>
 
+// TODO: This shouldn't be here, or the semantics of the class should be split 
+// into two parts: Representing GtkWindow and representing the project. XXX
+#include "../image/Image.hpp" 
+
 namespace Gtk {
 
 Image::Image(): 
@@ -149,6 +153,43 @@ void Image::removeScaling()
 	unscaled = NULL; // it'd be unref'd in setPixbuf() otherwise
 
 	setPixbuf(orig);
+}
+
+// XXX XXX : THESE DON'T BELONG HERE
+void Image::setMap(std::string name, Cv::Image* img)
+{
+	imageCache[name] = img;
+}
+
+Cv::Image* Image::getMap(std::string name)
+{
+	if(!imageCache.count(name)) {
+		// not found
+		return 0;
+	}
+	return imageCache[name];
+}
+
+void Image::removeMap(std::string name, bool doDelete)
+{
+	Cv::Image* temp = 0;
+
+	temp = getMap(name);
+	if(temp == NULL) {
+		return;
+	}
+	imageCache.erase(name);
+
+	if(doDelete) {
+		delete temp;
+	}
+}
+
+void Image::restoreOriginal()
+{
+	Cv::Image* orig = 0;
+	orig = getMap("original");
+	setPixbuf(orig->toPixbuf());
 }
 
 } // end namespace Gtk

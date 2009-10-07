@@ -11,8 +11,14 @@
 #include "gui/button/Button.hpp"
 #include "gui/Label.hpp"
 
+/**
+ * Convert an image to grayscale.
+ * TODO: Needs cleanup, also requires Cv::Image pixel access refactor (TODO).
+ */
 void grayscale(GtkButton* button, gpointer data)
 {
+	static bool next = 0;
+
 	Gtk::Window* win = (Gtk::Window*)data;
 	Gtk::Image* gtkImg = 0;
 	Cv::Image* img = 0;
@@ -22,6 +28,15 @@ void grayscale(GtkButton* button, gpointer data)
 	int avg;
 
 	gtkImg = win->getImage();
+
+	// Undo grayscale.
+	if(next == 1) {
+		gtkImg->restoreOriginal();
+		next = 0;
+		return;
+	}
+	next = 1;
+
 	pixbuf = gtkImg->getPixbuf();
 
 	img = new Cv::Image(pixbuf);
@@ -44,7 +59,7 @@ void grayscale(GtkButton* button, gpointer data)
 		}
 	}
 
-	gtkImg->setPixbuf(img->getPixbuf());
+	gtkImg->setPixbuf(img->toPixbuf());
 	delete img;
 }
 
@@ -77,9 +92,9 @@ int main(int argc, char *argv[])
 
 	// Load image
 	pix = win->getImage();
-	pix->setPixbuf(img->getPixbuf());
+	pix->setPixbuf(img->toPixbuf());
+	pix->setMap("original", img);
 
 	win->start();
-
 }
 

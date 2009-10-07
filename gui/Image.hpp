@@ -13,6 +13,11 @@
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <string>
+#include <map>
+
+namespace Cv {
+	class Image;
+}
 
 namespace Gtk {
 class Image
@@ -64,6 +69,14 @@ class Image
 		 */
 		void removeScaling();
 
+		// TODO: These DO NOT belong here.
+		void setMap(std::string name, Cv::Image* img);
+		Cv::Image* getMap(std::string name);
+		void removeMap(std::string name, bool doDelete = false);
+
+		// TODO: Tied to the above
+		void restoreOriginal();
+
 	private:
 		/**
 		 * The image widget.
@@ -74,6 +87,11 @@ class Image
 		 * If the image is scaled, the original pixbuf is cached here.
 		 */
 		GdkPixbuf* unscaled;
+
+		/**
+		 * Map of cached IplImages.
+		 */
+		std::map<std::string, Cv::Image*> imageCache;
 };
 }
 

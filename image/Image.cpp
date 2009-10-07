@@ -65,7 +65,7 @@ IplImage* Image::getPtr()
 	return image;
 }
 
-GdkPixbuf* Image::getPixbuf()
+GdkPixbuf* Image::toPixbuf()
 {
 	IplImage* rgb = 0;
 	GdkPixbuf* pb = 0;

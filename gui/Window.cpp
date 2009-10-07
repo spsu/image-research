@@ -16,6 +16,7 @@
 #include "box/VBox.hpp"
 #include "entry/SpinButton.hpp"
 #include <stdlib.h>
+#include "../image/Image.hpp" // NOTE: BAD! XXX
 
 namespace Gtk {
 
@@ -111,6 +112,7 @@ void Window::dragDataReceivedCb(GtkWidget* widget, GdkDragContext* dragCtx,
 {
 	std::string filename;
 	Window* self = (Window*)obj;
+	Cv::Image* img = 0;
 
 	if(type == DND_TARGET_URILIST || type == DND_TARGET_MOZURL) {
 		filename = (const char*)data->data;
@@ -129,6 +131,11 @@ void Window::dragDataReceivedCb(GtkWidget* widget, GdkDragContext* dragCtx,
 	// TODO: Do a check to ensure this is a file. Don't try to set HTTP URIs
 	// unless I add libcurl or libsoup or something.
 	self->image->setFile(filename);
+	self->image->removeMap("original", true);
+
+	// Backup in cache.
+	img = new Cv::Image(self->image->getPixbuf()); // XXX: Potential segfault
+	self->image->setMap("original", img);
 }
 
 Window::~Window()
