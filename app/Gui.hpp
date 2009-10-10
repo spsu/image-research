@@ -1,6 +1,13 @@
 #ifndef APP_GUI
 #define APP_GUI
 
+/**
+ * Copyright Brandon Thomas Suit 2009
+ * Available under the LGPL 2.
+ * <http://possibilistic.org> 
+ * <echelon@gmail.com>
+ */
+
 #include <gtk/gtk.h>
 #include <string>
 

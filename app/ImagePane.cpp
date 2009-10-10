@@ -1,4 +1,12 @@
+/**
+ * Copyright Brandon Thomas Suit 2009
+ * Available under the LGPL 2.
+ * <http://possibilistic.org> 
+ * <echelon@gmail.com>
+ */
+
 #include "ImagePane.hpp"
+#include "ImageCache.hpp"
 #include "../gtk/Widget.hpp"
 #include "../gtk/Image.hpp"
 #include "../cv/Image.hpp"
@@ -6,7 +14,8 @@
 namespace App {
 
 ImagePane::ImagePane(std::string filename):
-	gtkImage(0)
+	gtkImage(0),
+	cache(0)
 {
 	// For drag and drop (TODO: Doesn't belong here)
 	static const GtkTargetEntry dropTypes[] = {
@@ -21,15 +30,20 @@ ImagePane::ImagePane(std::string filename):
 	static const gint numDropTypes = sizeof(dropTypes)/sizeof(dropTypes[0]);
 	Cv::Image* tmpImg = 0;
 
+	// Create members
 	if(filename.size() < 1) {
 		gtkImage = new Gtk::Image();
 	}
 	else {
-		tmpImg = new Cv::Image(filename);
+		tmpImg = new Cv::Image(filename); // TODO - check for error.
 		gtkImage = new Gtk::Image(tmpImg->toPixbuf());
-		delete tmpImg;
 	}
+	cache = new ImageCache();
 
+	// Backup of original 
+	if(tmpImg != 0) {
+		cache->set("original", tmpImg);
+	}
 
 	// Enable drag and drop
 	gtk_drag_dest_set(gtkImage->getPtr(), GTK_DEST_DEFAULT_ALL, dropTypes, 
@@ -51,11 +65,17 @@ ImagePane::ImagePane(std::string filename):
 ImagePane::~ImagePane()
 {
 	delete gtkImage;
+	delete cache;
 }
 
 Gtk::Image* ImagePane::getImage()
 {
 	return gtkImage;
+}
+
+ImageCache* ImagePane::getCache()
+{
+	return cache;
 }
 
 /************************* CALLBACKS ****************************/
@@ -98,11 +118,11 @@ void ImagePane::dragDataReceivedCb(GtkWidget* widget, GdkDragContext* dragCtx,
 	// TODO: Do a check to ensure this is a file. Don't try to set HTTP URIs
 	// unless I add libcurl or libsoup or something.
 	self->gtkImage->setFile(filename);
-	//self->image->removeMap("original", true);
+	self->cache->del("original");
 
 	// Backup in cache.
-	//img = new Cv::Image(self->image->getPixbuf()); // XXX: Potential segfault
-	//self->image->setMap("original", img);
+	img = new Cv::Image(self->gtkImage->getPixbuf()); // XXX: Potential segfault
+	self->cache->set("original", img);
 }
 
 } // end namespace App

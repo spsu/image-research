@@ -1,32 +1,30 @@
 #include "app/Gui.hpp"
 #include "app/ImagePane.hpp"
 
-#include "gtk/Widget.hpp"
-#include "gtk/Window.hpp"
-#include "gtk/Image.hpp"
-#include "gtk/box/VBox.hpp"
+#include "gtk/all.hpp"
 
 int main(int argc, char *argv[])
 {
 	App::Gui* gui = 0;
-	App::ImagePane* img1 = 0;
-	App::ImagePane* img2 = 0;
-	Gtk::Window* win = 0;
-	Gtk::Image* gimg = 0;
+	App::ImagePane* img = 0;
 	Gtk::VBox* vbox = 0;
+	Gtk::HBox* hbox = 0;
+	Gtk::CheckButton* resize = 0;
 
+	// Create main application elements
 	gui = new App::Gui("Test");
-	img1 = new App::ImagePane("./discovery-small.jpg");
-	img2 = new App::ImagePane("./discovery-small.jpg");
-	vbox = new Gtk::VBox();
+	img = new App::ImagePane("./discovery-small.jpg");
 
-	win = gui->getWindow();
-	//gimg = img->getImage();
-	
-	//gui->setChild((Gtk::Widget*)gimg);
+	// Create other Gtk widgets
+	vbox = new Gtk::VBox(false, 0);
+	hbox = new Gtk::HBox(false, 0);
+	resize = new Gtk::CheckButton("_f_it to window", true);
+
+	// Construct GUI
 	gui->setChild(vbox);
-	vbox->packStart(img1->getImage());
-	vbox->packStart(img2->getImage());
+	vbox->packStart(hbox, false, false, 0);
+	hbox->packStart(resize, false, false, 0);
+	vbox->packStart(img->getImage(), true, true, 0);
 
 	gui->start();
 

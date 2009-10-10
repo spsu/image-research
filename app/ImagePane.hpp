@@ -1,27 +1,56 @@
 #ifndef APP_IMAGEPANE
 #define APP_IMAGEPANE
 
+/**
+ * Copyright Brandon Thomas Suit 2009
+ * Available under the LGPL 2.
+ * <http://possibilistic.org> 
+ * <echelon@gmail.com>
+ */
+
 #include <string>
 #include <gtk/gtk.h> // TODO: TEMP
 
-/*namespace Cv {
+namespace Cv {
 	class Image;
-}*/
+}
+namespace App {
+	class ImageCache;
+}
 namespace Gtk {
 	class Image;
 }
 
+/**
+ * Application-specific functionality for "image panes", eg. GtkImage widgets.
+ * This class supports drag/drop, restore-to-original, caching, etc. for 
+ * assistance.
+ */
 namespace App {
 class ImagePane
 {
 	public:
+		/**
+		 * ImagePane CTOR.
+		 * Optionally specify filename for construction.
+		 */
 		ImagePane(std::string filename = std::string());
+
+		/**
+		 * ImagePane DTOR.
+		 * Deletes the GtkImage widget and ImageCache.
+		 */
 		~ImagePane();
 
 		/**
 		 * Get the Gtk::Image widget.
 		 */
 		Gtk::Image* getImage();
+
+		/**
+		 * Get the ImageCache.
+		 */
+		ImageCache* getCache();
 
 		/**
 		 * Drag and drop targets.
@@ -57,7 +86,16 @@ class ImagePane
 				guint info, guint time, gpointer obj);
 
 	private:
+		/**
+		 * The Gtk Image represented in this pane.
+		 */
 		Gtk::Image* gtkImage;
+
+		/**
+		 * An image cache that may be used to store revision histories for this
+		 * ImagePane. Cached images are of type Cv::Image.
+		 */
+		ImageCache* cache;
 		
 };
 }

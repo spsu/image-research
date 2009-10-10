@@ -1,3 +1,10 @@
+/**
+ * Copyright Brandon Thomas Suit 2009
+ * Available under the LGPL 2.
+ * <http://possibilistic.org> 
+ * <echelon@gmail.com>
+ */
+
 #include "Gui.hpp"
 //#include <gtk/gtk.h> //(included in .hpp)
 #include "../gtk/Gtk.hpp"

@@ -14,6 +14,11 @@ ImageCache::ImageCache()
 	// Nothing
 }
 
+ImageCache::~ImageCache()
+{
+	delAll();
+}
+
 bool ImageCache::exists(std::string name) 
 {
 	return (bool)cache.count(name);
@@ -56,6 +61,14 @@ void ImageCache::del(std::string name)
 
 	if(temp != NULL) {
 		delete temp;
+	}
+}
+
+void ImageCache::delAll()
+{
+	std::map<std::string, Cv::Image*>::iterator it;
+	for(it = cache.begin(); it != cache.end(); it++) {
+		del((*it).first);
 	}
 }
 
