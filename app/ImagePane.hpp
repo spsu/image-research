@@ -53,6 +53,27 @@ class ImagePane
 		ImageCache* getCache();
 
 		/**
+		 * Drag-drop status.
+		 */
+		bool acceptsDrag();
+
+		/**
+		 * Set drag-drop status.
+		 */
+		void setAcceptsDrag(bool accept = true);
+
+		/**
+		 * Set the original image.
+		 * Internal ImageCache becomes the owner.
+		 */
+		void setOriginal(Cv::Image* img);
+
+		/**
+		 * Restore the original image.
+		 */
+		bool restoreOriginal();
+
+		/**
 		 * Drag and drop targets.
 		 * TODO XXX TEMP: These don't belong here.
 		 * Make a gtk/DragDrop class or something to automate adding types. 
@@ -96,7 +117,11 @@ class ImagePane
 		 * ImagePane. Cached images are of type Cv::Image.
 		 */
 		ImageCache* cache;
-		
+
+		/**
+		 * Drag and drop status.
+		 */
+		bool isAcceptDrag;
 };
 }
 

@@ -18,7 +18,8 @@ all:
 
 .PHONY: clean
 clean:
-	$(RM) $(GEN) fourier wavelet
+	$(RM) $(GEN) fourier wavelet test grayscale
+	cd ./app && $(RM) $(GEN)
 	cd ./gtk && $(RM) $(GEN)
 	cd ./gtk/box && $(RM) $(GEN)
 	cd ./gtk/button && $(RM) $(GEN)
@@ -41,17 +42,20 @@ fourier: fourier.cpp cv/Image.o \
 	fourier.o -o fourier
 
 ### FOURIER #########################
-grayscale: grayscale.cpp cv/Image.o \
-	gtk/Window.o gtk/Image.o gtk/Widget.o gtk/Label.o \
-	gtk/button/Button.o gtk/button/ToggleButton.o gtk/button/CheckButton.o \
-	gtk/box/Box.o gtk/box/HBox.o gtk/box/VBox.o \
-	gtk/entry/Entry.o gtk/entry/SpinButton.o
-	$(C) $(INC) -c grayscale.cpp
-	$(LN) $(LIB) cv/Image.o \
-	gtk/Window.o gtk/Image.o gtk/Widget.o gtk/Label.o \
+grayscale: grayscale.cpp \
+	app/ImageCache.o app/Gui.o app/ImagePane.o \
+	gtk/Gtk.o gtk/Window.o gtk/Image.o gtk/Widget.o gtk/Label.o \
 	gtk/button/Button.o gtk/button/ToggleButton.o gtk/button/CheckButton.o \
 	gtk/box/Box.o gtk/box/HBox.o gtk/box/VBox.o \
 	gtk/entry/Entry.o gtk/entry/SpinButton.o \
+	cv/Image.o
+	$(C) $(INC) -c grayscale.cpp
+	$(LN) $(LIB) app/ImageCache.o app/Gui.o app/ImagePane.o \
+	gtk/Gtk.o gtk/Window.o gtk/Image.o gtk/Widget.o gtk/Label.o \
+	gtk/button/Button.o gtk/button/ToggleButton.o gtk/button/CheckButton.o \
+	gtk/box/Box.o gtk/box/HBox.o gtk/box/VBox.o \
+	gtk/entry/Entry.o gtk/entry/SpinButton.o \
+	cv/Image.o \
 	grayscale.o -o grayscale
 
 ### WAVELET #########################

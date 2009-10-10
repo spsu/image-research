@@ -30,6 +30,18 @@ Button::~Button()
 	// TODO
 }
 
+std::string Button::getLabel()
+{
+	std::string temp;
+	temp = gtk_button_get_label(GTK_BUTTON(widget));
+	return temp;
+}
+
+void Button::setLabel(std::string label)
+{
+	gtk_button_set_label(GTK_BUTTON(widget), (const gchar*)label.c_str());
+}
+
 void Button::addClickedCb(void(*userFunc)(GtkButton*, gpointer), 
 		gpointer data)
 {

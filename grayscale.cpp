@@ -1,45 +1,38 @@
+/**
+ * Copyright Brandon Thomas Suit 2009
+ * Available under the LGPL 2.
+ * <http://possibilistic.org> 
+ * <echelon@gmail.com>
+ */
 
-#include <gtk/gtk.h>
+#include "app/Gui.hpp"
+#include "app/ImagePane.hpp"
+#include "cv/Image.hpp"
+#include "gtk/all.hpp"
 #include <stdio.h>
 
-#include "gui/Window.hpp"
-#include "gui/Image.hpp"
-#include "cv/Image.hpp"
+/**
+ * Globals.
+ * TODO: Globals are bad. Make a lookup system/dictionary in App::Gui.
+ */
 
-#include "gui/box/HBox.hpp"
-#include "gui/box/VBox.hpp"
-#include "gui/button/Button.hpp"
-#include "gui/Label.hpp"
+Gtk::Button* button = 0;
+App::ImagePane* imgPane = 0;
 
 /**
- * Convert an image to grayscale.
+ * Grayscale function.
  * TODO: Needs cleanup, also requires Cv::Image pixel access refactor (TODO).
  */
-void grayscale(GtkButton* button, gpointer data)
+void grayscale()
 {
-	static bool next = 0;
-
-	Gtk::Window* win = (Gtk::Window*)data;
 	Gtk::Image* gtkImg = 0;
 	Cv::Image* img = 0;
-	GdkPixbuf* pixbuf = 0;
 	int width, height;
 	int r, g, b;
 	int avg;
 
-	gtkImg = win->getImage();
-
-	// Undo grayscale.
-	if(next == 1) {
-		gtkImg->restoreOriginal();
-		next = 0;
-		return;
-	}
-	next = 1;
-
-	pixbuf = gtkImg->getPixbuf();
-
-	img = new Cv::Image(pixbuf);
+	gtkImg = imgPane->getImage();
+	img = new Cv::Image(gtkImg->getPixbuf());
 
 	width = img->getWidth();
 	height = img->getHeight();
@@ -64,37 +57,60 @@ void grayscale(GtkButton* button, gpointer data)
 }
 
 /**
- * Implement simple grayscale
+ * Callback for conversion to grayscale. 
+ * Changes the gui a little and dispatches to relevant function.
+ */
+void grayscaleCb(GtkButton* gtkbutton, gpointer data)
+{
+	static bool next = 0;
+
+	// Revert
+	if(next == 1) {
+		imgPane->restoreOriginal();
+		button->setLabel("Grayscale");
+		next = 0;
+		return;
+	}
+
+	// Grayscale
+	grayscale();
+	button->setLabel("Revert");
+	next = 1;
+}
+
+/**
+ * Main function
+ * Sets up the Gui, attaches any callbacks, then starts Gtk.
  */
 int main(int argc, char *argv[])
 {
-	Gtk::Window* win = 0;
-	Gtk::Image* pix = 0;
-	Cv::Image* img = 0;
+	App::Gui* gui = 0;
 	Gtk::VBox* vbox = 0;
 	Gtk::HBox* hbox = 0;
-	Gtk::Button* button = 0;
+	Gtk::CheckButton* resize = 0;
 
-	win = new Gtk::Window("Title here");
-	img = new Cv::Image("./discovery-small.jpg");
+	// Create main application elements
+	gui = new App::Gui("Grayscale Demo");
+	imgPane = new App::ImagePane("./discovery-small.jpg");
 
-	// Customize gui
+	// Create other Gtk widgets
+	vbox = new Gtk::VBox(false, 0);
 	hbox = new Gtk::HBox(false, 0);
+	resize = new Gtk::CheckButton("_f_it to window", true);
 	button = new Gtk::Button("Grayscale");
 
-	vbox = win->getVbox();
-	vbox->packStart(hbox);
-	hbox->packStart(button);
-	hbox->showAll();
+	// Construct GUI
+	gui->setChild(vbox);
+	vbox->packStart(hbox, false, false, 0);
+	hbox->packStart(resize, false, false, 0);
+	vbox->packStart(imgPane->getImage(), true, true, 0);
+	vbox->packStart(button, false, false, 0);
 
-	// Install main callback
-	button->addClickedCb(grayscale, win);
+	// Install grayscale callback
+	button->addClickedCb(grayscaleCb, gui);
 
-	// Load image
-	pix = win->getImage();
-	pix->setPixbuf(img->toPixbuf());
-	pix->setMap("original", img);
+	gui->start();
 
-	win->start();
+	return 0;
 }
 

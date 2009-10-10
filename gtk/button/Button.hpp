@@ -41,6 +41,16 @@ class Button : public Widget
 		virtual ~Button();
 
 		/**
+		 * Get button label.
+		 */
+		std::string getLabel();
+
+		/**
+		 * Set button label.
+		 */
+		void setLabel(std::string label);
+
+		/**
 		 * Attach a signal handler callback to the "clicked" signal.
 		 */
 		void addClickedCb(void(*userFunc)(GtkButton*, gpointer), 

@@ -15,19 +15,9 @@ namespace App {
 
 ImagePane::ImagePane(std::string filename):
 	gtkImage(0),
-	cache(0)
+	cache(0),
+	isAcceptDrag(true)
 {
-	// For drag and drop (TODO: Doesn't belong here)
-	static const GtkTargetEntry dropTypes[] = {
-		{(gchar*)"text/plain", 0, DND_TARGET_TEXT},
-		{(gchar*)"image/jpg", 0, DND_TARGET_JPG},
-		{(gchar*)"image/png", 0, DND_TARGET_PNG},
-		{(gchar*)"x-directory/normal", 0, DND_TARGET_XDIR},
-		{(gchar*)"inode/directory", 0, DND_TARGET_INODE},
-		{(gchar*)"text/uri-list", 0, DND_TARGET_URILIST},
-		{(gchar*)"text/x-moz-url", 0, DND_TARGET_MOZURL}
-	};
-	static const gint numDropTypes = sizeof(dropTypes)/sizeof(dropTypes[0]);
 	Cv::Image* tmpImg = 0;
 
 	// Create members
@@ -42,24 +32,16 @@ ImagePane::ImagePane(std::string filename):
 
 	// Backup of original 
 	if(tmpImg != 0) {
-		cache->set("original", tmpImg);
+		setOriginal(tmpImg);
 	}
 
 	// Enable drag and drop
-	gtk_drag_dest_set(gtkImage->getPtr(), GTK_DEST_DEFAULT_ALL, dropTypes, 
-						numDropTypes, GDK_ACTION_COPY);
+	setAcceptsDrag(true);
 
 	// Resize signals (TODO: Automate all of these.)
 	//g_signal_connect(window->getPtr(), "check-resize", 
 	//					G_CALLBACK(checkResizeCb), this);
 
-	// Drag and drop signals (TODO: Automate all of these.)
-	g_signal_connect(gtkImage->getPtr(), "drag-motion", 
-						G_CALLBACK(dragMotionCb), this);
-	g_signal_connect(gtkImage->getPtr(), "drag-data-get", 
-						G_CALLBACK(dragDataGetCb), this);
-	g_signal_connect(gtkImage->getPtr(), "drag-data-received", 
-						G_CALLBACK(dragDataReceivedCb), this);
 }
 
 ImagePane::~ImagePane()
@@ -76,6 +58,70 @@ Gtk::Image* ImagePane::getImage()
 ImageCache* ImagePane::getCache()
 {
 	return cache;
+}
+
+bool ImagePane::acceptsDrag()
+{
+	return isAcceptDrag;
+}
+
+void ImagePane::setAcceptsDrag(bool accept)
+{
+	// For drag and drop (TODO: Doesn't belong here)
+	static const GtkTargetEntry dropTypes[] = {
+		{(gchar*)"text/plain", 0, DND_TARGET_TEXT},
+		{(gchar*)"image/jpg", 0, DND_TARGET_JPG},
+		{(gchar*)"image/png", 0, DND_TARGET_PNG},
+		{(gchar*)"x-directory/normal", 0, DND_TARGET_XDIR},
+		{(gchar*)"inode/directory", 0, DND_TARGET_INODE},
+		{(gchar*)"text/uri-list", 0, DND_TARGET_URILIST},
+		{(gchar*)"text/x-moz-url", 0, DND_TARGET_MOZURL}
+	};
+	static const gint numDropTypes = sizeof(dropTypes)/sizeof(dropTypes[0]);
+
+	isAcceptDrag = accept;
+
+	// TODO: Create Drag-Drop class in Gtk/ that automates *ALL* of this.
+	// May need to be supplemented by a signal connecting class.
+	if(accept) {
+		// TODO: Automate all of this
+		gtk_drag_dest_set(gtkImage->getPtr(), GTK_DEST_DEFAULT_ALL, dropTypes, 
+							numDropTypes, GDK_ACTION_COPY);
+		g_signal_connect(gtkImage->getPtr(), "drag-motion", 
+							G_CALLBACK(dragMotionCb), this);
+		g_signal_connect(gtkImage->getPtr(), "drag-data-get", 
+							G_CALLBACK(dragDataGetCb), this);
+		g_signal_connect(gtkImage->getPtr(), "drag-data-received", 
+							G_CALLBACK(dragDataReceivedCb), this);
+	}
+	else {
+		// TODO: Automate all of this
+		/*g_signal_handlers_disconnect_by_func(G_OBJECT(gtkImage->getPtr()), 
+							G_CALLBACK(dragMotionCb), this);
+		g_signal_handlers_disconnect_by_func(gtkImage->getPtr(), 
+							G_CALLBACK(dragDataGetCb), this);
+		g_signal_handlers_disconnect_by_func(gtkImage->getPtr(), 
+							G_CALLBACK(dragDataReceivedCb), this);*/
+		gtk_drag_dest_unset(gtkImage->getPtr());
+	}
+}
+
+void ImagePane::setOriginal(Cv::Image* img)
+{
+	cache->del("original");
+	cache->set("original", img);
+}
+
+bool ImagePane::restoreOriginal()
+{
+	Cv::Image* orig = 0;
+
+	orig = cache->get("original");
+	if(orig == 0) {
+		return false;
+	}
+	gtkImage->setPixbuf(orig->toPixbuf());
+	return true;
 }
 
 /************************* CALLBACKS ****************************/
@@ -118,11 +164,12 @@ void ImagePane::dragDataReceivedCb(GtkWidget* widget, GdkDragContext* dragCtx,
 	// TODO: Do a check to ensure this is a file. Don't try to set HTTP URIs
 	// unless I add libcurl or libsoup or something.
 	self->gtkImage->setFile(filename);
-	self->cache->del("original");
+	//self->cache->del("original");
 
 	// Backup in cache.
 	img = new Cv::Image(self->gtkImage->getPixbuf()); // XXX: Potential segfault
-	self->cache->set("original", img);
+	//self->cache->set("original", img);
+	self->setOriginal(img);
 }
 
 } // end namespace App
