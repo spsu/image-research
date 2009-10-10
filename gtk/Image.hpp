@@ -6,10 +6,9 @@
  * Available under the LGPL 2.
  * <http://possibilistic.org> 
  * <echelon@gmail.com>
- * 
- * GtkImage widgets with GdkPixbuf loading. 
  */
 
+#include "Widget.hpp"
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <string>
@@ -19,8 +18,11 @@ namespace Cv {
 	class Image;
 }
 
+/**
+ * GtkImage widgets with GdkPixbuf loading. 
+ */
 namespace Gtk {
-class Image
+class Image : public Widget
 {
 	public:
 		/**
@@ -39,11 +41,6 @@ class Image
 		~Image();
 
 		/**
-		 * Get widget pointer.
-		 */
-		GtkWidget* getPtr();
-
-		/**
 		 * Get the internal pixbuf.
 		 * Caller does not own a reference!
 		 */
@@ -56,8 +53,9 @@ class Image
 
 		/**
 		 * Set file.
+		 * Returns false on failure.
 		 */
-		void setFile(std::string filename);
+		bool setFile(std::string filename);
 
 		/**
 		 * Set scaling.
@@ -66,32 +64,19 @@ class Image
 
 		/**
 		 * Remove any scaling.
+		 * TODO: This doesn't belong here. (Or does it count as a "convenience
+		 * function for a gtk library?)
 		 */
 		void removeScaling();
 
-		// TODO: These DO NOT belong here.
-		void setMap(std::string name, Cv::Image* img);
-		Cv::Image* getMap(std::string name);
-		void removeMap(std::string name, bool doDelete = false);
-
-		// TODO: Tied to the above
+		// TODO: Application logic doesn't belong here!
 		void restoreOriginal();
 
 	private:
 		/**
-		 * The image widget.
-		 */
-		GtkWidget* image;
-
-		/**
 		 * If the image is scaled, the original pixbuf is cached here.
 		 */
 		GdkPixbuf* unscaled;
-
-		/**
-		 * Map of cached IplImages.
-		 */
-		std::map<std::string, Cv::Image*> imageCache;
 };
 }
 

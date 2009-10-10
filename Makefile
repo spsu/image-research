@@ -19,75 +19,103 @@ all:
 .PHONY: clean
 clean:
 	$(RM) $(GEN) fourier wavelet
-	cd ./gui && $(RM) $(GEN)
-	cd ./gui/box && $(RM) $(GEN)
-	cd ./gui/button && $(RM) $(GEN)
-	cd ./gui/entry && $(RM) $(GEN)
+	cd ./gtk && $(RM) $(GEN)
+	cd ./gtk/box && $(RM) $(GEN)
+	cd ./gtk/button && $(RM) $(GEN)
+	cd ./gtk/entry && $(RM) $(GEN)
 	cd ./cv && $(RM) $(GEN)
 	
 
 ### FOURIER #########################
 fourier: fourier.cpp cv/Image.o \
-	gui/Window.o gui/Image.o gui/Widget.o gui/Label.o \
-	gui/button/Button.o gui/button/ToggleButton.o gui/button/CheckButton.o \
-	gui/box/Box.o gui/box/HBox.o gui/box/VBox.o \
-	gui/entry/Entry.o gui/entry/SpinButton.o
+	gtk/Window.o gtk/Image.o gtk/Widget.o gtk/Label.o \
+	gtk/button/Button.o gtk/button/ToggleButton.o gtk/button/CheckButton.o \
+	gtk/box/Box.o gtk/box/HBox.o gtk/box/VBox.o \
+	gtk/entry/Entry.o gtk/entry/SpinButton.o
 	$(C) $(INC) -c fourier.cpp
 	$(LN) $(LIB) cv/Image.o \
-	gui/Window.o gui/Image.o gui/Widget.o gui/Label.o \
-	gui/button/Button.o gui/button/ToggleButton.o gui/button/CheckButton.o \
-	gui/box/Box.o gui/box/HBox.o gui/box/VBox.o \
-	gui/entry/Entry.o gui/entry/SpinButton.o \
+	gtk/Window.o gtk/Image.o gtk/Widget.o gtk/Label.o \
+	gtk/button/Button.o gtk/button/ToggleButton.o gtk/button/CheckButton.o \
+	gtk/box/Box.o gtk/box/HBox.o gtk/box/VBox.o \
+	gtk/entry/Entry.o gtk/entry/SpinButton.o \
 	fourier.o -o fourier
 
 ### FOURIER #########################
 grayscale: grayscale.cpp cv/Image.o \
-	gui/Window.o gui/Image.o gui/Widget.o gui/Label.o \
-	gui/button/Button.o gui/button/ToggleButton.o gui/button/CheckButton.o \
-	gui/box/Box.o gui/box/HBox.o gui/box/VBox.o \
-	gui/entry/Entry.o gui/entry/SpinButton.o
+	gtk/Window.o gtk/Image.o gtk/Widget.o gtk/Label.o \
+	gtk/button/Button.o gtk/button/ToggleButton.o gtk/button/CheckButton.o \
+	gtk/box/Box.o gtk/box/HBox.o gtk/box/VBox.o \
+	gtk/entry/Entry.o gtk/entry/SpinButton.o
 	$(C) $(INC) -c grayscale.cpp
 	$(LN) $(LIB) cv/Image.o \
-	gui/Window.o gui/Image.o gui/Widget.o gui/Label.o \
-	gui/button/Button.o gui/button/ToggleButton.o gui/button/CheckButton.o \
-	gui/box/Box.o gui/box/HBox.o gui/box/VBox.o \
-	gui/entry/Entry.o gui/entry/SpinButton.o \
+	gtk/Window.o gtk/Image.o gtk/Widget.o gtk/Label.o \
+	gtk/button/Button.o gtk/button/ToggleButton.o gtk/button/CheckButton.o \
+	gtk/box/Box.o gtk/box/HBox.o gtk/box/VBox.o \
+	gtk/entry/Entry.o gtk/entry/SpinButton.o \
 	grayscale.o -o grayscale
 
-### WAVELET ########################
+### WAVELET #########################
 wavelet: wavelet.cpp
 	$(C) $(INC) -c wavelet.cpp
 	$(LN) $(LIB) wavelet.o -o wavelet
 
-### GTK GUI LIBRARY #################
-gui/Window.o: gui/Window.hpp gui/Window.cpp
-	$(CD) ./gui && $(C) $(INC) -c Window.cpp
-gui/Image.o: gui/Image.hpp gui/Image.cpp
-	$(CD) ./gui && $(C) $(INC) -c Image.cpp
+### TEST ############################
+test: test.cpp \
+	app/ImageCache.o app/Gui.o app/ImagePane.o \
+	gtk/Gtk.o gtk/Window.o gtk/Image.o gtk/Widget.o gtk/Label.o \
+	gtk/button/Button.o gtk/button/ToggleButton.o gtk/button/CheckButton.o \
+	gtk/box/Box.o gtk/box/HBox.o gtk/box/VBox.o \
+	gtk/entry/Entry.o gtk/entry/SpinButton.o \
+	cv/Image.o
+	$(C) $(INC) -c test.cpp
+	$(LN) $(LIB) app/ImageCache.o app/Gui.o app/ImagePane.o \
+	gtk/Gtk.o gtk/Window.o gtk/Image.o gtk/Widget.o gtk/Label.o \
+	gtk/button/Button.o gtk/button/ToggleButton.o gtk/button/CheckButton.o \
+	gtk/box/Box.o gtk/box/HBox.o gtk/box/VBox.o \
+	gtk/entry/Entry.o gtk/entry/SpinButton.o \
+	cv/Image.o \
+	test.o -o test
 
-gui/Widget.o: gui/Widget.hpp gui/Widget.cpp
-	$(CD) ./gui && $(C) $(INC) -c Widget.cpp
-gui/Label.o: gui/Label.hpp gui/Label.cpp
-	$(CD) ./gui && $(C) $(INC) -c Label.cpp
-gui/button/Button.o: gui/button/Button.hpp gui/button/Button.cpp
-	$(CD) ./gui/button && $(C) $(INC) -c Button.cpp
-gui/button/ToggleButton.o: gui/Widget.o gui/button/ToggleButton.hpp \
-	gui/button/ToggleButton.hpp
-	$(CD) ./gui/button && $(C) $(INC) -c ToggleButton.cpp
-gui/button/CheckButton.o: gui/button/ToggleButton.o gui/button/CheckButton.hpp \
-	gui/button/CheckButton.hpp
-	$(CD) ./gui/button && $(C) $(INC) -c CheckButton.cpp
-gui/box/Box.o: gui/Widget.o gui/box/Box.hpp gui/box/Box.hpp
-	$(CD) ./gui/box && $(C) $(INC) -c Box.cpp
-gui/box/HBox.o: gui/box/Box.o gui/box/HBox.hpp gui/box/HBox.hpp
-	$(CD) ./gui/box && $(C) $(INC) -c HBox.cpp
-gui/box/VBox.o: gui/box/Box.o gui/box/VBox.hpp gui/box/VBox.hpp
-	$(CD) ./gui/box && $(C) $(INC) -c VBox.cpp
-gui/entry/Entry.o: gui/entry/Entry.hpp gui/entry/Entry.hpp
-	$(CD) ./gui/entry && $(C) $(INC) -c Entry.cpp
-gui/entry/SpinButton.o: gui/entry/Entry.o gui/entry/SpinButton.hpp \
-	gui/entry/SpinButton.hpp
-	$(CD) ./gui/entry && $(C) $(INC) -c SpinButton.cpp
+### APPLICATION CLASSES #############
+app/ImageCache.o: app/ImageCache.hpp app/ImageCache.cpp
+	$(CD) ./app && $(C) $(INC) -c ImageCache.cpp
+app/Gui.o: app/Gui.cpp
+	$(CD) ./app && $(C) $(INC) -c Gui.cpp
+app/ImagePane.o: app/ImagePane.hpp app/ImagePane.cpp
+	$(CD) ./app && $(C) $(INC) -c ImagePane.cpp
+
+### GTK WRAPPER LIBRARY #############
+gtk/Gtk.o: gtk/Gtk.hpp gtk/Gtk.cpp
+	$(CD) ./gtk && $(C) $(INC) -c Gtk.cpp
+
+gtk/Window.o: gtk/Window.hpp gtk/Window.cpp
+	$(CD) ./gtk && $(C) $(INC) -c Window.cpp
+gtk/Image.o: gtk/Image.hpp gtk/Image.cpp
+	$(CD) ./gtk && $(C) $(INC) -c Image.cpp
+
+gtk/Widget.o: gtk/Widget.hpp gtk/Widget.cpp
+	$(CD) ./gtk && $(C) $(INC) -c Widget.cpp
+gtk/Label.o: gtk/Label.hpp gtk/Label.cpp
+	$(CD) ./gtk && $(C) $(INC) -c Label.cpp
+gtk/button/Button.o: gtk/button/Button.hpp gtk/button/Button.cpp
+	$(CD) ./gtk/button && $(C) $(INC) -c Button.cpp
+gtk/button/ToggleButton.o: gtk/Widget.o gtk/button/ToggleButton.hpp \
+	gtk/button/ToggleButton.hpp
+	$(CD) ./gtk/button && $(C) $(INC) -c ToggleButton.cpp
+gtk/button/CheckButton.o: gtk/button/ToggleButton.o gtk/button/CheckButton.hpp \
+	gtk/button/CheckButton.hpp
+	$(CD) ./gtk/button && $(C) $(INC) -c CheckButton.cpp
+gtk/box/Box.o: gtk/Widget.o gtk/box/Box.hpp gtk/box/Box.hpp
+	$(CD) ./gtk/box && $(C) $(INC) -c Box.cpp
+gtk/box/HBox.o: gtk/box/Box.o gtk/box/HBox.hpp gtk/box/HBox.hpp
+	$(CD) ./gtk/box && $(C) $(INC) -c HBox.cpp
+gtk/box/VBox.o: gtk/box/Box.o gtk/box/VBox.hpp gtk/box/VBox.hpp
+	$(CD) ./gtk/box && $(C) $(INC) -c VBox.cpp
+gtk/entry/Entry.o: gtk/entry/Entry.hpp gtk/entry/Entry.hpp
+	$(CD) ./gtk/entry && $(C) $(INC) -c Entry.cpp
+gtk/entry/SpinButton.o: gtk/entry/Entry.o gtk/entry/SpinButton.hpp \
+	gtk/entry/SpinButton.hpp
+	$(CD) ./gtk/entry && $(C) $(INC) -c SpinButton.cpp
 
 
 ### CV IMAGE WRAPPER ################

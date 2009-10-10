@@ -8,44 +8,39 @@
 namespace Gtk {
 
 Image::Image(): 
-	image(0),
+	Widget(),
 	unscaled(0)
 {
-	image = gtk_image_new();
+	widget = gtk_image_new();
 }
 
 Image::Image(GdkPixbuf* pixbuf):
-	image(0),
+	Widget(),
 	unscaled(0)
 {
-	image = gtk_image_new_from_pixbuf(pixbuf);
+	widget = gtk_image_new_from_pixbuf(pixbuf);
 }
 
 Image::~Image()
 {
-	if(image != NULL) {
-		gtk_widget_destroy(image);
+	if(widget != NULL) {
+		gtk_widget_destroy(widget);
 	}
 	if(unscaled != NULL) {
 		g_object_unref(unscaled);
 	}
 }
 
-GtkWidget* Image::getPtr()
-{
-	return image;
-}
-
 GdkPixbuf* Image::getPixbuf()
 {
-	if(GTK_IMAGE_PIXBUF != gtk_image_get_storage_type(GTK_IMAGE(image))) {
+	if(GTK_IMAGE_PIXBUF != gtk_image_get_storage_type(GTK_IMAGE(widget))) {
 		printf("Gtk::Image::getPixbuf() err: No internal pixbuf!\n");
 		return NULL;
 	}
 
 	// TODO: Should I return the cached unscaled image if it exists?
 	// probably not...
-	return gtk_image_get_pixbuf(GTK_IMAGE(image));
+	return gtk_image_get_pixbuf(GTK_IMAGE(widget));
 }
 
 void Image::setPixbuf(GdkPixbuf* pixbuf)
@@ -57,11 +52,11 @@ void Image::setPixbuf(GdkPixbuf* pixbuf)
 		return;
 	}
 
-	if(GTK_IMAGE_PIXBUF == gtk_image_get_storage_type(GTK_IMAGE(image))) {
-		oldPb = gtk_image_get_pixbuf(GTK_IMAGE(image));
+	if(GTK_IMAGE_PIXBUF == gtk_image_get_storage_type(GTK_IMAGE(widget))) {
+		oldPb = gtk_image_get_pixbuf(GTK_IMAGE(widget));
 	}
 
-	gtk_image_set_from_pixbuf(GTK_IMAGE(image), pixbuf);
+	gtk_image_set_from_pixbuf(GTK_IMAGE(widget), pixbuf);
 
 	if(unscaled != NULL) {
 		g_object_unref(unscaled);
@@ -72,7 +67,7 @@ void Image::setPixbuf(GdkPixbuf* pixbuf)
 	}
 }
 
-void Image::setFile(std::string filename)
+bool Image::setFile(std::string filename)
 {
 	size_t pos = 0;
 	GdkPixbuf* pixbuf = 0;
@@ -97,22 +92,23 @@ void Image::setFile(std::string filename)
 	   filename.substr(0, 6) == "ftp://") {
 			fprintf(stderr, "Image::setFile() err: Cannot load over the "
 							"internet (yet)!\n");
-		return;
+		return false;
 	}
 
 	// Load via pixbuf loader to detect errors
 	pixbuf = gdk_pixbuf_new_from_file(filename.c_str(), err);
 	if(pixbuf == NULL || err != NULL) {
 		fprintf(stderr, "Image::setFile() err: Error loading image.\n");
-		return;
+		return false;
 	}
 
-	gtk_image_set_from_pixbuf(GTK_IMAGE(image), pixbuf);
+	gtk_image_set_from_pixbuf(GTK_IMAGE(widget), pixbuf);
 	g_object_unref(pixbuf);
 
 	if(unscaled != NULL) {
 		g_object_unref(unscaled);
 	}
+	return true;
 }
 
 void Image::setScale(int width, int height)
@@ -120,13 +116,13 @@ void Image::setScale(int width, int height)
 	GdkPixbuf* orig = 0;
 	GdkPixbuf* scaled = 0;
 
-	if(GTK_IMAGE_PIXBUF != gtk_image_get_storage_type(GTK_IMAGE(image))) {
+	if(GTK_IMAGE_PIXBUF != gtk_image_get_storage_type(GTK_IMAGE(widget))) {
 		printf("Image::setScale() err: Cannot scale without internal pixbuf\n");
 		return;
 	}
 
 	if(unscaled == NULL) {
-		orig = gtk_image_get_pixbuf(GTK_IMAGE(image));
+		orig = gtk_image_get_pixbuf(GTK_IMAGE(widget));
 		g_object_ref(orig);
 	}
 	else {
@@ -155,41 +151,12 @@ void Image::removeScaling()
 	setPixbuf(orig);
 }
 
-// XXX XXX : THESE DON'T BELONG HERE
-void Image::setMap(std::string name, Cv::Image* img)
-{
-	imageCache[name] = img;
-}
-
-Cv::Image* Image::getMap(std::string name)
-{
-	if(!imageCache.count(name)) {
-		// not found
-		return 0;
-	}
-	return imageCache[name];
-}
-
-void Image::removeMap(std::string name, bool doDelete)
-{
-	Cv::Image* temp = 0;
-
-	temp = getMap(name);
-	if(temp == NULL) {
-		return;
-	}
-	imageCache.erase(name);
-
-	if(doDelete) {
-		delete temp;
-	}
-}
-
+// XXX NOTE: THIS DOESN'T BELONG HERE
 void Image::restoreOriginal()
 {
 	Cv::Image* orig = 0;
-	orig = getMap("original");
-	setPixbuf(orig->toPixbuf());
+	//orig = getMap("original"); // XXX XXX XXX XXX RESTORE ELSEWHERE
+	//setPixbuf(orig->toPixbuf());
 }
 
 } // end namespace Gtk

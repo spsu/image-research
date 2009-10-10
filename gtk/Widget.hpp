@@ -6,13 +6,16 @@
  * Available under the LGPL 2.
  * <http://possibilistic.org> 
  * <echelon@gmail.com>
- * 
- * The gtk widget superclass.
  */
 
 #include <gtk/gtk.h>
 #include <string>
 
+/**
+ * The Gtk widget superclass.
+ * All other classes in my wrapper inherit from this, with the exception of
+ * the Gtk class.
+ */
 namespace Gtk {
 class Widget
 {
