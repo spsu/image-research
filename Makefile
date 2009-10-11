@@ -97,6 +97,22 @@ test: test.cpp \
 	cv/Image.o \
 	test.o -o test
 
+stereo: stereo.cpp \
+	app/ImageCache.o app/Gui.o app/ImagePane.o \
+	gtk/Gtk.o gtk/Window.o gtk/Image.o gtk/Widget.o gtk/Label.o \
+	gtk/button/Button.o gtk/button/ToggleButton.o gtk/button/CheckButton.o \
+	gtk/box/Box.o gtk/box/HBox.o gtk/box/VBox.o \
+	gtk/entry/Entry.o gtk/entry/SpinButton.o \
+	cv/Image.o cv/Camera.o
+	$(C) $(INC) -c stereo.cpp
+	$(LN) $(LIB) app/ImageCache.o app/Gui.o app/ImagePane.o \
+	gtk/Gtk.o gtk/Window.o gtk/Image.o gtk/Widget.o gtk/Label.o \
+	gtk/button/Button.o gtk/button/ToggleButton.o gtk/button/CheckButton.o \
+	gtk/box/Box.o gtk/box/HBox.o gtk/box/VBox.o \
+	gtk/entry/Entry.o gtk/entry/SpinButton.o \
+	cv/Image.o cv/Camera.o \
+	stereo.o -o stereo
+
 ### APPLICATION CLASSES #############
 app/ImageCache.o: app/ImageCache.hpp app/ImageCache.cpp
 	$(CD) ./app && $(C) $(INC) -c ImageCache.cpp
@@ -142,6 +158,8 @@ gtk/entry/SpinButton.o: gtk/entry/Entry.o gtk/entry/SpinButton.hpp \
 ### CV IMAGE WRAPPER ################
 cv/Image.o: cv/Image.hpp cv/Image.cpp
 	$(CD) ./cv && $(C) $(INC) -c Image.cpp
+cv/Camera.o: cv/Camera.hpp cv/Camera.cpp
+	$(CD) ./cv && $(C) $(INC) -c Camera.cpp
 
 
 

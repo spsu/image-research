@@ -4,25 +4,36 @@
 namespace Cv {
 
 Image::Image():
-	image(0)
+	image(0),
+	isOwner(true)
 {
-	// Nothing
+	// TODO
+}
+
+Image::Image(IplImage* img, bool shared):
+	image(0),
+	isOwner(!shared)
+{
+	image = img;
 }
 
 Image::Image(int width, int height, int numChannels):
-	image(0)
+	image(0),
+	isOwner(true)
 {
 	image = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, numChannels);
 }
 
 Image::Image(std::string filename):
-	image(0)
+	image(0),
+	isOwner(true)
 {
 	image = cvLoadImage(filename.c_str(), CV_LOAD_IMAGE_COLOR);
 }
 
 Image::Image(GdkPixbuf* pixbuf):
-	image(0)
+	image(0),
+	isOwner(true)
 {
 	//CvSize sz;
 	int width = 0;
@@ -61,7 +72,7 @@ Image::Image(GdkPixbuf* pixbuf):
 
 Image::~Image()
 {
-	if(image != NULL) {
+	if(image != NULL && isOwner) {
 		cvReleaseImage(&image);
 	}
 }
@@ -109,18 +120,6 @@ int Image::getHeight()
 	}
 	return image->height;
 }
-
-/*int* Image::pix(int i, int j, int k)
-{
-	//int step = image->widthStep/sizeof(uchar);
-	//int chan = image->nChannels;
-	//char* data = image->imageData;
-	//return data[i*step + j*chan + k];
-//((uchar *)(img->imageData + i*img->widthStep))[j*img->nChannels + 0]
-//((uchar*)(img->imageData + img->widthStep*y))[x*3]
-	return (int*) &((char*)(image->imageData + image->widthStep*j))[i*3];
-	//return ((char*)(image->imageData + i * image->widthStep))[j*image->nChannels + k];
-}*/
 
 RgbPix Image::getPix()
 {

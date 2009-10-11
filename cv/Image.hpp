@@ -54,6 +54,13 @@ class Image
 		Image();
 
 		/**
+		 * IplImage wrapper CTOR.
+		 * Becomes the owner of the IplImage unless isOwner is false.
+		 * TODO: Enforce non-writability of shared copies.
+		 */
+		Image(IplImage* img, bool shared = false);
+
+		/**
 		 * Blank image CTOR.
 		 * Creates an image with the width, height, channels, etc. specified.
 		 * Created with 8-bits per channel, unsigned.
@@ -96,22 +103,10 @@ class Image
 		int getHeight();
 
 		/**
-		 * Get the pixel.
-		 * TODO: Test.
-		 */
-		//int* pix(int i, int j, int k);
-
-		/**
 		 * Easy pixel access.
+		 * TODO: Not as easy as img[y][x].r/g/b though!
 		 */
 		RgbPix getPix();
-
-		/**
-		 * Pixel access.
-		 */
-		inline RgbPixel* operator[](const int rowIndex) {
-			return ((RgbPixel*)(image->imageData + rowIndex*image->widthStep));
-		}
 
 	protected:
 		/**
@@ -120,10 +115,14 @@ class Image
 		IplImage* image;
 
 		/**
+		 * Whether the Image class owns the IplImage.
+		 */
+		bool isOwner;
+
+		/**
 		 * Closure for destroying copied IplImage created in getPixbuf()
 		 */
 		static void destroyPixbufCb(guchar* pixels, gpointer data);
-
 };
 }
 

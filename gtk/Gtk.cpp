@@ -7,7 +7,6 @@ void Gtk::init()
 {
 	g_thread_init(0);
 	gdk_threads_init();
-
     gtk_init(0, 0); // Omitting &argc, &argv
 }
 

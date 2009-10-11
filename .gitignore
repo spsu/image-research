@@ -6,6 +6,7 @@ wavelet
 grayscale
 test
 negative
+stereo
 
 # Images (Don't add to repo: unnecessary!)
 *png
