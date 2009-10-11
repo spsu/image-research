@@ -10,6 +10,7 @@
 #include "cv/Image.hpp"
 #include "gtk/all.hpp"
 #include <stdio.h>
+#include <cstdlib>
 
 /**
  * Globals.
@@ -20,16 +21,14 @@ Gtk::Button* button = 0;
 App::ImagePane* imgPane = 0;
 
 /**
- * Grayscale function.
+ * Negative function.
  * TODO: Needs cleanup, also requires Cv::Image pixel access refactor (TODO).
  */
-void grayscale()
+void negative()
 {
 	Gtk::Image* gtkImg = 0;
 	Cv::Image* img = 0;
 	int width, height;
-	int r, g, b;
-	int avg;
 
 	gtkImg = imgPane->getImage();
 	img = new Cv::Image(gtkImg->getPixbuf());
@@ -37,21 +36,13 @@ void grayscale()
 	width = img->getWidth();
 	height = img->getHeight();
 
-	//RgbImage pix = RgbImage(img->getPtr());
-	RgbPix pix = img->getPix();
+	RgbImage pix = RgbImage(img->getPtr());
 
 	for(int i = 0; i < height; i++) {
 		for(int j = 0; j < width; j++) {
-			//r = img[i][j].r;
-			r = pix[i][j].r;
-			//r = *img->pix(i, j, 0);
-			g = pix[i][j].g;
-			b = pix[i][j].b;
-
-			avg = (r+g+b)/3;
-			pix[i][j].r = avg;
-			pix[i][j].g = avg;
-			pix[i][j].b = avg;
+			pix[i][j].r = abs(pix[i][j].r - 255);
+			pix[i][j].g = abs(pix[i][j].g - 255);
+			pix[i][j].b = abs(pix[i][j].b - 255);
 		}
 	}
 
@@ -60,25 +51,13 @@ void grayscale()
 }
 
 /**
- * Callback for conversion to grayscale. 
+ * Callback for conversion to negative. 
  * Changes the gui a little and dispatches to relevant function.
  */
-void grayscaleCb(GtkButton* gtkbutton, gpointer data)
+void negativeCb(GtkButton* gtkbutton, gpointer data)
 {
-	static bool next = 0;
-
-	// Revert
-	if(next == 1) {
-		imgPane->restoreOriginal();
-		button->setLabel("Grayscale");
-		next = 0;
-		return;
-	}
-
-	// Grayscale
-	grayscale();
-	button->setLabel("Revert Grayscale");
-	next = 1;
+	// Negative
+	negative();
 }
 
 /**
@@ -93,14 +72,14 @@ int main(int argc, char *argv[])
 	Gtk::CheckButton* resize = 0;
 
 	// Create main application elements
-	gui = new App::Gui("Grayscale Demo");
+	gui = new App::Gui("Negative Demo");
 	imgPane = new App::ImagePane("./discovery-small.jpg");
 
 	// Create other Gtk widgets
 	vbox = new Gtk::VBox(false, 0);
 	hbox = new Gtk::HBox(false, 0);
 	resize = new Gtk::CheckButton("_f_it to window", true);
-	button = new Gtk::Button("Grayscale");
+	button = new Gtk::Button("Negative");
 
 	// Construct GUI
 	gui->setChild(vbox);
@@ -109,8 +88,8 @@ int main(int argc, char *argv[])
 	vbox->packStart(imgPane->getImage(), true, true, 0);
 	vbox->packStart(button, false, false, 0);
 
-	// Install grayscale callback
-	button->addClickedCb(grayscaleCb, gui);
+	// Install negative callback
+	button->addClickedCb(negativeCb, gui);
 
 	gui->start();
 

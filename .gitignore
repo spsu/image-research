@@ -5,6 +5,7 @@ fourier
 wavelet
 grayscale
 test
+negative
 
 # Images (Don't add to repo: unnecessary!)
 *png

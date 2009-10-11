@@ -6,9 +6,6 @@
  * Available under the LGPL 2.
  * <http://possibilistic.org> 
  * <echelon@gmail.com>
- * 
- * Class to represent and operate on OpenCV images, as well as a method of 
- * converting to GdkPixbuf.
  */
 
 #include <cv.h>
@@ -38,7 +35,15 @@ typedef struct{
 } RgbPixel;
 
 typedef Canvas<RgbPixel> RgbImage;
+typedef Canvas<RgbPixel> RgbPix;
 
+/**
+ * Cv::Image
+ * A class to represent and operate on OpenCV images, as well as a method of 
+ * loading files and converting between GdkPixbufs, etc.
+ * Only represents 8-channel BGR images for now. I'll have to generalize this in
+ * order to use it with other OpenCV-related code. 
+ */
 namespace Cv {
 class Image
 {
@@ -47,6 +52,13 @@ class Image
 		 * Default CTOR does nothing.
 		 */
 		Image();
+
+		/**
+		 * Blank image CTOR.
+		 * Creates an image with the width, height, channels, etc. specified.
+		 * Created with 8-bits per channel, unsigned.
+		 */
+		Image(int width, int height, int numChannels = 3);
 
 		/**
 		 * File load CTOR.
@@ -82,6 +94,17 @@ class Image
 		 */
 		int getWidth();
 		int getHeight();
+
+		/**
+		 * Get the pixel.
+		 * TODO: Test.
+		 */
+		//int* pix(int i, int j, int k);
+
+		/**
+		 * Easy pixel access.
+		 */
+		RgbPix getPix();
 
 		/**
 		 * Pixel access.

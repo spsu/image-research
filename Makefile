@@ -41,7 +41,7 @@ fourier: fourier.cpp cv/Image.o \
 	gtk/entry/Entry.o gtk/entry/SpinButton.o \
 	fourier.o -o fourier
 
-### FOURIER #########################
+### GRAYSCALE #########################
 grayscale: grayscale.cpp \
 	app/ImageCache.o app/Gui.o app/ImagePane.o \
 	gtk/Gtk.o gtk/Window.o gtk/Image.o gtk/Widget.o gtk/Label.o \
@@ -57,6 +57,23 @@ grayscale: grayscale.cpp \
 	gtk/entry/Entry.o gtk/entry/SpinButton.o \
 	cv/Image.o \
 	grayscale.o -o grayscale
+
+### NEGATIVE #########################
+negative: negative.cpp \
+	app/ImageCache.o app/Gui.o app/ImagePane.o \
+	gtk/Gtk.o gtk/Window.o gtk/Image.o gtk/Widget.o gtk/Label.o \
+	gtk/button/Button.o gtk/button/ToggleButton.o gtk/button/CheckButton.o \
+	gtk/box/Box.o gtk/box/HBox.o gtk/box/VBox.o \
+	gtk/entry/Entry.o gtk/entry/SpinButton.o \
+	cv/Image.o
+	$(C) $(INC) -c negative.cpp
+	$(LN) $(LIB) app/ImageCache.o app/Gui.o app/ImagePane.o \
+	gtk/Gtk.o gtk/Window.o gtk/Image.o gtk/Widget.o gtk/Label.o \
+	gtk/button/Button.o gtk/button/ToggleButton.o gtk/button/CheckButton.o \
+	gtk/box/Box.o gtk/box/HBox.o gtk/box/VBox.o \
+	gtk/entry/Entry.o gtk/entry/SpinButton.o \
+	cv/Image.o \
+	negative.o -o negative
 
 ### WAVELET #########################
 wavelet: wavelet.cpp

@@ -9,6 +9,12 @@ Image::Image():
 	// Nothing
 }
 
+Image::Image(int width, int height, int numChannels):
+	image(0)
+{
+	image = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, numChannels);
+}
+
 Image::Image(std::string filename):
 	image(0)
 {
@@ -34,8 +40,8 @@ Image::Image(GdkPixbuf* pixbuf):
 	bitsPerSamp = gdk_pixbuf_get_bits_per_sample(pixbuf);
 	numChannels = gdk_pixbuf_get_n_channels(pixbuf);
 
-	printf("Width: %d, height: %d, bits: %d, channels: %d\n", width, height, 
-				bitsPerSamp, numChannels);
+	//printf("Width: %d, height: %d, bits: %d, channels: %d\n", width, height, 
+	//			bitsPerSamp, numChannels);
 
 	// TODO: Catch errors.
 	//sz = cvSize(gdk_pixbuf_get_width(pixbuf), gdk_pixbuf_get_height(pixbuf));
@@ -104,10 +110,27 @@ int Image::getHeight()
 	return image->height;
 }
 
+/*int* Image::pix(int i, int j, int k)
+{
+	//int step = image->widthStep/sizeof(uchar);
+	//int chan = image->nChannels;
+	//char* data = image->imageData;
+	//return data[i*step + j*chan + k];
+//((uchar *)(img->imageData + i*img->widthStep))[j*img->nChannels + 0]
+//((uchar*)(img->imageData + img->widthStep*y))[x*3]
+	return (int*) &((char*)(image->imageData + image->widthStep*j))[i*3];
+	//return ((char*)(image->imageData + i * image->widthStep))[j*image->nChannels + k];
+}*/
+
+RgbPix Image::getPix()
+{
+	return RgbPix(image);
+}
+
 // Closure for destroying copy IplImages used in creating pixbufs
 void Image::destroyPixbufCb(guchar* pixels, gpointer data)
 {
-	printf("Closure destroying pixbuf's IplImage*\n");
+	//printf("Closure destroying pixbuf's IplImage*\n");
 	IplImage* copy = (IplImage*)data;
 	cvReleaseImage(&copy);
 }
