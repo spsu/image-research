@@ -10,7 +10,8 @@ Camera::Camera(int device):
 	height(0),
 	frameCache(0)
 {
-	capture = cvCreateCameraCapture(device);
+	//capture = cvCreateCameraCapture(device);
+	capture = cvCaptureFromCAM(device);
 	if (!capture) {
 		fprintf(stderr, "Camera CTOR: Could not use device %d.\n", device);
 	}
@@ -31,8 +32,13 @@ Camera::~Camera()
 void Camera::setSize(int w, int h)
 {
 	// TODO: The following doesn't seem to work. OpenCV build issue?
-	cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH, (double)width);
-	cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT, (double)height);
+	// XXX: I hacked DEFAULT_V4L_WIDTH/HEIGHT in highgui/cvcap_v4l.cpp as a 
+	// temporary fix for this problem. Video4Linux definitely needs patching.
+	cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH, (double)w);
+	cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT, (double)h);
+
+	width = cvGetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH);
+	height = cvGetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT);
 }
 
 void Camera::setFps(int fps)

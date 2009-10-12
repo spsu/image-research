@@ -37,8 +37,7 @@ void grayscale()
 	width = img->getWidth();
 	height = img->getHeight();
 
-	//RgbImage pix = RgbImage(img->getPtr());
-	RgbPix pix = img->getPix();
+	RgbPix pix = img->getPix(); // TODO: Rename Cv::Pix
 
 	for(int i = 0; i < height; i++) {
 		for(int j = 0; j < width; j++) {

@@ -52,7 +52,10 @@ void Image::setPixbuf(GdkPixbuf* pixbuf)
 		return;
 	}
 
-	gdk_threads_enter();
+	// DO NOT DO THIS WITHIN THE UI THREAD!! ONLY OTHER THREADS USING GDK.
+	// SEE: http://blogs.operationaldynamics.com/andrew/software/gnome-desktop/
+	// gtk-thread-awareness.html
+	//gdk_threads_enter(); 
 	if(GTK_IMAGE_PIXBUF == gtk_image_get_storage_type(GTK_IMAGE(widget))) {
 		oldPb = gtk_image_get_pixbuf(GTK_IMAGE(widget));
 	}
@@ -66,7 +69,7 @@ void Image::setPixbuf(GdkPixbuf* pixbuf)
 	if(oldPb != NULL) {
 		g_object_unref(oldPb); // TODO: Make sure new pixbuf got set
 	}
-	gdk_threads_leave();
+	//gdk_threads_leave();
 }
 
 bool Image::setFile(std::string filename)
