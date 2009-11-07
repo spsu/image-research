@@ -8,6 +8,7 @@
 #include "app/Gui.hpp"
 #include "app/ImagePane.hpp"
 #include "cv/Image.hpp"
+#include "cv/Histogram.hpp" // TODO: TEMP
 #include "gtk/all.hpp"
 #include <stdio.h>
 
@@ -27,12 +28,14 @@ void grayscale()
 {
 	Gtk::Image* gtkImg = 0;
 	Cv::Image* img = 0;
+	Cv::Histogram* hist = 0; // TODO: TEMP TEST ONLY!!!
 	int width, height;
 	int r, g, b;
 	int avg;
 
 	gtkImg = imgPane->getImage();
 	img = new Cv::Image(gtkImg->getPixbuf());
+	hist = new Cv::Histogram(); // TODO TEMP ONLY
 
 	width = img->getWidth();
 	height = img->getHeight();
@@ -53,6 +56,11 @@ void grayscale()
 			pix[i][j].b = avg;
 		}
 	}
+
+	// vvv TODO TEMP ONLY vvv
+	hist->calculate(img);
+	printf("Bin 0: %f\n", hist->query(0));
+
 
 	gtkImg->setPixbuf(img->toPixbuf());
 	delete img;

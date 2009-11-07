@@ -43,6 +43,7 @@ void* queryCam(void* n)
 	while(1) {
 		if(turn == 0) {
 			cam1 = new Cv::Camera(1);
+			//cam1->setSize(480, 320);
 			frame1 = cam1->queryFrame();
 			gtkImg1->setPixbuf(frame1->toPixbuf());
 			turn = 1;
