@@ -6,6 +6,7 @@
  */
 
 #include "ImageCache.hpp"
+#include "../cv/Image.hpp"
 #include <stdio.h>
 
 namespace App {

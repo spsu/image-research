@@ -28,14 +28,14 @@ void grayscale()
 {
 	Gtk::Image* gtkImg = 0;
 	Cv::Image* img = 0;
-	Cv::Histogram* hist = 0; // TODO: TEMP TEST ONLY!!!
+	//Cv::Histogram* hist = 0; // TODO: TEMP TEST ONLY!!!
 	int width, height;
 	int r, g, b;
 	int avg;
 
 	gtkImg = imgPane->getImage();
 	img = new Cv::Image(gtkImg->getPixbuf());
-	hist = new Cv::Histogram(); // TODO TEMP ONLY
+	//hist = new Cv::Histogram(); // TODO TEMP ONLY
 
 	width = img->getWidth();
 	height = img->getHeight();
@@ -58,8 +58,8 @@ void grayscale()
 	}
 
 	// vvv TODO TEMP ONLY vvv
-	hist->calculate(img);
-	printf("Bin 0: %f\n", hist->query(0));
+	//hist->calculate(img);
+	//printf("Bin 0: %f\n", hist->query(0));
 
 
 	gtkImg->setPixbuf(img->toPixbuf());
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 
 	// Create main application elements
 	gui = new App::Gui("Grayscale Demo");
-	imgPane = new App::ImagePane("./discovery-small.jpg");
+	imgPane = new App::ImagePane("./media/example.jpg");
 
 	// Create other Gtk widgets
 	vbox = new Gtk::VBox(false, 0);

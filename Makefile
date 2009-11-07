@@ -24,10 +24,11 @@ clean:
 # 					Applications:
 
 ### GRAYSCALE #########################
-grayscale: grayscale.cpp libs
+grayscale: source/grayscale.cpp libs
 	@echo "[compile] grayscale"
-	@$(C) $(INC) -c grayscale.cpp
-	@$(LN) $(LIB) $(LOCALLIB) grayscale.o -o grayscale
+	@$(CD) ./build/out && $(C) $(INC) -c ../../source/grayscale.cpp
+	@$(LN) $(LIB) $(LOCALLIB) build/out/grayscale.o -o grayscale
+	@chmod +x grayscale
 
 ### NEGATIVE #########################
 negative: negative.cpp libs
@@ -61,25 +62,25 @@ libs: build/lib/liblocal_app.so build/lib/liblocal_cv.so \
 build/lib/liblocal_app.so: build/out/app/*.o
 	@echo "[linking] App Library Code"
 	@$(CD) ./build/lib && $(SHARED) ../out/app/*.o -o liblocal_app.so
-build/out/app/*.o: app/*.hpp app/*.cpp
+build/out/app/*.o: source/app/*.hpp source/app/*.cpp
 	@echo "[compile] App Library Code"
-	@$(CD) ./build/out/app && $(C) $(INC) -c ../../../app/*.cpp
+	@$(CD) ./build/out/app && $(C) $(INC) -c ../../../source/app/*.cpp
 
 ### CV WRAPPER LIB ####################
 build/lib/liblocal_cv.so: build/out/cv/*.o
 	@echo "[linking] OpenCV Wrapper Code"
 	@$(CD) ./build/lib && $(SHARED) ../out/cv/*.o -o liblocal_cv.so
-build/out/cv/*.o: cv/*.hpp cv/*.cpp
+build/out/cv/*.o: source/cv/*.hpp source/cv/*.cpp
 	@echo "[compile] OpenCV Wrapper Code"
-	@$(CD) ./build/out/cv && $(C) $(INC) -c ../../../cv/*.cpp
+	@$(CD) ./build/out/cv && $(C) $(INC) -c ../../../source/cv/*.cpp
 
 
 ### GTK WRAPPER LIB ###################
 build/lib/liblocal_gtk.so: build/out/gtk/*.o
 	@echo "[linking] Gtk Wrapper Code"
 	@$(CD) ./build/lib && $(SHARED) ../out/gtk/*.o -o liblocal_gtk.so
-build/out/gtk/*.o: gtk/*.hpp gtk/*.cpp gtk/*/*.hpp gtk/*/*.cpp
+build/out/gtk/*.o: source/gtk/*.hpp source/gtk/*.cpp source/gtk/*/*.hpp source/gtk/*/*.cpp
 	@echo "[compile] Gtk Wrapper Code"
-	@$(CD) ./build/out/gtk && $(C) $(INC) -c ../../../gtk/*.cpp
-	@$(CD) ./build/out/gtk && $(C) $(INC) -c ../../../gtk/*/*.cpp
+	@$(CD) ./build/out/gtk && $(C) $(INC) -c ../../../source/gtk/*.cpp
+	@$(CD) ./build/out/gtk && $(C) $(INC) -c ../../../source/gtk/*/*.cpp
 
