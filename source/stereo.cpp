@@ -20,7 +20,6 @@
  * TODO: Globals are bad. Make a lookup system/dictionary in App::Gui.
  */
 
-Gtk::Button* button = 0;
 App::ImagePane* imgPane1 = 0;
 App::ImagePane* imgPane2 = 0;
 Cv::Camera* cam1 = 0;
@@ -28,6 +27,7 @@ Cv::Camera* cam2 = 0;
 
 /**
  * Query camera.
+ * Function pattern matches callback.
  */
 void* queryCam(void* n)
 {
@@ -40,25 +40,38 @@ void* queryCam(void* n)
 	gtkImg1 = imgPane1->getImage();
 	gtkImg2 = imgPane2->getImage();
 
+	cam1 = new Cv::Camera(1);
+	cam2 = new Cv::Camera(2);
+	sleep(2);
+
+	cam1->setSize(320, 240);
+	cam2->setSize(320, 240);
+
 	while(1) {
+		sleep(1); // TODO: Try to ensure USB bandwidth is enough.		
+
 		if(turn == 0) {
-			cam1 = new Cv::Camera(1);
-			//cam1->setSize(480, 320);
-			frame1 = cam1->queryFrame();
-			gtkImg1->setPixbuf(frame1->toPixbuf());
 			turn = 1;
-			delete cam1;
-			sleep(1);
+			printf("Query 1...\n");
+			frame1 = cam1->queryFrame();
+			if(!frame1->isValid()) {
+				continue; // skip
+			}
+			printf("Captured 1\n");
+			gtkImg1->setPixbuf(frame1->toPixbuf());
 		}
 		else {
-			cam2 = new Cv::Camera(2);
-			frame2 = cam2->queryFrame();
-			gtkImg2->setPixbuf(frame2->toPixbuf());
 			turn = 0;
-			delete cam2;
-			sleep(1);
+			printf("Query 2...\n");
+			frame2 = cam2->queryFrame();
+			if(!frame2->isValid()) {
+				continue; // skip
+			}
+			printf("Captured 2\n");
+			gtkImg2->setPixbuf(frame2->toPixbuf());
 		}
 	}
+	return 0;
 }
 
 /**
@@ -86,13 +99,13 @@ int main(int argc, char *argv[])
 	App::Gui* gui = 0;
 	Gtk::VBox* vbox = 0;
 	Gtk::HBox* hbox = 0;
-	Gtk::CheckButton* resize = 0;
+	Gtk::Button* button = 0;
 	printf("Test\n");
 
 	// Create main application elements
 	gui = new App::Gui("Negative Demo");
-	imgPane1 = new App::ImagePane("./discovery-small.jpg");
-	imgPane2 = new App::ImagePane("./discovery-small.jpg");
+	imgPane1 = new App::ImagePane("./media/example.jpg");
+	imgPane2 = new App::ImagePane("./media/example.jpg");
 	printf("Test\n");
 
 	// Create other Gtk widgets

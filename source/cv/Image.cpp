@@ -82,6 +82,11 @@ IplImage* Image::getPtr()
 	return image;
 }
 
+bool Image::isValid()
+{
+	return bool(image != 0);
+}
+
 GdkPixbuf* Image::toPixbuf()
 {
 	IplImage* rgb = 0;

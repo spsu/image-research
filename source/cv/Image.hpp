@@ -91,6 +91,11 @@ class Image
 		IplImage* getPtr();
 
 		/**
+		 * Determines if image is valid (imgPtr != 0).
+		 */
+		bool isValid();
+
+		/**
 		 * Get the pixbuf representation of the IplImage.
 		 * Caller must deallocate pixbuf.
 		 */

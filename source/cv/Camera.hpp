@@ -18,7 +18,7 @@ class Camera
 	public:
 		/**
 		 * Camera CTOR.
-		 * Specify te camera number to query.
+		 * Specify the camera number to query.
 		 */
 		Camera(int device = 0);
 
