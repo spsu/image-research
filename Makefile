@@ -8,7 +8,7 @@ CD = cd
 RM = /bin/rm -f
 INC = `pkg-config --cflags-only-I opencv gtk+-2.0` # missing libfeat 
 LIB = `pkg-config --libs opencv  gtk+-2.0` # missing lpthread, lfeat, lstdc++
-LOCALLIB = -Lbuild/lib -llocal_app -llocal_cv -llocal_gtk
+LOCALLIB = -Lbuild/lib -Wl,-rpath build/lib -llocal_app -llocal_cv -llocal_gtk
 GEN = *.o *.a *.so *.out
 
 all: 
