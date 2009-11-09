@@ -30,17 +30,26 @@ grayscale: source/grayscale.cpp libs
 	@$(LN) $(LIB) $(LOCALLIB) build/out/grayscale.o -o grayscale
 	@chmod +x grayscale
 
+### STEREOSCOPIC ####################
+stereo: source/stereo.cpp libs
+	@echo "[compile] stereo"
+	@$(CD) ./build/out && $(C) $(INC) -c ../../source/stereo.cpp
+	@$(LN) $(LIB) $(LOCALLIB) build/out/stereo.o -o stereo
+	@chmod +x stereo
+
+### Video 4 Linux test ####################
+testv4l: source/testv4l.cpp libs
+	@echo "[compile] testv4l"
+	@$(CD) ./build/out && $(C) $(INC) -c ../../source/testv4l.cpp
+	@$(LN) $(LIB) $(LOCALLIB) build/out/testv4l.o -o testv4l
+	@chmod +x testv4l
+
 ### NEGATIVE #########################
 negative: negative.cpp libs
 	@echo "[compile] negative"
 	@$(C) $(INC) -c negative.cpp
 	@$(LN) $(LIB) $(LOCALLIB) negative.o -o negative
 
-### STEREOSCOPIC ####################
-stereo: stereo.cpp libs
-	@echo "[compile] stereo"
-	@$(C) $(INC) -c stereo.cpp
-	@$(LN) $(LIB) $(LOCALLIB) stereo.o -o stereo
 
 ### FOURIER #########################
 fourier: 
