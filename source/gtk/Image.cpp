@@ -8,15 +8,13 @@
 namespace Gtk {
 
 Image::Image(): 
-	Widget(),
-	unscaled(0)
+	Widget()
 {
 	widget = gtk_image_new();
 }
 
 Image::Image(GdkPixbuf* pixbuf):
-	Widget(),
-	unscaled(0)
+	Widget()
 {
 	widget = gtk_image_new_from_pixbuf(pixbuf);
 }
@@ -26,9 +24,6 @@ Image::~Image()
 	if(widget != NULL) {
 		gtk_widget_destroy(widget);
 	}
-	if(unscaled != NULL) {
-		g_object_unref(unscaled);
-	}
 }
 
 GdkPixbuf* Image::getPixbuf()
@@ -37,9 +32,6 @@ GdkPixbuf* Image::getPixbuf()
 		printf("Gtk::Image::getPixbuf() err: No internal pixbuf!\n");
 		return NULL;
 	}
-
-	// TODO: Should I return the cached unscaled image if it exists?
-	// probably not...
 	return gtk_image_get_pixbuf(GTK_IMAGE(widget));
 }
 
@@ -55,21 +47,17 @@ void Image::setPixbuf(GdkPixbuf* pixbuf)
 	// DO NOT DO THIS WITHIN THE UI THREAD!! ONLY OTHER THREADS USING GDK.
 	// SEE: http://blogs.operationaldynamics.com/andrew/software/gnome-desktop/
 	// gtk-thread-awareness.html
-	//gdk_threads_enter(); 
+	//gdk_threads_enter(); // If I remember, this lead to deadlocks...
 	if(GTK_IMAGE_PIXBUF == gtk_image_get_storage_type(GTK_IMAGE(widget))) {
 		oldPb = gtk_image_get_pixbuf(GTK_IMAGE(widget));
 	}
 
 	gtk_image_set_from_pixbuf(GTK_IMAGE(widget), pixbuf);
 
-	if(unscaled != NULL) {
-		g_object_unref(unscaled);
-	}
-
 	if(oldPb != NULL) {
 		g_object_unref(oldPb); // TODO: Make sure new pixbuf got set
 	}
-	//gdk_threads_leave();
+	//gdk_threads_leave(); // If I remember, this lead to deadlocks...
 }
 
 bool Image::setFile(std::string filename)
@@ -89,7 +77,6 @@ bool Image::setFile(std::string filename)
 	filename.erase(0, pos);
 	pos = filename.find_last_not_of("\n\r\t ");
 	filename.erase(pos+1);
-
 	//printf("New Filename: %s.\n", filename.c_str());
 
 	// No loading from the Internet just yet.
@@ -109,59 +96,7 @@ bool Image::setFile(std::string filename)
 
 	gtk_image_set_from_pixbuf(GTK_IMAGE(widget), pixbuf);
 	g_object_unref(pixbuf);
-
-	if(unscaled != NULL) {
-		g_object_unref(unscaled);
-	}
 	return true;
-}
-
-void Image::setScale(int width, int height)
-{
-	GdkPixbuf* orig = 0;
-	GdkPixbuf* scaled = 0;
-
-	if(GTK_IMAGE_PIXBUF != gtk_image_get_storage_type(GTK_IMAGE(widget))) {
-		printf("Image::setScale() err: Cannot scale without internal pixbuf\n");
-		return;
-	}
-
-	if(unscaled == NULL) {
-		orig = gtk_image_get_pixbuf(GTK_IMAGE(widget));
-		g_object_ref(orig);
-	}
-	else {
-		orig = unscaled;
-		unscaled = NULL; // it'd be unref'd in setPixbuf() otherwise
-	}
-
-	scaled = gdk_pixbuf_scale_simple(orig, width, height, 
-				GDK_INTERP_BILINEAR);
-
-	setPixbuf(scaled);
-	unscaled = orig; // now we can set
-}
-
-void Image::removeScaling()
-{
-	GdkPixbuf* orig = 0;
-
-	if(unscaled == NULL) {
-		return;
-	}
-
-	orig = unscaled;
-	unscaled = NULL; // it'd be unref'd in setPixbuf() otherwise
-
-	setPixbuf(orig);
-}
-
-// XXX NOTE: THIS DOESN'T BELONG HERE
-void Image::restoreOriginal()
-{
-	Cv::Image* orig = 0;
-	//orig = getMap("original"); // XXX XXX XXX XXX RESTORE ELSEWHERE
-	//setPixbuf(orig->toPixbuf());
 }
 
 } // end namespace Gtk

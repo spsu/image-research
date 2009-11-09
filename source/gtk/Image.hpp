@@ -56,27 +56,6 @@ class Image : public Widget
 		 * Returns false on failure.
 		 */
 		bool setFile(std::string filename);
-
-		/**
-		 * Set scaling.
-		 */
-		void setScale(int width, int height);
-
-		/**
-		 * Remove any scaling.
-		 * TODO: This doesn't belong here. (Or does it count as a "convenience
-		 * function for a gtk library?)
-		 */
-		void removeScaling();
-
-		// TODO: Application logic doesn't belong here!
-		void restoreOriginal();
-
-	private:
-		/**
-		 * If the image is scaled, the original pixbuf is cached here.
-		 */
-		GdkPixbuf* unscaled;
 };
 }
 
