@@ -40,6 +40,7 @@ void Window::setChild(GtkWidget* child)
 	gtk_container_add(GTK_CONTAINER(widget), child);
 }
 
+// XXX: Can lead to race condition. See Gtk docs.
 std::pair<int, int> Window::getSize()
 {
 	std::pair<int, int> size; // width, height.

@@ -7,7 +7,7 @@
  * <http://possibilistic.org> 
  * <echelon@gmail.com>
  * 
- * The main gtk window. (Fairly rigid and unflexible class, however.)
+ * The main gtk window.
  */
 
 #include "Widget.hpp"

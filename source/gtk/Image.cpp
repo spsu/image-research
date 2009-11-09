@@ -1,10 +1,6 @@
 #include "Image.hpp"
 #include <stdio.h>
 
-// TODO: This shouldn't be here, or the semantics of the class should be split 
-// into two parts: Representing GtkWindow and representing the project. XXX
-#include "../cv/Image.hpp" 
-
 namespace Gtk {
 
 Image::Image(): 
