@@ -31,6 +31,21 @@ class Format
 
 		int getWidth();
 		int getHeight();
+		int getBytesPerLine();
+
+		/**
+		 * Get the number of bytes the image uses.
+		 */
+		int getImageSize();
+
+		const char* getPixelFormat();
+		int getPixelFormatCode();
+
+		const char* getColorspace();
+		int getColorspaceCode();
+
+		const char* getField();
+		int getFieldCode();
 
 	private:
 		/**

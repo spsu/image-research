@@ -33,10 +33,10 @@ const char* Capabilities::busInfo()
 	return (const char*)cap.bus_info;
 }
 
-const char* Capabilities::version()
+int Capabilities::version()
 {
 	doQuery();
-	return (const char*)cap.version;
+	return (int)cap.version;
 }
 
 bool Capabilities::hasVideoCapture()

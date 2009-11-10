@@ -33,7 +33,6 @@ bool Device::open()
 		return false;
 	}
 
-	printf("Opening %s\n", name.c_str());
 	fd = ::open(name.c_str(), O_RDWR);
 	if(fd == -1) {
 		// TODO: Report error.

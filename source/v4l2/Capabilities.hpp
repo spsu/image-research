@@ -32,7 +32,7 @@ class Capabilities
 		const char* driver();
 		const char* card();
 		const char* busInfo();
-		const char* version();
+		int version();
 
 		/**
 		 * Test against bitmasks
