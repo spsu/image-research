@@ -4,6 +4,8 @@
 #include <stropts.h> // ioctl
 #include <stdio.h>
 #include <string>
+#include "v4l2/Device.hpp"
+#include "v4l2/Capabilities.hpp"
 
 const char* getPixFormat(int fourcc)
 {
@@ -92,37 +94,36 @@ const char* getColorspace(int c)
 
 int main(int argc, char* argv[])
 {
+	V4L2::Device* device = 0;
+	V4L2::Capabilities* cap = 0;
 	int fd = 0;
 	int ret = 0;
 	int pixfmt = 0;
-	//struct v4l2_capability* cap = 0;
-	struct v4l2_capability cap;
 	struct v4l2_format format;
 
-	fd = open("/dev/video1", O_RDWR);
+	device = new V4L2::Device("/dev/video0");
+	device->open();
+	fd = device->tempGetHandle();
 
 	printf("File descriptor: %d\n", fd);
 
-	ret = ioctl(fd, VIDIOC_QUERYCAP, &cap);
-	if(ret != 0) {
-		fprintf(stderr, "There was an error in querying the camera.\n");
-		return 1;
-	}
-	printf("Driver: %s\n", cap.driver);
-	printf("Card: %s\n", cap.card);
-	printf("Bus info: %s\n", cap.bus_info);
-	printf("Version: %2d\n", cap.version);
+
+	cap = device->getCapabilities();
+
+	printf("Driver: %s\n", cap->driver());
+	printf("Card: %s\n", cap->card());
+	printf("Bus info: %s\n", cap->busInfo());
+	printf("Version: %2d\n", cap->version());
+
 	printf("\nCapabilities:\n");
-	if(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE) {
-		printf("\tCapture video\n");
-	}
-	if(cap.capabilities & V4L2_CAP_READWRITE) {
-		printf("\tHas read and/or write\n");
-	}
-	if(cap.capabilities & V4L2_CAP_STREAMING) {
-		printf("\tHas streaming\n");
-	}
-	printf("\n");
+
+	printf("\tCapture video: %s\n", 
+		cap->hasVideoCapture()? "Yes" : "No");
+	printf("\tread/write: %s\n", 
+		cap->hasReadWrite()? "Yes" : "No");
+	printf("\tstreaming: %s\n", 
+		cap->hasStreaming()? "Yes" : "No");
+
 
 	// TODO: Can be used to set/try params
 	ret = ioctl(fd, VIDIOC_G_FMT, &format); 
@@ -146,7 +147,6 @@ int main(int argc, char* argv[])
 	printf("\tpixel field: %s\n", 
 		getField(format.fmt.pix.field));
 
-	close(fd);
 	return 0;
 }
 

@@ -1,4 +1,5 @@
 #include "Device.hpp"
+#include "Capabilities.hpp"
 #include <stdio.h>
 #include <fcntl.h> // open
 #include <unistd.h> // close
@@ -7,7 +8,8 @@ namespace V4L2 {
 
 Device::Device(const std::string& fName):
 	name(fName),
-	handle(0)
+	fd(0),
+	cap(0)
 {
 	// Nothing
 }
@@ -16,6 +18,9 @@ Device::~Device()
 {
 	if(isOpen()) {
 		close();
+	}
+	if(cap != NULL) {
+		delete cap;
 	}
 }
 
@@ -27,11 +32,11 @@ bool Device::open()
 	}
 
 	printf("Opening %s\n", name.c_str());
-	handle = ::open(name.c_str(), O_RDWR);
-	if(handle == -1) {
+	fd = ::open(name.c_str(), O_RDWR);
+	if(fd == -1) {
 		// TODO: Report error.
 		fprintf(stderr, "Device::open() err: could not open device\n");
-		handle = 0;
+		fd = 0;
 		return false;
 	}
 	return true;
@@ -39,14 +44,21 @@ bool Device::open()
 
 bool Device::isOpen()
 {
-	return bool(handle > 0);
+	return bool(fd > 0);
 }
 
 void Device::close()
 {
-	::close(handle);
-	handle = 0;
+	::close(fd);
+	fd = 0;
 }
 
+Capabilities* Device::getCapabilities()
+{
+	if(cap == NULL) {
+		cap = new Capabilities(this);
+	}
+	return cap;
+}
 
 } // end namespace V4L2

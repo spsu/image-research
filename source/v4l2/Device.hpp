@@ -3,12 +3,18 @@
 
 #include <string>
 
+namespace V4L2 {
+	class Capabilities;
+}
+
 /**
  * Represents a Video4Linux2 interface to a hardware camera.
  */
 namespace V4L2 {
 class Device 
 {
+	friend class Capabilities;
+
 	public:
 		/**
 		 * CTOR.
@@ -36,7 +42,13 @@ class Device
 		void close();
 
 		// XXX XXX TEMPORARY!
-		int tempGetHandle() { return handle; }
+		int tempGetHandle() { return fd; }
+
+		/**
+		 * Get the camera capabilities object.
+		 * Caller does not own the object.
+		 */
+		Capabilities* getCapabilities();
 
 	private:
 		/**
@@ -45,9 +57,14 @@ class Device
 		std::string name;
 
 		/**
-		 * File handle.
+		 * File descriptor.
 		 */
-		int handle;
+		int fd;
+
+		/**
+		 * Capabilities of the device (cached)
+		 */
+		Capabilities* cap;
 };
 }
 
