@@ -2,13 +2,14 @@
 # 					Makefile Setup:
 
 C = g++ -g -Wall -fPIC
-LN = g++ -g
-SHARED = g++ -shared
+LN = g++ -g -lstdc++
+SHARED = g++ -shared -lstdc++
 CD = cd
 RM = /bin/rm -f
 INC = `pkg-config --cflags-only-I opencv gtk+-2.0` # missing libfeat 
 LIB = `pkg-config --libs opencv  gtk+-2.0` # missing lpthread, lfeat, lstdc++
-LOCALLIB = -Lbuild/lib -Wl,-rpath build/lib -llocal_app -llocal_cv -llocal_gtk
+LOCALLIB = -Lbuild/lib -Wl,-rpath build/lib -llocal_app -llocal_cv \
+		   -llocal_gtk -llocal_v4l2
 GEN = *.o *.a *.so *.out
 
 all: 
@@ -17,7 +18,7 @@ all:
 
 .PHONY: clean
 clean:
-	$(RM) $(GEN) fourier wavelet test grayscale
+	$(RM) $(GEN) fourier wavelet test testv4l grayscale
 	cd ./build && $(RM) */*.o */*.so */*/*.o */*/*.so 
 
 # ============================================================================ #
@@ -41,8 +42,15 @@ stereo: source/stereo.cpp libs
 testv4l: source/testv4l.cpp libs
 	@echo "[compile] testv4l"
 	@$(CD) ./build/out && $(C) $(INC) -c ../../source/testv4l.cpp
-	@$(LN) $(LIB) $(LOCALLIB) build/out/testv4l.o -o testv4l
+	$(LN) $(LIB) $(LOCALLIB) build/out/testv4l.o -o testv4l
 	@chmod +x testv4l
+
+### test ####################
+#test: source/test.cpp libs
+#	echo "[compile] test"
+#	$(CD) ./build/out && $(C) $(INC) -c ../../source/test.cpp
+#	$(LN) $(LIB) $(LOCALLIB) build/out/test.o -o test
+#	chmod +x test
 
 ### NEGATIVE #########################
 negative: negative.cpp libs
@@ -64,7 +72,7 @@ wavelet:
 
 ### ALL LIBS ##########################
 libs: build/lib/liblocal_app.so build/lib/liblocal_cv.so \
-	  build/lib/liblocal_gtk.so
+	  build/lib/liblocal_gtk.so build/lib/liblocal_v4l2.so
 		@$(CD) .
 
 ### APP CODE LIB ######################
@@ -92,4 +100,13 @@ build/out/gtk/*.o: source/gtk/*.hpp source/gtk/*.cpp source/gtk/*/*.hpp source/g
 	@echo "[compile] Gtk Wrapper Code"
 	@$(CD) ./build/out/gtk && $(C) $(INC) -c ../../../source/gtk/*.cpp
 	@$(CD) ./build/out/gtk && $(C) $(INC) -c ../../../source/gtk/*/*.cpp
+
+
+### V4L2 WRAPPER LIB ####################
+build/lib/liblocal_v4l2.so: build/out/v4l2/*.o
+	echo "[linking] Video4Linux2 Wrapper Code"
+	$(CD) ./build/lib && $(SHARED) ../out/v4l2/*.o -o liblocal_v4l2.so
+build/out/v4l2/*.o: source/v4l2/*.hpp source/v4l2/*.cpp
+	echo "[compile] Video4Linux2 Wrapper Code"
+	$(CD) ./build/out/v4l2 && $(C) $(INC) -c ../../../source/v4l2/*.cpp
 
