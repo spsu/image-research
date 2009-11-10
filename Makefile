@@ -42,7 +42,7 @@ stereo: source/stereo.cpp libs
 testv4l: source/testv4l.cpp libs
 	@echo "[compile] testv4l"
 	@$(CD) ./build/out && $(C) $(INC) -c ../../source/testv4l.cpp
-	$(LN) $(LIB) $(LOCALLIB) build/out/testv4l.o -o testv4l
+	@$(LN) $(LIB) $(LOCALLIB) build/out/testv4l.o -o testv4l
 	@chmod +x testv4l
 
 ### test ####################
@@ -104,9 +104,9 @@ build/out/gtk/*.o: source/gtk/*.hpp source/gtk/*.cpp source/gtk/*/*.hpp source/g
 
 ### V4L2 WRAPPER LIB ####################
 build/lib/liblocal_v4l2.so: build/out/v4l2/*.o
-	echo "[linking] Video4Linux2 Wrapper Code"
-	$(CD) ./build/lib && $(SHARED) ../out/v4l2/*.o -o liblocal_v4l2.so
+	@echo "[linking] Video4Linux2 Wrapper Code"
+	@$(CD) ./build/lib && $(SHARED) ../out/v4l2/*.o -o liblocal_v4l2.so
 build/out/v4l2/*.o: source/v4l2/*.hpp source/v4l2/*.cpp
-	echo "[compile] Video4Linux2 Wrapper Code"
-	$(CD) ./build/out/v4l2 && $(C) $(INC) -c ../../../source/v4l2/*.cpp
+	@echo "[compile] Video4Linux2 Wrapper Code"
+	@$(CD) ./build/out/v4l2 && $(C) $(INC) -c ../../../source/v4l2/*.cpp
 

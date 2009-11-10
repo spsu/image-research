@@ -20,12 +20,16 @@ Format::Format(Device* dev)
 
 Format::~Format()
 {
-
+	// Nothing
 }
 
 void Format::resetStruct()
 {
-	format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE; // critical
+	format.fmt.pix.width = 0;
+	format.fmt.pix.height = 0;
+	format.fmt.pix.bytesperline = 0;
+	format.fmt.pix.sizeimage = 0;
 	queried = false;
 }
 
@@ -118,7 +122,7 @@ const char* Format::getColorspace()
 		case V4L2_COLORSPACE_SRGB:
 			return "?";
 		default:
-			return "Unknown code...";
+			return "Unknown colorspace code...";
 	}
 }
 
@@ -135,7 +139,7 @@ const char* Format::getField()
 		case V4L2_FIELD_ANY:
 			return "Any";
 		case V4L2_FIELD_NONE:
-			return "None / progressive or undetermined";
+			return "None (progressive or undetermined)";
 		case V4L2_FIELD_TOP:
 			return "Top";
 		case V4L2_FIELD_BOTTOM:
@@ -153,7 +157,7 @@ const char* Format::getField()
 		case V4L2_FIELD_INTERLACED_BT:
 			return "Interlaced BT";
 		default:
-			return "Unknown code...\n";
+			return "Unknown field code...\n";
 	}
 }
 

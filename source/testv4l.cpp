@@ -9,8 +9,6 @@
 int main(int argc, char* argv[])
 {
 	int fd = 0;
-	int ret = 0;
-	int pixfmt = 0;
 
 	V4L2::Device* dev = 0;
 	V4L2::Capabilities* cap = 0;
