@@ -6,10 +6,16 @@
 
 #include <linux/videodev2.h> // v4l2_capability struct
 
+struct v4l2_format;
+
 namespace V4L2 {
 	class Device;
 }
 
+/**
+ * Represents camera format.
+ * Get or set these.
+ */
 namespace V4L2 {
 class Format
 {
@@ -20,6 +26,9 @@ class Format
 
 		~Format();
 
+		// Reset the struct to default/empty values
+		void resetStruct();
+
 		int getWidth();
 		int getHeight();
 
@@ -29,6 +38,9 @@ class Format
 		 */
 		struct v4l2_format format;
 
+		/**
+		 * Whether the format has been queried.
+		 */
 		bool queried;
 
 		/**

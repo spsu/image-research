@@ -48,8 +48,14 @@ class Capabilities
 		 */
 		struct v4l2_capability cap;
 
+		/**
+		 * Pointer to the device.
+		 */
 		Device* device;
 
+		/**
+		 * Whether the device has been queried.
+		 */
 		bool queried;
 
 		/**

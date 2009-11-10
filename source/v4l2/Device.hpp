@@ -5,6 +5,7 @@
 
 namespace V4L2 {
 	class Capabilities;
+	class Format;
 }
 
 /**
@@ -14,6 +15,7 @@ namespace V4L2 {
 class Device 
 {
 	friend class Capabilities;
+	friend class Format;
 
 	public:
 		/**
@@ -42,7 +44,7 @@ class Device
 		void close();
 
 		// XXX XXX TEMPORARY!
-		int tempGetHandle() { return fd; }
+		int getFd();
 
 		/**
 		 * Get the camera capabilities object.

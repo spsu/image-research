@@ -4,8 +4,6 @@
 #include <stropts.h> // ioctl
 #include <stdio.h>
 #include <string>
-#include "v4l2/Device.hpp"
-#include "v4l2/Capabilities.hpp"
 
 const char* getPixFormat(int fourcc)
 {
@@ -92,50 +90,68 @@ const char* getColorspace(int c)
 	}
 }
 
+#include "v4l2/Device.hpp"
+#include "v4l2/Format.hpp"
+#include "v4l2/Capabilities.hpp"
+
 int main(int argc, char* argv[])
 {
-	V4L2::Device* device = 0;
-	V4L2::Capabilities* cap = 0;
 	int fd = 0;
 	int ret = 0;
 	int pixfmt = 0;
+	//struct v4l2_capability* cap = 0;
+	struct v4l2_capability cap;
 	struct v4l2_format format;
 
-	device = new V4L2::Device("/dev/video0");
-	device->open();
-	fd = device->tempGetHandle();
+	V4L2::Device* dev = 0;
+	V4L2::Capabilities* capa = 0;
+	V4L2::Format* fmt = 0;
 
-	printf("File descriptor: %d\n", fd);
+	dev = new V4L2::Device("/dev/video1");
 
+	//fd = open("/dev/video1", O_RDWR);
+	fd = dev->getFd();
 
-	cap = device->getCapabilities();
+	printf("File descriptor (main): %d\n", fd);
 
-	printf("Driver: %s\n", cap->driver());
-	printf("Card: %s\n", cap->card());
-	printf("Bus info: %s\n", cap->busInfo());
-	printf("Version: %2d\n", cap->version());
-
-	printf("\nCapabilities:\n");
-
-	printf("\tCapture video: %s\n", 
-		cap->hasVideoCapture()? "Yes" : "No");
-	printf("\tread/write: %s\n", 
-		cap->hasReadWrite()? "Yes" : "No");
-	printf("\tstreaming: %s\n", 
-		cap->hasStreaming()? "Yes" : "No");
-
-
-	// TODO: Can be used to set/try params
-	ret = ioctl(fd, VIDIOC_G_FMT, &format); 
+	ret = ioctl(fd, VIDIOC_QUERYCAP, &cap);
 	if(ret != 0) {
 		fprintf(stderr, "There was an error in querying the camera.\n");
 		return 1;
 	}
+	printf("Driver: %s\n", cap.driver);
+	printf("Card: %s\n", cap.card);
+	printf("Bus info: %s\n", cap.bus_info);
+	printf("Version: %2d\n", cap.version);
+	printf("\nCapabilities:\n");
+	if(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE) {
+		printf("\tCapture video\n");
+	}
+	if(cap.capabilities & V4L2_CAP_READWRITE) {
+		printf("\tHas read and/or write\n");
+	}
+	if(cap.capabilities & V4L2_CAP_STREAMING) {
+		printf("\tHas streaming\n");
+	}
+	printf("\n");
 
 
-	printf("Pixel Format Data:\n");
+	fmt = new V4L2::Format(dev);
+	printf("\twidth: %d\n", fmt->getWidth());
+
+	/*printf("\tbuftype: %d\n", format.type);
+	printf("\theight: %d\n", format.fmt.pix.height);
+	// TODO: Can be used to set/try params
+	ret = ioctl(fd, VIDIOC_G_FMT, &format); 
+	/*if(ret != 0) {
+		fprintf(stderr, "There was an error in querying the camera.\n");
+		return 1;
+	}*/
+
+
+	/*printf("Pixel Format Data:\n");
 	printf("\twidth: %d\n", format.fmt.pix.width);
-	printf("\twidth: %d\n", format.fmt.pix.height);
+	printf("\theight: %d\n", format.fmt.pix.height);
 	printf("\tbytes/line: %d\n", format.fmt.pix.bytesperline);
 	printf("\timage buffer size: %d\n", format.fmt.pix.sizeimage);
 
@@ -147,6 +163,7 @@ int main(int argc, char* argv[])
 	printf("\tpixel field: %s\n", 
 		getField(format.fmt.pix.field));
 
+	close(fd);*/
 	return 0;
 }
 

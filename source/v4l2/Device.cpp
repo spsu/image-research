@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <fcntl.h> // open
 #include <unistd.h> // close
+#include <stropts.h> // ioctl
+#include <linux/videodev2.h> // v4l2_capability struct
 
 namespace V4L2 {
 
@@ -51,6 +53,12 @@ void Device::close()
 {
 	::close(fd);
 	fd = 0;
+}
+
+int Device::getFd()
+{
+	open();
+	return fd;
 }
 
 Capabilities* Device::getCapabilities()
