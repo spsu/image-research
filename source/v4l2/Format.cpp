@@ -4,6 +4,7 @@
 #include <linux/videodev2.h> // v4l2_capability struct
 #include <stdio.h>
 #include <errno.h>
+#include <string.h> // memset
 
 namespace V4L2 {
 
@@ -25,11 +26,7 @@ Format::~Format()
 
 void Format::resetStruct()
 {
-	format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE; // critical
-	format.fmt.pix.width = 0;
-	format.fmt.pix.height = 0;
-	format.fmt.pix.bytesperline = 0;
-	format.fmt.pix.sizeimage = 0;
+	memset(&format, 0, sizeof(format));
 	queried = false;
 }
 
@@ -177,6 +174,7 @@ bool Format::doQuery()
 	}
 	queried = true;
 
+	format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE; // Required to query
 	if(ioctl(device->fd, VIDIOC_G_FMT, &format) != 0) {
 		switch(errno) {
 			case EBUSY:

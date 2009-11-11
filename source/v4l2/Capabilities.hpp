@@ -2,7 +2,7 @@
 #define V4L2_Capabilities
 
 #include <string> 
-#include <linux/videodev2.h> // v4l2_capability struct
+#include <linux/videodev2.h>
 
 struct v4l2_capability;
 namespace V4L2 {

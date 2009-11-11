@@ -19,6 +19,7 @@ Device::Device(const std::string& fName):
 Device::~Device()
 {
 	if(isOpen()) {
+		streamOff();
 		close();
 	}
 	if(cap != NULL) {
@@ -59,6 +60,27 @@ int Device::getFd()
 	open();
 	return fd;
 }
+
+bool Device::streamOn()
+{
+	v4l2_buf_type buffType = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	if(ioctl(fd, VIDIOC_STREAMON, &buffType) == -1) {
+		fprintf(stderr, "Could not turn stream on.");
+		return false;
+	}
+	return true;
+}
+
+bool Device::streamOff()
+{
+	v4l2_buf_type buffType = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	if(ioctl(fd, VIDIOC_STREAMOFF, &buffType) == -1) {
+		fprintf(stderr, "Could not turn stream off.");
+		return false;
+	}
+	return true;
+}
+
 
 Capabilities* Device::getCapabilities()
 {

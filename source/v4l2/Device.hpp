@@ -47,6 +47,16 @@ class Device
 		int getFd();
 
 		/**
+		 * Turn the stream on.
+		 */
+		bool streamOn();
+
+		/**
+		 * Turn the stream off.
+		 */
+		bool streamOff();
+
+		/**
 		 * Get the camera capabilities object.
 		 * Caller does not own the object.
 		 */

@@ -4,7 +4,7 @@
 // XXX XXX: This might need to be refactored significantly when 
 // XXX XXX: Set State implemented
 
-#include <linux/videodev2.h> // v4l2_capability struct
+#include <linux/videodev2.h>
 
 struct v4l2_format;
 
