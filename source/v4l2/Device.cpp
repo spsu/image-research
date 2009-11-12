@@ -1,5 +1,5 @@
 #include "Device.hpp"
-#include "Capabilities.hpp"
+#include "Capability.hpp"
 #include <stdio.h>
 #include <fcntl.h> // open
 #include <unistd.h> // close
@@ -11,7 +11,7 @@ namespace V4L2 {
 Device::Device(const std::string& fName):
 	name(fName),
 	fd(0),
-	cap(0)
+	capability(0)
 {
 	// Nothing
 }
@@ -22,8 +22,8 @@ Device::~Device()
 		streamOff();
 		close();
 	}
-	if(cap != NULL) {
-		delete cap;
+	if(capability != NULL) {
+		delete capability;
 	}
 }
 
@@ -82,12 +82,12 @@ bool Device::streamOff()
 }
 
 
-Capabilities* Device::getCapabilities()
+Capability* Device::getCapability()
 {
-	if(cap == NULL) {
-		cap = new Capabilities(this);
+	if(capability == NULL) {
+		capability = new Capability(this);
 	}
-	return cap;
+	return capability;
 }
 
 } // end namespace V4L2

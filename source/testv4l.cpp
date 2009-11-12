@@ -4,7 +4,7 @@
 
 #include "v4l2/Device.hpp"
 #include "v4l2/Format.hpp"
-#include "v4l2/Capabilities.hpp"
+#include "v4l2/Capability.hpp"
 
 #include <stropts.h> // ioctl
 #include <linux/videodev2.h>
@@ -38,7 +38,7 @@ Gtk::Button* button = 0;
 App::ImagePane* imgPane = 0;
 int fd = 0;
 V4L2::Device* dev = 0;
-V4L2::Capabilities* cap = 0;
+V4L2::Capability* cap = 0;
 V4L2::Format* fmt = 0;
 struct v4l2_requestbuffers reqbuf;
 std::vector<bbuffer> vbuffers;
@@ -52,7 +52,7 @@ static void processImage(unsigned char *p, int len)
 {
 	GdkPixbuf* pixbuf = 0;
 
-	printf("Len %d\n", len);
+	//printf("Len %d\n", len);
 
 	pixbuf = gdk_pixbuf_new_from_data(
 		(const guchar*)p, // data
@@ -66,16 +66,6 @@ static void processImage(unsigned char *p, int len)
 		NULL
 	);
 
-	/*            (const guchar *data,
-                                                         GdkColorspace colorspace,
-                                                         gboolean has_alpha,
-                                                         int bits_per_sample,
-                                                         int width,
-                                                         int height,
-                                                         int rowstride,
-                                                         GdkPixbufDestroyNotify destroy_fn,
-                                                         gpointer destroy_fn_data);*/
-
 	gtkImg->setPixbuf(pixbuf);
 }
 
@@ -83,13 +73,13 @@ int prepCam()
 {
 	gtkImg = imgPane->getImage();
 
-	dev = new V4L2::Device("/dev/video2");
+	dev = new V4L2::Device("/dev/video1");
 
 	fd = dev->getFd();
 
 	printf("File descriptor (main): %d\n", fd);
 
-	cap = dev->getCapabilities();
+	cap = dev->getCapability();
 
 	printf("\nBasic Info:\n");
 	printf("\tDriver: %s\n", cap->driver());
@@ -148,58 +138,6 @@ int prepCam()
 	}
 
 	printf("\tNumber of buffers allocated: %d\n", reqbuf.count);
-
-
-	// ================================ C-TYPE BUFFERS =========================
-
-	// Buffers to copy to later
-	/*struct {
-		void *start;
-		size_t length;
-	} *buffersx;
-
-
-	struct buff {
-		void *start;
-		size_t length;
-	};
-
-	struct buff *buffers;
-
-	buffers = (buff*) calloc(reqbuf.count, sizeof(*buffers));
-
-	for(unsigned int i = 0; i < reqbuf.count; i++) {
-		struct v4l2_buffer buffer;
-		memset(&buffer, 0, sizeof(buffer)); // clear buffer
-		buffer.type = reqbuf.type;
-		buffer.memory = reqbuf.memory;
-		buffer.index = i;
-
-		ret = ioctl(fd, VIDIOC_QUERYBUF, &buffer);
-		if(ret == -1) {
-			fprintf(stderr, "Querying the buffer failed\n");
-			return 1;
-		}
-
-
-        buffers[i].length = buffer.length; // remember for munmap()
-
-        buffers[i].start = mmap (NULL, buffer.length,
-                                 PROT_READ | PROT_WRITE, // recommended
-                                 MAP_SHARED,             // recommended
-                                 fd, buffer.m.offset);
-
-        if (MAP_FAILED == buffers[i].start) {
-                // If you do not exit here you should unmap() and free()
-                //   the buffers mapped so far. 
-                perror ("mmap");
-                return 1;
-        }
-	}*/
-
-	// ============================ END C-TYPE BUFFERS =========================
-
-
 
 
 	for(unsigned int i = 0; i < reqbuf.count; i++) {
@@ -266,6 +204,7 @@ int prepCam()
 	}
 
 	dev->streamOn();
+	return 0;
 }
 
 int doCamera()
@@ -329,7 +268,7 @@ int doCamera()
 
 
 
-		printf("Iter\n");
+	//	printf("Iter\n");
 	//	sleep(1);
 
 	//}
@@ -339,6 +278,7 @@ int doCamera()
 	// Cleanup
 	//for (i = 0; i < reqbuf.count; i++)
     //	munmap (buffers[i].start, buffers[i].length);
+	return 0;
 }
 
 void doCamera2(GtkButton* gtkbutton, gpointer data)

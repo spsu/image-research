@@ -1,5 +1,5 @@
-#ifndef V4L2_Capabilities
-#define V4L2_Capabilities
+#ifndef V4L2_Capability
+#define V4L2_Capability
 
 #include <string> 
 #include <linux/videodev2.h>
@@ -11,20 +11,26 @@ namespace V4L2 {
 
 /**
  * Represents the capabilities of a V4L2 device.
+ * Must be associated with a particular device. 
  */
 namespace V4L2 {
-class Capabilities
+class Capability
 {
 	public:
 		/**
 		 * CTOR Gets V4L capabilities of the device.
 		 */
-		Capabilities(Device* device);
+		Capability(Device* device);
 
 		/**
 		 * DTOR.
 		 */
-		~Capabilities();
+		~Capability();
+
+		/**
+		 * Reset the capability structure.
+		 */
+		void reset();
 
 		/**
 		 * Accessors
@@ -42,11 +48,13 @@ class Capabilities
 		bool hasStreaming();
 		// TODO: More bit masks...
 		
-	private:
+	protected:
 		/**
-		 * V4L2 struct.
+		 * V4L2 capability struct.
 		 */
-		struct v4l2_capability cap;
+		struct v4l2_capability capability;
+		
+	private:
 
 		/**
 		 * Pointer to the device.

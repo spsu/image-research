@@ -13,8 +13,10 @@ namespace V4L2 {
 }
 
 /**
- * Represents camera format.
- * Get or set these.
+ * Represents a V4L2 device format, and can be used to get/set/try various
+ * format options.
+ * Does not need to be associated with a single Device, so it may be used and
+ * reused between multiple devices.
  */
 namespace V4L2 {
 class Format
@@ -22,12 +24,22 @@ class Format
 	public:
 		Format();
 
+		/**
+		 * XXX: Does this mean it is tied to the device??
+		 */
 		Format(Device* dev);
 
 		~Format();
 
-		// Reset the struct to default/empty values
-		void resetStruct();
+		/**
+		 * Reset the structure to default.
+		 * XXX: Should I have this?? Shouldn't I just make a new Format struct?
+		 */
+		void reset(); // rename 'clear()' ?
+
+		bool getFormat(Device* dev = NULL, bool doReset = true);
+		bool setFormat(Device* dev = NULL);
+		bool tryFormat(Device* dev = NULL);
 
 		int getWidth();
 		int getHeight();
@@ -47,23 +59,30 @@ class Format
 		const char* getField();
 		int getFieldCode();
 
-	private:
+	protected:
 		/**
 		 * V4L2 format structure.
 		 */
 		struct v4l2_format format;
 
 		/**
-		 * Whether the format has been queried.
+		 * Whether the format has been queried (since the last reset).
 		 */
 		bool queried;
+
+		/**
+		 * Perform the 'get', 'set', or 'try' format query.
+		 */
+		bool query(int fd, int request);
+
+	private:
 
 		/**
 		 * The device this format was fetched from.
 		 */
 		Device* device;
 
-		bool doQuery();
+		bool doQuery(); // XXX: Remove
 
 };
 }

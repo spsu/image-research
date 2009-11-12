@@ -4,7 +4,7 @@
 #include <string>
 
 namespace V4L2 {
-	class Capabilities;
+	class Capability;
 	class Format;
 }
 
@@ -14,7 +14,7 @@ namespace V4L2 {
 namespace V4L2 {
 class Device 
 {
-	friend class Capabilities;
+	friend class Capability;
 	friend class Format;
 
 	public:
@@ -57,10 +57,10 @@ class Device
 		bool streamOff();
 
 		/**
-		 * Get the camera capabilities object.
+		 * Get the camera capability object.
 		 * Caller does not own the object.
 		 */
-		Capabilities* getCapabilities();
+		Capability* getCapability();
 
 	private:
 		/**
@@ -76,7 +76,7 @@ class Device
 		/**
 		 * Capabilities of the device (cached)
 		 */
-		Capabilities* cap;
+		Capability* capability;
 };
 }
 

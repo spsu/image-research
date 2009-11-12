@@ -10,13 +10,13 @@ namespace V4L2 {
 
 Format::Format()
 {
-	resetStruct();
+	reset();
 }
 
 Format::Format(Device* dev)
 {
 	device = dev;
-	resetStruct();
+	reset();
 }
 
 Format::~Format()
@@ -24,11 +24,62 @@ Format::~Format()
 	// Nothing
 }
 
-void Format::resetStruct()
+void Format::reset()
 {
 	memset(&format, 0, sizeof(format));
 	queried = false;
 }
+
+bool Format::getFormat(Device* dev, bool doReset)
+{
+	if(device == NULL && dev == NULL) {
+		fprintf(stderr, "No device to query the format.\n");
+		return false;
+	}
+	if(dev == NULL) {
+		dev = device;
+	}
+
+	if(doReset) {
+		reset();
+	}
+
+	// XXX: Required to query video cams, but there are other kinds of devices.
+	format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE; 
+	return query(dev->fd, VIDIOC_G_FMT);
+}
+
+bool Format::setFormat(Device* dev)
+{
+	if(device == NULL && dev == NULL) {
+		fprintf(stderr, "No device to query the format.\n");
+		return false;
+	}
+	if(dev == NULL) {
+		dev = device;
+	}
+
+	// XXX: Required to query video cams, but there are other kinds of devices.
+	format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE; 
+	return query(dev->fd, VIDIOC_S_FMT);
+}
+
+bool Format::tryFormat(Device* dev)
+{
+	if(device == NULL && dev == NULL) {
+		fprintf(stderr, "No device to query the format.\n");
+		return false;
+	}
+	if(dev == NULL) {
+		dev = device;
+	}
+
+	// XXX: Required to query video cams, but there are other kinds of devices.
+	format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE; 
+	return query(dev->fd, VIDIOC_TRY_FMT);
+}
+
+// ============================= GET PARAMETERS ============================= //
 
 int Format::getWidth()
 {
@@ -164,18 +215,11 @@ int Format::getFieldCode()
 	return (int)format.fmt.pix.field;
 }
 
-bool Format::doQuery()
-{
-	if(device == NULL) {
-		return false;
-	}
-	if(queried) {
-		return false;
-	}
-	queried = true;
+// ============================ PROTECTED METHODS =========================== //
 
-	format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE; // Required to query
-	if(ioctl(device->fd, VIDIOC_G_FMT, &format) != 0) {
+bool Format::query(int fd, int request)
+{
+	if(ioctl(fd, request, &format) != 0) {
 		switch(errno) {
 			case EBUSY:
 				fprintf(stderr,
@@ -192,6 +236,18 @@ bool Format::doQuery()
 		return false;
 	}
 	return true;
+}
+
+// TODO: REMOVE XXX
+bool Format::doQuery()
+{
+	if(device == NULL) {
+		return false;
+	}
+	if(queried) {
+		return false;
+	}
+	getFormat(NULL, true);
 }
 
 } // end namespace V4L2
