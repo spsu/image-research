@@ -6,6 +6,7 @@
 #include "v4l2/Format.hpp"
 #include "v4l2/Capability.hpp"
 #include "v4l2/RequestBuffers.hpp"
+#include "v4l2/RgbImage.hpp" // XXX: Temp test
 
 #include <stropts.h> // ioctl
 #include <linux/videodev2.h>
@@ -43,6 +44,7 @@ V4L2::Capability* cap = 0;
 V4L2::Format* fmt = 0;
 V4L2::RequestBuffers* reqbuf = 0;
 std::vector<bbuffer> vbuffers;
+int camNum = 0;
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtkmain.h>
@@ -52,10 +54,7 @@ std::vector<bbuffer> vbuffers;
 static void processImage(unsigned char *p, int len)
 {
 	GdkPixbuf* pixbuf = 0;
-	unsigned char* rgb;
-
-	// Allocate RGB buffer
-	rgb = (unsigned char*)malloc(len);
+	RgbImage2* rgb = new RgbImage2(640, 480);
 
 	printf("Len %d\n", len);
 	// For YUYV information:
@@ -159,41 +158,44 @@ static void processImage(unsigned char *p, int len)
 		int g2 = y2;
 		int b2 = y2;*/
 
-		rgb[j] = (int)r1;
-		rgb[j+1] = (int)g1;
-		rgb[j+2] = (int)b1;
+		rgb->data[j] = (int)r1;
+		rgb->data[j+1] = (int)g1;
+		rgb->data[j+2] = (int)b1;
 
-		rgb[j+3] = (int)r2;
-		rgb[j+4] = (int)g2;
-		rgb[j+5] = (int)b2;
+		rgb->data[j+3] = (int)r2;
+		rgb->data[j+4] = (int)g2;
+		rgb->data[j+5] = (int)b2;
 
 		j += 6;
 	}
 
 	pixbuf = gdk_pixbuf_new_from_data(
-		//(const guchar*)p, // data
-		(const guchar*)rgb,
+		(const guchar*)rgb->data,
 		GDK_COLORSPACE_RGB,
 		false,
 		8,
 		640,
 		480,
-		640*3, // rowstride
-		NULL,
-		NULL
+		640*3, 					// rowstride
+		RgbImage2::destroy,		// closure func
+		rgb						// closure data
 	);
 
 	gtkImg->setPixbuf(pixbuf);
-
-	//free(rgb);
-	rgb = NULL;
 }
 
 int prepCam()
 {
+	std::string cam = "/dev/video0";
+	if(camNum != 0) {
+		cam = "/dev/video";
+		cam += (const char*)camNum;
+	}
+
 	gtkImg = imgPane->getImage();
 
-	dev = new V4L2::Device("/dev/video0");
+	printf("Using device: %s\n", cam.c_str());
+	dev = new V4L2::Device(cam);
 
 	fd = dev->getFd();
 
@@ -391,6 +393,10 @@ int main(int argc, char* argv[])
 	Gtk::VBox* vbox = 0;
 	Gtk::HBox* hbox = 0;
 	Gtk::CheckButton* resize = 0;
+
+	if(argc > 1) {
+		camNum = (int)argv[1];
+	}
 
 	// Create main application elements
 	gui = new App::Gui("Grayscale Demo");
