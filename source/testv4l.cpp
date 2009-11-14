@@ -5,6 +5,7 @@
 #include "v4l2/Device.hpp"
 #include "v4l2/Format.hpp"
 #include "v4l2/Capability.hpp"
+#include "v4l2/RequestBuffers.hpp"
 
 #include <stropts.h> // ioctl
 #include <linux/videodev2.h>
@@ -40,7 +41,7 @@ int fd = 0;
 V4L2::Device* dev = 0;
 V4L2::Capability* cap = 0;
 V4L2::Format* fmt = 0;
-struct v4l2_requestbuffers reqbuf;
+V4L2::RequestBuffers* reqbuf = 0;
 std::vector<bbuffer> vbuffers;
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
@@ -51,29 +52,148 @@ std::vector<bbuffer> vbuffers;
 static void processImage(unsigned char *p, int len)
 {
 	GdkPixbuf* pixbuf = 0;
+	unsigned char* rgb;
 
-	//printf("Len %d\n", len);
+	// Allocate RGB buffer
+	rgb = (unsigned char*)malloc(len);
+
+	printf("Len %d\n", len);
+	// For YUYV information:
+	// http://v4l2spec.bytesex.org/spec/r4339.htm
+	// http://www.fourcc.org/fccyvrgb.php
+	int j = 0;
+	for(int i = 0; i < len; i+=4) {
+		int y1 = p[i];
+		int cb = p[i+1];
+		int y2 = p[i+2];
+		int cr = p[i+3];
+
+		//R = 1.164(Y - 16) + 1.596(V - 128)
+		//G = 1.164(Y - 16) - 0.813(V - 128) - 0.391(U - 128)
+		//B = 1.164(Y - 16)                   + 2.018(U - 128)
+		
+		int r1 = (int) 1.164*(y1 - 16) + 1.596*(cr - 128);
+		int g1 = (int) 1.164*(y1 - 16) - 0.813*(cr - 128) - 0.391*(cb - 128);
+		int b1 = (int) 1.164*(y1 - 16) + 2.018*(cb - 128);
+		
+		int r2 = (int) 1.164*(y1 - 16) + 1.596*(cr - 128);
+		int g2 = (int) 1.164*(y1 - 16) - 0.813*(cr - 128) - 0.391*(cb - 128);
+		int b2 = (int) 1.164*(y1 - 16) + 2.018*(cb - 128);
+
+		/*r1 &= 0xff;
+		g1 &= 0xff;
+		b1 &= 0xff;
+		r2 &= 0xff;
+		g2 &= 0xff;
+		b2 &= 0xff;*/
+		if(r1 > 255) {
+			r1 = 255;
+		}
+		if(g1 > 255) {
+			g1 = 255;
+		}
+		if(b1 > 255) {
+			b1 = 255;
+		}
+		if(r2 > 255) {
+			r2 = 255;
+		}
+		if(g2 > 255) {
+			g2 = 255;
+		}
+		if(b2 > 255) {
+			b2 = 255;
+		}
+
+		if(r1 < 0) {
+			r1 = 0;
+		}	
+		if(g1 < 0) {
+			g1 = 0;
+		}	
+		if(b1 < 0) {
+			b1 = 0;
+		}	
+		if(r2 < 0) {
+			r2 = 0;
+		}	
+		if(g2 < 0) {
+			g2 = 0;
+		}	 
+		if(b2 < 0) {
+			b2 = 0;
+		}	
+
+		if(r1 > 255 || g1 > 255 || b1 > 255) {
+			printf("[%d] R: %d, G: %d, B: %d\n", i, r1, g1, b1);
+		}
+		if(r1 < 0 || g1 < 0 || b1 < 0) {
+			printf("[%d] R: %d, G: %d, B: %d\n", i, r1, g1, b1);
+		}
+		
+		/*r1 &= 255;
+		g1 &= 255;
+		b1 &= 255;
+
+		if(r1 < 0) {
+			r1 = 0;
+		}
+		if(g1 < 0) {
+			g1 = 0;
+		}
+		if(b1 < 0) {
+			b1 = 0;
+		}*/
+
+		/*r1 &= 200;
+		g1 &= 200;
+		b1 &= 200;
+		r2 &= 200;
+		g2 &= 200;
+		b2 &= 200;*/
+
+		/*int r1 = y1;
+		int g1 = y1;
+		int b1 = y1;
+		int r2 = y2;
+		int g2 = y2;
+		int b2 = y2;*/
+
+		rgb[j] = (int)r1;
+		rgb[j+1] = (int)g1;
+		rgb[j+2] = (int)b1;
+
+		rgb[j+3] = (int)r2;
+		rgb[j+4] = (int)g2;
+		rgb[j+5] = (int)b2;
+
+		j += 6;
+	}
 
 	pixbuf = gdk_pixbuf_new_from_data(
-		(const guchar*)p, // data
+		//(const guchar*)p, // data
+		(const guchar*)rgb,
 		GDK_COLORSPACE_RGB,
 		false,
 		8,
 		640,
 		480,
-		1280,
+		640*3, // rowstride
 		NULL,
 		NULL
 	);
 
 	gtkImg->setPixbuf(pixbuf);
+
+	//free(rgb);
+	rgb = NULL;
 }
 
 int prepCam()
 {
 	gtkImg = imgPane->getImage();
 
-	dev = new V4L2::Device("/dev/video1");
+	dev = new V4L2::Device("/dev/video0");
 
 	fd = dev->getFd();
 
@@ -86,7 +206,6 @@ int prepCam()
 	printf("\tCard: %s\n", cap->card());
 	printf("\tBus info: %s\n", cap->busInfo());
 	printf("\tVersion: %2d\n", cap->version());
-
 
 	printf("\nCapabilities:\n");
 
@@ -109,42 +228,20 @@ int prepCam()
 	printf("\tcolorspace: %s\n", fmt->getColorspace());
 	printf("\tfield: %s\n", fmt->getField());
 
-
-
 	// Try to set streaming...
 	printf("\nStreaming...\n");
 	int ret = 0;
-	reqbuf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	reqbuf.memory = V4L2_MEMORY_MMAP; // or V4L2_MEMORY_USERPTR
-	// video output requires at least two buffers, one displayed and one filled 
-	// by the application.
-	reqbuf.count = 2; // ONLY FOR V4L2_MEMORY_MMAP
 
-	ret = ioctl(fd, VIDIOC_REQBUFS, &reqbuf);
-	if(ret == -1) {
-		switch(errno) {
-			case EBUSY:
-				fprintf(stderr, 
-					"Buffer busy err: IO in progress, or mem still mapped.\n");
-				break;
-			case EINVAL:
-				fprintf(stderr, 
-					"Buffer type or IO method unsupported.\n");
-				break;
-			default:
-				fprintf(stderr, 
-					"An unknown request buffer error occurred.\n");
-		}
-	}
+	reqbuf = new V4L2::RequestBuffers(dev);
+	reqbuf->makeRequest();
 
-	printf("\tNumber of buffers allocated: %d\n", reqbuf.count);
+	printf("\tNumber of buffers allocated: %d\n", reqbuf->getCount());
 
-
-	for(unsigned int i = 0; i < reqbuf.count; i++) {
+	for(unsigned int i = 0; i < reqbuf->getCount(); i++) {
 		struct v4l2_buffer buffer;
 		memset(&buffer, 0, sizeof(buffer)); // clear buffer
-		buffer.type = reqbuf.type;
-		buffer.memory = reqbuf.memory;
+		buffer.type = reqbuf->getType();
+		buffer.memory = reqbuf->getMemory();
 		buffer.index = i;
 
 		ret = ioctl(fd, VIDIOC_QUERYBUF, &buffer);
@@ -152,8 +249,6 @@ int prepCam()
 			fprintf(stderr, "Querying the buffer failed\n");
 			return 1;
 		}
-
-		
 
 		// TODO: TEMP!
 		ret = ioctl(fd, VIDIOC_QBUF, &buffer);
@@ -176,9 +271,6 @@ int prepCam()
 					return 1;
 			}
 		}
-
-
-
 
 		// make each vbuffer
 		vbuffers.push_back(bbuffer());
@@ -217,8 +309,8 @@ int doCamera()
 
 		struct v4l2_buffer buffer;
 		memset(&buffer, 0, sizeof(buffer)); // clear buffer
-		buffer.type = reqbuf.type;
-		buffer.memory = reqbuf.memory;
+		buffer.type = reqbuf->getType();
+		buffer.memory = reqbuf->getMemory();
 		//buffer.index = i;
 
 		// Dequeue to process

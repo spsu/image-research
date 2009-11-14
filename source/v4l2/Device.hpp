@@ -16,6 +16,7 @@ class Device
 {
 	friend class Capability;
 	friend class Format;
+	friend class RequestBuffers;
 
 	public:
 		/**

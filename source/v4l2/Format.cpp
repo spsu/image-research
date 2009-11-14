@@ -248,6 +248,7 @@ bool Format::doQuery()
 		return false;
 	}
 	getFormat(NULL, true);
+	return true;
 }
 
 } // end namespace V4L2
