@@ -6,6 +6,7 @@
 #include "v4l2/Format.hpp"
 #include "v4l2/Capability.hpp"
 #include "v4l2/RequestBuffers.hpp"
+#include "v4l2/Buffer.hpp"
 #include "v4l2/RgbImage.hpp" // XXX: Temp test
 
 #include <stropts.h> // ioctl
@@ -56,118 +57,7 @@ static void processImage(unsigned char *p, int len)
 	GdkPixbuf* pixbuf = 0;
 	RgbImage2* rgb = new RgbImage2(640, 480);
 
-	printf("Len %d\n", len);
-	// For YUYV information:
-	// http://v4l2spec.bytesex.org/spec/r4339.htm
-	// http://www.fourcc.org/fccyvrgb.php
-	int j = 0;
-	for(int i = 0; i < len; i+=4) {
-		int y1 = p[i];
-		int cb = p[i+1];
-		int y2 = p[i+2];
-		int cr = p[i+3];
-
-		//R = 1.164(Y - 16) + 1.596(V - 128)
-		//G = 1.164(Y - 16) - 0.813(V - 128) - 0.391(U - 128)
-		//B = 1.164(Y - 16)                   + 2.018(U - 128)
-		
-		int r1 = (int) 1.164*(y1 - 16) + 1.596*(cr - 128);
-		int g1 = (int) 1.164*(y1 - 16) - 0.813*(cr - 128) - 0.391*(cb - 128);
-		int b1 = (int) 1.164*(y1 - 16) + 2.018*(cb - 128);
-		
-		int r2 = (int) 1.164*(y1 - 16) + 1.596*(cr - 128);
-		int g2 = (int) 1.164*(y1 - 16) - 0.813*(cr - 128) - 0.391*(cb - 128);
-		int b2 = (int) 1.164*(y1 - 16) + 2.018*(cb - 128);
-
-		/*r1 &= 0xff;
-		g1 &= 0xff;
-		b1 &= 0xff;
-		r2 &= 0xff;
-		g2 &= 0xff;
-		b2 &= 0xff;*/
-		if(r1 > 255) {
-			r1 = 255;
-		}
-		if(g1 > 255) {
-			g1 = 255;
-		}
-		if(b1 > 255) {
-			b1 = 255;
-		}
-		if(r2 > 255) {
-			r2 = 255;
-		}
-		if(g2 > 255) {
-			g2 = 255;
-		}
-		if(b2 > 255) {
-			b2 = 255;
-		}
-
-		if(r1 < 0) {
-			r1 = 0;
-		}	
-		if(g1 < 0) {
-			g1 = 0;
-		}	
-		if(b1 < 0) {
-			b1 = 0;
-		}	
-		if(r2 < 0) {
-			r2 = 0;
-		}	
-		if(g2 < 0) {
-			g2 = 0;
-		}	 
-		if(b2 < 0) {
-			b2 = 0;
-		}	
-
-		if(r1 > 255 || g1 > 255 || b1 > 255) {
-			printf("[%d] R: %d, G: %d, B: %d\n", i, r1, g1, b1);
-		}
-		if(r1 < 0 || g1 < 0 || b1 < 0) {
-			printf("[%d] R: %d, G: %d, B: %d\n", i, r1, g1, b1);
-		}
-		
-		/*r1 &= 255;
-		g1 &= 255;
-		b1 &= 255;
-
-		if(r1 < 0) {
-			r1 = 0;
-		}
-		if(g1 < 0) {
-			g1 = 0;
-		}
-		if(b1 < 0) {
-			b1 = 0;
-		}*/
-
-		/*r1 &= 200;
-		g1 &= 200;
-		b1 &= 200;
-		r2 &= 200;
-		g2 &= 200;
-		b2 &= 200;*/
-
-		/*int r1 = y1;
-		int g1 = y1;
-		int b1 = y1;
-		int r2 = y2;
-		int g2 = y2;
-		int b2 = y2;*/
-
-		rgb->data[j] = (int)r1;
-		rgb->data[j+1] = (int)g1;
-		rgb->data[j+2] = (int)b1;
-
-		rgb->data[j+3] = (int)r2;
-		rgb->data[j+4] = (int)g2;
-		rgb->data[j+5] = (int)b2;
-
-		j += 6;
-	}
+	rgb->setFromYuyv((const unsigned char*)p, len);
 
 	pixbuf = gdk_pixbuf_new_from_data(
 		(const guchar*)rgb->data,
@@ -240,38 +130,14 @@ int prepCam()
 	printf("\tNumber of buffers allocated: %d\n", reqbuf->getCount());
 
 	for(unsigned int i = 0; i < reqbuf->getCount(); i++) {
-		struct v4l2_buffer buffer;
-		memset(&buffer, 0, sizeof(buffer)); // clear buffer
-		buffer.type = reqbuf->getType();
-		buffer.memory = reqbuf->getMemory();
-		buffer.index = i;
+		V4L2::Buffer buffer(reqbuf, i);
 
-		ret = ioctl(fd, VIDIOC_QUERYBUF, &buffer);
-		if(ret == -1) {
-			fprintf(stderr, "Querying the buffer failed\n");
+		if(!buffer.query(dev)) {
 			return 1;
 		}
 
-		// TODO: TEMP!
-		ret = ioctl(fd, VIDIOC_QBUF, &buffer);
-		if(ret == -1) {
-			switch(errno) {
-				case EAGAIN:
-					fprintf(stderr, "EAGAIN\n");
-					break;
-				case EINVAL:
-					fprintf(stderr, "EINVAL\n");
-					break;
-				case ENOMEM:
-					fprintf(stderr, "ENOMEM\n");
-					break;
-				case EIO:
-					fprintf(stderr, "EIO\n");
-					break;
-				default:
-					fprintf(stderr, "There was an error queueing\n");
-					return 1;
-			}
+		if(!buffer.queue(dev)) {
+			return 1;
 		}
 
 		// make each vbuffer
@@ -279,11 +145,11 @@ int prepCam()
 		//memset(&vbuffers[i], 0, sizeof(vbuffers[i])); // clear buffer
 
 		vbuffers[i].state = NONE;
-        vbuffers[i].length = buffer.length; // remember for munmap()
-		vbuffers[i].start = mmap(NULL, buffer.length,
+        vbuffers[i].length = buffer.getLength(); // remember for munmap()
+        vbuffers[i].start = mmap(NULL, buffer.getLength(),
                                  PROT_READ | PROT_WRITE, // recommended
                                  MAP_SHARED,             // recommended
-                                 fd, buffer.m.offset);
+								 fd, buffer.getOffset());
 
         if (MAP_FAILED == vbuffers[i].start) {
                 // If you do not exit here you should unmap() and free()
@@ -303,75 +169,23 @@ int prepCam()
 
 int doCamera()
 {
-
-
-	//unsigned int i = 0;
-	int ret = 0;
 	//while(1) {
 
-		struct v4l2_buffer buffer;
-		memset(&buffer, 0, sizeof(buffer)); // clear buffer
-		buffer.type = reqbuf->getType();
-		buffer.memory = reqbuf->getMemory();
-		//buffer.index = i;
+		V4L2::Buffer buffer(reqbuf);
 
 		// Dequeue to process
-		ret = ioctl(fd, VIDIOC_DQBUF, &buffer);
-		if(ret == -1) {
-			switch(errno) {
-				case EAGAIN:
-					fprintf(stderr, "EAGAIN\n");
-					break;
-				case EINVAL:
-					fprintf(stderr, "EINVAL\n");
-					break;
-				case ENOMEM:
-					fprintf(stderr, "ENOMEM\n");
-					break;
-				case EIO:
-					fprintf(stderr, "EIO\n");
-					break;
-				default:
-					fprintf(stderr, "There was an error dequeueing\n");
-			}
+		if(!buffer.dequeue(dev)) {
+			return 1;
 		}
 
-		processImage((unsigned char*)vbuffers[buffer.index].start, buffer.bytesused);
+		processImage((unsigned char*)vbuffers[buffer.getIndex()].start, 
+				buffer.getBytesUsed());
 
 		// Queue it back at the camera 
-		ret = ioctl(fd, VIDIOC_QBUF, &buffer);
-		if(ret == -1) {
-			switch(errno) {
-				case EAGAIN:
-					fprintf(stderr, "EAGAIN\n");
-					break;
-				case EINVAL:
-					fprintf(stderr, "EINVAL\n");
-					break;
-				case ENOMEM:
-					fprintf(stderr, "ENOMEM\n");
-					break;
-				case EIO:
-					fprintf(stderr, "EIO\n");
-					break;
-				default:
-					fprintf(stderr, "There was an error queueing\n");
-					return 1;
-			}
+		if(!buffer.queue(dev)) {
+			return 1;
 		}
 
-
-
-	//	printf("Iter\n");
-	//	sleep(1);
-
-	//}
-
-	//i = read(fd, buffers[0].start, buffers[0].length);
-
-	// Cleanup
-	//for (i = 0; i < reqbuf.count; i++)
-    //	munmap (buffers[i].start, buffers[i].length);
 	return 0;
 }
 

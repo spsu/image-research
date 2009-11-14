@@ -39,6 +39,11 @@ struct RgbImage2
 	~RgbImage2();
 
 	/**
+	 * Set RGB data from conversion of YUYV data supplied
+	 */
+	void setFromYuyv(const unsigned char* p, int len);
+
+	/**
 	 * Closure that auto-destructs (For use with Gtk/GdkPixbuf).
 	 */
 	static void destroy(unsigned char* pixels, void* data);

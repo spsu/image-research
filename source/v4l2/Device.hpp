@@ -14,6 +14,7 @@ namespace V4L2 {
 namespace V4L2 {
 class Device 
 {
+	friend class Buffer;
 	friend class Capability;
 	friend class Format;
 	friend class RequestBuffers;

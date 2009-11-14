@@ -46,6 +46,12 @@ class Format
 		int getBytesPerLine();
 
 		/**
+		 * Attempt at mutators. Maybe refactor?
+		 */
+		void setWidth(int w);
+		void setHeight(int h);
+
+		/**
 		 * Get the number of bytes the image uses.
 		 */
 		int getImageSize();

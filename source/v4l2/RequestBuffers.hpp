@@ -3,12 +3,15 @@
 
 #include <linux/videodev2.h>
 namespace V4L2 {
+	class Buffer;
 	class Device;
 }
 
 namespace V4L2 {
 class RequestBuffers
 {
+	friend class Buffer;
+
 	public:
 		RequestBuffers(Device* dev = NULL);
 

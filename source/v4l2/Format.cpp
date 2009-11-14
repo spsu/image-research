@@ -79,6 +79,17 @@ bool Format::tryFormat(Device* dev)
 	return query(dev->fd, VIDIOC_TRY_FMT);
 }
 
+// ============================= TRY PARAMETERS ============================= //
+void Format::setWidth(int w)
+{
+	// XXX XXX XXX - MUST QUERY FIRST
+	format.fmt.pix.width = w;
+}
+void Format::setHeight(int h)
+{
+	// XXX XXX XXX - MUST QUERY FIRST
+	format.fmt.pix.height = h;
+}
 // ============================= GET PARAMETERS ============================= //
 
 int Format::getWidth()
