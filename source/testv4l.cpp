@@ -55,7 +55,9 @@ int camNum = 0;
 static void processImage(unsigned char *p, int len)
 {
 	GdkPixbuf* pixbuf = 0;
-	RgbImage2* rgb = new RgbImage2(640, 480);
+	int width = fmt->getWidth();
+	int height = fmt->getHeight();
+	RgbImage2* rgb = new RgbImage2(width, height);
 
 	rgb->setFromYuyv((const unsigned char*)p, len);
 
@@ -64,9 +66,9 @@ static void processImage(unsigned char *p, int len)
 		GDK_COLORSPACE_RGB,
 		false,
 		8,
-		640,
-		480,
-		640*3, 					// rowstride
+		width,
+		height,
+		width*3, 				// rowstride
 		RgbImage2::destroy,		// closure func
 		rgb						// closure data
 	);
@@ -119,6 +121,11 @@ int prepCam()
 	printf("\tpix format: %s\n", fmt->getPixelFormat());
 	printf("\tcolorspace: %s\n", fmt->getColorspace());
 	printf("\tfield: %s\n", fmt->getField());
+
+	// Try format:
+	fmt->setWidth(320);
+	fmt->setHeight(240);
+	fmt->setFormat();
 
 	// Try to set streaming...
 	printf("\nStreaming...\n");
