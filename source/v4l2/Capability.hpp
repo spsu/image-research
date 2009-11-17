@@ -44,9 +44,22 @@ class Capability
 		 * Test against bitmasks
 		 */
 		bool hasVideoCapture();
+		bool hasVideoOutput();
+		bool hasVideoOverlay();
+		bool hasVbiCapture();
+		bool hasVbiOutput();
+		bool hasSlicedVbiCapture();
+		bool hasSlicedVbiOutput();
+
+		bool hasRdsCapture();
+		bool hasVideoOutputOverlay();
+		bool hasTuner();
+		bool hasAudio();
+		bool hasRadio();
+
 		bool hasReadWrite();
+		bool hasAsyncIo();
 		bool hasStreaming();
-		// TODO: More bit masks...
 		
 	protected:
 		/**

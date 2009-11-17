@@ -53,10 +53,82 @@ bool Capability::hasVideoCapture()
 	return bool(capability.capabilities & V4L2_CAP_VIDEO_CAPTURE);
 }
 
+bool Capability::hasVideoOutput()
+{
+	doQuery();
+	return bool(capability.capabilities & V4L2_CAP_VIDEO_OUTPUT);
+}
+
+bool Capability::hasVideoOverlay()
+{
+	doQuery();
+	return bool(capability.capabilities & V4L2_CAP_VIDEO_OVERLAY);
+}
+
+bool Capability::hasVbiCapture()
+{
+	doQuery();
+	return bool(capability.capabilities & V4L2_CAP_VBI_CAPTURE);
+}
+
+bool Capability::hasVbiOutput()
+{
+	doQuery();
+	return bool(capability.capabilities & V4L2_CAP_VBI_OUTPUT);
+}
+
+bool Capability::hasSlicedVbiCapture()
+{
+	doQuery();
+	return bool(capability.capabilities & V4L2_CAP_SLICED_VBI_CAPTURE);
+}
+
+bool Capability::hasSlicedVbiOutput()
+{
+	doQuery();
+	return bool(capability.capabilities & V4L2_CAP_SLICED_VBI_OUTPUT);
+}
+
+bool Capability::hasRdsCapture()
+{
+	doQuery();
+	return bool(capability.capabilities & V4L2_CAP_RDS_CAPTURE);
+}
+
+bool Capability::hasVideoOutputOverlay()
+{
+	doQuery();
+	return bool(capability.capabilities & V4L2_CAP_VIDEO_OUTPUT_OVERLAY);
+}
+
+bool Capability::hasTuner()
+{
+	doQuery();
+	return bool(capability.capabilities & V4L2_CAP_TUNER);
+}
+
+bool Capability::hasAudio()
+{
+	doQuery();
+	return bool(capability.capabilities & V4L2_CAP_AUDIO);
+}
+
+bool Capability::hasRadio()
+{
+	doQuery();
+	return bool(capability.capabilities & V4L2_CAP_RADIO);
+}
+
 bool Capability::hasReadWrite()
 {
 	doQuery();
 	return bool(capability.capabilities & V4L2_CAP_READWRITE);
+}
+
+bool Capability::hasAsyncIo()
+{
+	doQuery();
+	return bool(capability.capabilities & V4L2_CAP_ASYNCIO);
 }
 
 bool Capability::hasStreaming()
