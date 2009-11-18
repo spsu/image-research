@@ -7,6 +7,7 @@
 namespace V4L2 {
 
 Capability::Capability(Device* dev):
+	device(NULL),
 	queried(false)
 {
 	device = dev;

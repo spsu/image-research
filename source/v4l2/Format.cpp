@@ -226,6 +226,30 @@ int Format::getFieldCode()
 	return (int)format.fmt.pix.field;
 }
 
+void Format::printAll()
+{
+	// A lot of information to output...
+	printf(
+		"Image size info:\n"			\
+		"    width: %d\n"				\
+		"    height: %d\n"				\
+		"    bytes per line: %d\n"		\
+		"    image buffer size: %d\n"	\
+		"\nImage format info:\n"		\
+		"    pixel format: %s\n"		\
+		"    colorspace: %s\n"			\
+		"    field: %s\n",
+
+		getWidth(),
+		getHeight(),
+		getBytesPerLine(),
+		getImageSize(),
+		getPixelFormat(),
+		getColorspace(),
+		getField()
+	);
+}
+
 // ============================ PROTECTED METHODS =========================== //
 
 bool Format::query(int fd, int request)

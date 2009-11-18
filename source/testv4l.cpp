@@ -97,15 +97,7 @@ int prepCam()
 	cap->printAll();
 
 	fmt = new V4L2::Format(dev);
-
-	printf("\nFormat:\n");
-	printf("\twidth: %d\n", fmt->getWidth());
-	printf("\theight: %d\n", fmt->getHeight());
-	printf("\tbytes per line: %d\n", fmt->getBytesPerLine());
-	printf("\timage buffer size: %d\n", fmt->getImageSize());
-	printf("\tpix format: %s\n", fmt->getPixelFormat());
-	printf("\tcolorspace: %s\n", fmt->getColorspace());
-	printf("\tfield: %s\n", fmt->getField());
+	fmt->printAll();
 
 	// Try format:
 	fmt->setWidth(320);
@@ -160,25 +152,27 @@ int prepCam()
 
 int doCamera()
 {
-	//while(1) {
+	V4L2::Buffer buffer(reqbuf);
 
-		V4L2::Buffer buffer(reqbuf);
+	// Dequeue to process
+	if(!buffer.dequeue(dev)) {
+		return 1;
+	}
 
-		// Dequeue to process
-		if(!buffer.dequeue(dev)) {
-			return 1;
-		}
-
-		processImage((unsigned char*)vbuffers[buffer.getIndex()].start, 
+	processImage((unsigned char*)vbuffers[buffer.getIndex()].start, 
 				buffer.getBytesUsed());
 
-		// Queue it back at the camera 
-		if(!buffer.queue(dev)) {
-			return 1;
-		}
+	// Queue it back at the camera 
+	if(!buffer.queue(dev)) {
+		return 1;
+	}
 
 	return 0;
 }
+
+
+/* ======================= IGNORE BELOW CODE ================================ */
+
 
 void doCamera2(GtkButton* gtkbutton, gpointer data)
 {
