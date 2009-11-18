@@ -94,22 +94,7 @@ int prepCam()
 	printf("File descriptor (main): %d\n", fd);
 
 	cap = dev->getCapability();
-
-	printf("\nBasic Info:\n");
-	printf("\tDriver: %s\n", cap->driver());
-	printf("\tCard: %s\n", cap->card());
-	printf("\tBus info: %s\n", cap->busInfo());
-	printf("\tVersion: %2d\n", cap->version());
-
-	printf("\nCapabilities:\n");
-
-	printf("\tCapture video: %s\n", 
-		cap->hasVideoCapture()? "Yes" : "No");
-	printf("\tread/write: %s\n", 
-		cap->hasReadWrite()? "Yes" : "No");
-	printf("\tstreaming: %s\n", 
-		cap->hasStreaming()? "Yes" : "No");
-
+	cap->printAll();
 
 	fmt = new V4L2::Format(dev);
 
@@ -129,14 +114,13 @@ int prepCam()
 
 	// Try to set streaming...
 	printf("\nStreaming...\n");
-	int ret = 0;
 
 	reqbuf = new V4L2::RequestBuffers(dev);
 	reqbuf->makeRequest();
 
 	printf("\tNumber of buffers allocated: %d\n", reqbuf->getCount());
 
-	for(unsigned int i = 0; i < reqbuf->getCount(); i++) {
+	for(int i = 0; i < reqbuf->getCount(); i++) {
 		V4L2::Buffer buffer(reqbuf, i);
 
 		if(!buffer.query(dev)) {

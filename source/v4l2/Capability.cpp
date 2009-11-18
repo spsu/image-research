@@ -6,7 +6,8 @@
 
 namespace V4L2 {
 
-Capability::Capability(Device* dev)
+Capability::Capability(Device* dev):
+	queried(false)
 {
 	device = dev;
 	reset();
@@ -21,6 +22,50 @@ Capability::~Capability()
 void Capability::reset()
 {
 	memset(&capability, 0, sizeof(capability));
+}
+
+void Capability::printAll()
+{
+	// A lot of information to output...
+	printf(
+		"Basic Info:\n"		\
+		"    Driver: %s\n"	\
+		"    Card: %s\n"	\
+		"    Bus info: %s\n"\
+		"    Version: %2d\n"\
+		"\nCapabilities:\n"	\
+		"    video capture: %s\n"	\
+		"    video overlay: %s\n"	\
+		"    VBI capture: %s\n"		\
+		"    VBI output: %s\n"		\
+		"    sliced VBI capture: %s\n"\
+		"    sliced VBI output: %s\n"\
+		"    RDS capture: %s\n"		\
+		"    video ouput overlay: %s\n"\
+		"    has tuner: %s\n"		\
+		"    has audio: %s\n"		\
+		"    has radio: %s\n"		\
+		"    async IO: %s\n"		\
+		"    streaming: %s\n",
+		
+		driver(),
+		card(),
+		busInfo(),
+		version(),
+		hasVideoCapture()? "YES" : "no",
+		hasVideoOverlay()? "YES" : "no",
+		hasVbiCapture()? "YES" : "no",
+		hasVbiOutput()? "YES" : "no",
+		hasSlicedVbiCapture()? "YES" : "no",
+		hasSlicedVbiOutput()? "YES" : "no",
+		hasRdsCapture()? "YES" : "no",
+		hasVideoOutputOverlay()? "YES" : "no",
+		hasTuner()? "YES" : "no",
+		hasAudio()? "YES" : "no",
+		hasRadio()? "YES" : "no",
+		hasAsyncIo()? "YES" : "no",
+		hasStreaming()? "YES" : "no"
+	);
 }
 
 const char* Capability::driver()
@@ -148,6 +193,7 @@ bool Capability::doQuery()
 	if(queried) {
 		return false;
 	}
+	printf("Querying camera capability...\n");
 	queried = true;
 	reset();
 	ret = ioctl(device->fd, VIDIOC_QUERYCAP, &capability);

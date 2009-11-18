@@ -33,6 +33,11 @@ class Capability
 		void reset();
 
 		/**
+		 * Print all information.
+		 */
+		void printAll();
+
+		/**
 		 * Accessors
 		 */
 		const char* driver();
@@ -50,13 +55,11 @@ class Capability
 		bool hasVbiOutput();
 		bool hasSlicedVbiCapture();
 		bool hasSlicedVbiOutput();
-
 		bool hasRdsCapture();
 		bool hasVideoOutputOverlay();
 		bool hasTuner();
 		bool hasAudio();
 		bool hasRadio();
-
 		bool hasReadWrite();
 		bool hasAsyncIo();
 		bool hasStreaming();
