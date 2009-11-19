@@ -5,7 +5,6 @@
 
 namespace V4L2 {
 	class Capability;
-	class Format;
 }
 
 /**

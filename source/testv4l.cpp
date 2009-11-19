@@ -17,6 +17,9 @@
 #include <sys/mman.h> // mmap
 #include <vector>
 
+#include <gdk-pixbuf/gdk-pixbuf.h>
+#include <gtk/gtkmain.h>
+
 #include "app/Gui.hpp"
 #include "app/ImagePane.hpp"
 #include "cv/Image.hpp"
@@ -40,15 +43,14 @@ Gtk::Image* gtkImg = 0;
 Gtk::Button* button = 0;
 App::ImagePane* imgPane = 0;
 int fd = 0;
+int camNum = 0;
+
 V4L2::Device* dev = 0;
 V4L2::Capability* cap = 0;
 V4L2::Format* fmt = 0;
 V4L2::RequestBuffers* reqbuf = 0;
-std::vector<bbuffer> vbuffers;
-int camNum = 0;
+std::vector<V4L2::Buffer*> buffers;
 
-#include <gdk-pixbuf/gdk-pixbuf.h>
-#include <gtk/gtkmain.h>
 
 /////////////////////////////////////
 
@@ -104,46 +106,31 @@ int prepCam()
 	fmt->setHeight(240);
 	fmt->setFormat();
 
-	// Try to set streaming...
-	printf("\nStreaming...\n");
-
 	reqbuf = new V4L2::RequestBuffers(dev);
 	reqbuf->makeRequest();
 
 	printf("\tNumber of buffers allocated: %d\n", reqbuf->getCount());
 
+	// Query, queue, and *map* the buffers.
 	for(int i = 0; i < reqbuf->getCount(); i++) {
-		V4L2::Buffer buffer(reqbuf, i);
 
-		if(!buffer.query(dev)) {
+		V4L2::Buffer* buffer = new V4L2::Buffer(reqbuf, i);
+
+		if(!buffer->query(dev)) {
+			fprintf(stderr, "Buffer couldn't be queried.\n");
 			return 1;
 		}
 
-		if(!buffer.queue(dev)) {
+		if(!buffer->queue(dev)) {
 			return 1;
 		}
 
-		// make each vbuffer
-		vbuffers.push_back(bbuffer());
-		//memset(&vbuffers[i], 0, sizeof(vbuffers[i])); // clear buffer
+		if(!buffer->map(dev)) {
+			fprintf(stderr, "Memory map failed!\n");
+			return 1;
+		}
 
-		vbuffers[i].state = NONE;
-        vbuffers[i].length = buffer.getLength(); // remember for munmap()
-        vbuffers[i].start = mmap(NULL, buffer.getLength(),
-                                 PROT_READ | PROT_WRITE, // recommended
-                                 MAP_SHARED,             // recommended
-								 fd, buffer.getOffset());
-
-        if (MAP_FAILED == vbuffers[i].start) {
-                // If you do not exit here you should unmap() and free()
-                //   the buffers mapped so far. 
-                fprintf(stderr, "Memory map failed!\n");
-                return 1;
-        }
-	}
-		
-	for(unsigned int i = 0; i < vbuffers.size(); i++) {
-		printf("Buffer %d: Size %d\n", i, vbuffers[i].length);
+		buffers.push_back(buffer);
 	}
 
 	dev->streamOn();
@@ -159,7 +146,7 @@ int doCamera()
 		return 1;
 	}
 
-	processImage((unsigned char*)vbuffers[buffer.getIndex()].start, 
+	processImage((unsigned char*)buffers[buffer.getIndex()]->getStart(),
 				buffer.getBytesUsed());
 
 	// Queue it back at the camera 
@@ -178,12 +165,12 @@ void doCamera2(GtkButton* gtkbutton, gpointer data)
 {
 	doCamera();
 }
+
 gboolean doCamera3(gpointer data)
 {
 	doCamera();
 	return true;
 }
-
 
 int main(int argc, char* argv[])
 {

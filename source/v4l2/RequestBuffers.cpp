@@ -16,7 +16,7 @@ RequestBuffers::RequestBuffers(Device* dev)
 	reqbuf.memory = V4L2_MEMORY_MMAP; // or V4L2_MEMORY_USERPTR
 	// video output requires at least two buffers, one displayed and one filled 
 	// by the application.
-	reqbuf.count = 2; // ONLY FOR V4L2_MEMORY_MMAP
+	reqbuf.count = 20; // ONLY FOR V4L2_MEMORY_MMAP
 }
 
 RequestBuffers::~RequestBuffers()

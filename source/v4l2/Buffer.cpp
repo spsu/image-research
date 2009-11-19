@@ -3,17 +3,22 @@
 #include "Device.hpp"
 #include <stdio.h>
 #include <string.h> // memset
+#include <sys/mman.h> // mmap
 #include <stropts.h> // ioctl
 #include <errno.h>
 
 namespace V4L2 {
 
-Buffer::Buffer()
+Buffer::Buffer():
+	start(NULL),
+	mapped(false)
 {
 	reset();
 }
 
-Buffer::Buffer(RequestBuffers* reqbuf, int index)
+Buffer::Buffer(RequestBuffers* reqbuf, int index):
+	start(NULL),
+	mapped(false)
 {
 	reset();
 	buffer.type = reqbuf->getType();
@@ -23,10 +28,18 @@ Buffer::Buffer(RequestBuffers* reqbuf, int index)
 
 Buffer::~Buffer()
 {
+	if(mapped) {
+		// TODO: Unmap and free!
+	}
 }
 
 void Buffer::reset()
 {
+	if(mapped) {
+		fprintf(stderr,
+			"Buffer::reset() cannot reset struct while memory is mapped\n");
+		return;
+	}
 	memset(&buffer, 0, sizeof(buffer));
 }
 
@@ -106,5 +119,37 @@ int Buffer::getBytesUsed()
 {
 	return (int)buffer.bytesused;
 }
+
+bool Buffer::map(Device* dev)
+{
+	if(mapped) {
+		fprintf(stderr, "Buffer::map() cannot map memory again!\n");
+		return false;
+	}
+
+	if(dev == NULL) {
+		fprintf(stderr, "Buffer::map() invalid device supplied.\n");
+		return false;
+	}
+
+	start = mmap(NULL, 
+				 getLength(),
+				 PROT_READ | PROT_WRITE, // recommended
+				 MAP_SHARED,             // recommended
+				 dev->fd, 
+				 getOffset()
+	);
+
+	if(start == MAP_FAILED) {
+		// TODO: If failure, I need to unmap() and free() the buffers already
+		// mapped prior to this one...
+		fprintf(stderr, "Buffer::map() err: Could not map memory!\n");
+		return false;
+	}
+
+	mapped = true;
+	return true;
+}
+
 
 } // end namespace V4L2

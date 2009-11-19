@@ -9,14 +9,6 @@ namespace V4L2 {
 class RequestBuffers;
 class Device;
 
-enum queueState { ENQUEUED, DEQUEUED, NONE };
-
-struct bbuffer {
-	void* start;
-	size_t length;
-	queueState state;
-};
-
 /**
  * XXX FIXME: Obviously in need of a major refactor.
  */
@@ -44,11 +36,44 @@ class Buffer
 		//for (i = 0; i < reqbuf.count; i++)
 		//	munmap (buffers[i].start, buffers[i].length);
 
+		// ==================== MAPPED MEMORY ==================== //
+
+		/**
+		 * Perform the map operation.
+		 */
+		bool map(Device* dev);
+
+		/**
+		 * Get the start of mapped memory.
+		 */
+		void* getStart() { return start; };
+
+		/**
+		 * Get the length of the mapped memory.
+		 */
+		//size_t getLength() { return length; };
+
 	protected:
 		/**
 		 * V4L2 Buffer structure.
 		 */
 		struct v4l2_buffer buffer;
+
+		/**
+		 * User-space mapped memory start position.
+		 * (Only for memory mapped buffers.)
+		 */
+		void* start;
+
+		/**
+		 * Length of the mapped memory buffer.
+		 */
+		//size_t length;
+
+		/**
+		 * Whether or not memory has been mapped.
+		 */
+		bool mapped;
 };
 
 } // end namespace V4L2
