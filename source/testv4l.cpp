@@ -10,8 +10,6 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtkmain.h>
 
-
-
 /**
  * Globals.
  * TODO: Globals are bad. Make a lookup system/dictionary in App::Gui.
@@ -24,34 +22,6 @@ int camNum = 0;
 
 
 /////////////////////////////////////
-
-static void processImage(unsigned char *p, int len)
-{
-	GdkPixbuf* pixbuf = 0;
-	int width = cam->getFormat()->getWidth();
-	int height = cam->getFormat()->getHeight();
-	RgbImage2* rgb = new RgbImage2(width, height);
-
-	rgb->setFromYuyv((const unsigned char*)p, len);
-
-	pixbuf = gdk_pixbuf_new_from_data(
-		(const guchar*)rgb->data,
-		GDK_COLORSPACE_RGB,
-		false,
-		8,
-		width,
-		height,
-		width*3, 				// rowstride
-		RgbImage2::destroy,		// closure func
-		rgb						// closure data
-	);
-
-	gtkImg->setPixbuf(pixbuf);
-}
-
-
-/* ======================= IGNORE ABOVE CODE ================================ */
-
 
 int prepCam()
 {
@@ -71,7 +41,6 @@ int prepCam()
 	fmt->setHeight(240);
 	fmt->setFormat();
 
-
 	cam->printInfo();
 	cam->streamOn();
 	return 0;
@@ -79,13 +48,12 @@ int prepCam()
 
 void doCamera()
 {
-	V4L2::Frame* frame = 0;
 	Cv::Image* img = 0;
 
-	frame = cam->grabFrame();
-	//processImage(frame->getData(), frame->getBytesUsed());
+	img = new Cv::Image(cam->grabFrame());
 
-	img = new Cv::Image(frame);
+	// ***** PROCESS HERE ***** // 
+
 	gtkImg->setPixbuf(img->toPixbuf());
 	delete img;
 }
@@ -93,7 +61,7 @@ void doCamera()
 
 /* ======================= IGNORE BELOW CODE ================================ */
 
-gboolean doCamera3(gpointer data)
+gboolean doCameraGtk(gpointer data)
 {
 	doCamera();
 	return true;
@@ -125,7 +93,7 @@ int main(int argc, char* argv[])
 	gtkImg = imgPane->getImage();
 	prepCam();
 
-	gtk_idle_add(doCamera3, NULL);
+	gtk_idle_add(doCameraGtk, NULL);
 
 	gui->start();
 
