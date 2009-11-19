@@ -29,25 +29,25 @@ void Capability::printAll()
 {
 	// A lot of information to output...
 	printf(
-		"Basic Info:\n"		\
-		"    Driver: %s\n"	\
-		"    Card: %s\n"	\
-		"    Bus info: %s\n"\
-		"    Version: %2d\n"\
-		"\nCapabilities:\n"	\
-		"    video capture: %s\n"	\
-		"    video overlay: %s\n"	\
-		"    VBI capture: %s\n"		\
-		"    VBI output: %s\n"		\
-		"    sliced VBI capture: %s\n"\
-		"    sliced VBI output: %s\n"\
-		"    RDS capture: %s\n"		\
-		"    video ouput overlay: %s\n"\
-		"    has tuner: %s\n"		\
-		"    has audio: %s\n"		\
-		"    has radio: %s\n"		\
-		"    async IO: %s\n"		\
-		"    streaming: %s\n",
+		"Basic Info:\n"					\
+		"    Driver:\t\t %s\n"			\
+		"    Card:\t\t %s\n"			\
+		"    Bus info:\t\t %s\n"		\
+		"    Version:\t\t %2d\n"		\
+		"\nCapabilities:\n"				\
+		"    video capture:\t %s\n"		\
+		"    video overlay:\t %s\n"		\
+		"    VBI capture:\t %s\n"		\
+		"    VBI output:\t\t %s\n"		\
+		"    sliced VBI capture:\t %s\n"\
+		"    sliced VBI output:\t %s\n"	\
+		"    RDS capture:\t %s\n"		\
+		"    video ouput overlay: %s\n"	\
+		"    has tuner:\t\t %s\n"		\
+		"    has audio:\t\t %s\n"		\
+		"    has radio:\t\t %s\n"		\
+		"    async IO:\t\t %s\n"		\
+		"    streaming:\t\t %s\n",
 		
 		driver(),
 		card(),
@@ -194,7 +194,7 @@ bool Capability::doQuery()
 	if(queried) {
 		return false;
 	}
-	printf("Querying camera capability...\n");
+
 	queried = true;
 	reset();
 	ret = ioctl(device->fd, VIDIOC_QUERYCAP, &capability);

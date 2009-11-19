@@ -5,6 +5,7 @@
 
 namespace V4L2 {
 	class Capability;
+	class Format;
 }
 
 /**
@@ -58,10 +59,22 @@ class Device
 		bool streamOff();
 
 		/**
+		 * Print camera information. 
+		 * Includes capabilities, format, etc.
+		 */
+		void printInfo();
+
+		/**
 		 * Get the camera capability object.
 		 * Caller does not own the object.
 		 */
 		Capability* getCapability();
+
+		/**
+		 * Get the camera image format object.
+		 * Caller does not own the object, but may use it to set format options.
+		 */
+		Format* getFormat();
 
 	private:
 		/**
@@ -75,9 +88,14 @@ class Device
 		int fd;
 
 		/**
-		 * Capabilities of the device (cached)
+		 * Capabilities of the device
 		 */
 		Capability* capability;
+
+		/**
+		 * Format of the device
+		 */
+		Format* format;
 };
 }
 

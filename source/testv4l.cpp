@@ -2,13 +2,7 @@
 #include <stdio.h>
 #include <string>
 
-#include "v4l2/Device.hpp"
-#include "v4l2/Format.hpp"
-#include "v4l2/Capability.hpp"
-#include "v4l2/RequestBuffers.hpp"
-#include "v4l2/Buffer.hpp"
-#include "v4l2/RgbImage.hpp" // XXX: Temp test
-#include "v4l2/Buffers.hpp" // XXX: Temp test, should rename?? Not a V4L2 primative
+#include "v4l2/all.hpp" // RgbImage is *temporary*, and Buffers is a bad name...
 
 #include <stropts.h> // ioctl
 #include <linux/videodev2.h>
@@ -93,16 +87,11 @@ int prepCam()
 	dev = new V4L2::Device(cam);
 
 	fd = dev->getFd();
+	dev->printInfo();
 
-	printf("File descriptor (main): %d\n", fd);
+	fmt = dev->getFormat();
 
-	cap = dev->getCapability();
-	cap->printAll();
-
-	fmt = new V4L2::Format(dev);
-	fmt->printAll();
-
-	// Try format:
+	// Try the following format:
 	fmt->setWidth(320);
 	fmt->setHeight(240);
 	fmt->setFormat();
