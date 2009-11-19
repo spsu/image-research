@@ -8,12 +8,14 @@
 
 namespace V4L2 {
 
-Format::Format()
+Format::Format():
+	state(FORMAT_IS_NULL)
 {
 	reset();
 }
 
-Format::Format(Device* dev)
+Format::Format(Device* dev):
+	state(FORMAT_IS_NULL)
 {
 	device = dev;
 	reset();
@@ -28,6 +30,7 @@ void Format::reset()
 {
 	memset(&format, 0, sizeof(format));
 	queried = false;
+	state = FORMAT_IS_NULL;
 }
 
 bool Format::getFormat(Device* dev, bool doReset)
@@ -44,9 +47,13 @@ bool Format::getFormat(Device* dev, bool doReset)
 		reset();
 	}
 
+	if(state == FORMAT_IS_CLEAN) {
+		return false;
+	}
+
 	// XXX: Required to query video cams, but there are other kinds of devices.
 	format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE; 
-	return query(dev->fd, VIDIOC_G_FMT);
+	return query(dev->getFd(), VIDIOC_G_FMT);
 }
 
 bool Format::setFormat(Device* dev)
@@ -59,9 +66,14 @@ bool Format::setFormat(Device* dev)
 		dev = device;
 	}
 
+	if(state != FORMAT_IS_DIRTY) {
+		fprintf(stderr, "Format::setFormat() err: no new state to apply!\n");
+		return false;
+	}
+
 	// XXX: Required to query video cams, but there are other kinds of devices.
 	format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE; 
-	return query(dev->fd, VIDIOC_S_FMT);
+	return query(dev->getFd(), VIDIOC_S_FMT);
 }
 
 bool Format::tryFormat(Device* dev)
@@ -76,19 +88,25 @@ bool Format::tryFormat(Device* dev)
 
 	// XXX: Required to query video cams, but there are other kinds of devices.
 	format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE; 
-	return query(dev->fd, VIDIOC_TRY_FMT);
+	return query(dev->getFd(), VIDIOC_TRY_FMT);
 }
 
 // ============================= TRY PARAMETERS ============================= //
 void Format::setWidth(int w)
 {
-	// XXX XXX XXX - MUST QUERY FIRST
+	if(state == FORMAT_IS_NULL || state == FORMAT_FAILED_UPDATE) {
+		doQuery();
+	}
 	format.fmt.pix.width = w;
+	state = FORMAT_IS_DIRTY;
 }
 void Format::setHeight(int h)
 {
-	// XXX XXX XXX - MUST QUERY FIRST
+	if(state == FORMAT_IS_NULL || state == FORMAT_FAILED_UPDATE) {
+		doQuery();
+	}
 	format.fmt.pix.height = h;
+	state = FORMAT_IS_DIRTY;
 }
 // ============================= GET PARAMETERS ============================= //
 
@@ -228,17 +246,17 @@ int Format::getFieldCode()
 
 void Format::printAll()
 {
-	// A lot of information to output...
+	// All format information... 
 	printf(
 		"Image size info:\n"			\
-		"    width: %d\n"				\
-		"    height: %d\n"				\
-		"    bytes per line: %d\n"		\
-		"    image buffer size: %d\n"	\
+		"    width:\t\t %d\n"			\
+		"    height:\t\t %d\n"			\
+		"    bytes per line:\t %d\n"	\
+		"    image buffer size:\t %d\n"	\
 		"\nImage format info:\n"		\
-		"    pixel format: %s\n"		\
-		"    colorspace: %s\n"			\
-		"    field: %s\n",
+		"    pixel format:\t %s\n"		\
+		"    colorspace:\t\t %s\n"		\
+		"    field:\t\t %s\n",
 
 		getWidth(),
 		getHeight(),
@@ -248,6 +266,21 @@ void Format::printAll()
 		getColorspace(),
 		getField()
 	);
+
+	switch(state) {
+		case FORMAT_IS_DIRTY:
+			printf("\nFormat state has not yet been applied.\n");
+			break;
+		case FORMAT_IS_NULL:
+			printf("\nFormat has not yet been fetched.\n");
+			break;
+		case FORMAT_FAILED_UPDATE:
+			printf("\nFormat state update failed to apply cleanly.\n");
+			break;
+		case FORMAT_IS_CLEAN:
+		default:
+			break;
+	}
 }
 
 // ============================ PROTECTED METHODS =========================== //
@@ -268,8 +301,11 @@ bool Format::query(int fd, int request)
 				fprintf(stderr, 
 					"An unknown error occured in querying the camera format\n");
 		}
+		state = FORMAT_FAILED_UPDATE;
 		return false;
 	}
+
+	state = FORMAT_IS_CLEAN;
 	return true;
 }
 
@@ -279,7 +315,7 @@ bool Format::doQuery()
 	if(device == NULL) {
 		return false;
 	}
-	if(queried) {
+	if(state == FORMAT_IS_CLEAN) {
 		return false;
 	}
 	getFormat(NULL, true);

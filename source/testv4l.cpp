@@ -20,14 +20,6 @@
 #include "cv/Image.hpp"
 #include "gtk/all.hpp"
 
-enum queueState { ENQUEUED, DEQUEUED, NONE };
-
-// Buffers
-struct bbuffer {
-	void* start;
-	size_t length;
-	queueState state;
-};
 
 /**
  * Globals.
@@ -35,10 +27,10 @@ struct bbuffer {
  */
 
 Gtk::Image* gtkImg = 0;
-Gtk::Button* button = 0;
 App::ImagePane* imgPane = 0;
 int fd = 0;
 int camNum = 0;
+bool resize = true;
 
 V4L2::Device* dev = 0;
 V4L2::Capability* cap = 0;
@@ -52,8 +44,8 @@ V4L2::Buffers* buffers = 0;
 static void processImage(unsigned char *p, int len)
 {
 	GdkPixbuf* pixbuf = 0;
-	int width = fmt->getWidth();
-	int height = fmt->getHeight();
+	int width = dev->getFormat()->getWidth();
+	int height = dev->getFormat()->getHeight();
 	RgbImage2* rgb = new RgbImage2(width, height);
 
 	rgb->setFromYuyv((const unsigned char*)p, len);
@@ -86,15 +78,17 @@ int prepCam()
 	printf("Using device: %s\n", cam.c_str());
 	dev = new V4L2::Device(cam);
 
-	fd = dev->getFd();
-	dev->printInfo();
-
-	fmt = dev->getFormat();
-
 	// Try the following format:
-	fmt->setWidth(320);
-	fmt->setHeight(240);
+	fmt = dev->getFormat();
+	fmt->setWidth(640);
+	fmt->setHeight(480);
+	if(resize) {
+		fmt->setWidth(320);
+		fmt->setHeight(240);
+	}
 	fmt->setFormat();
+
+	dev->printInfo();
 
 	buffers = new V4L2::Buffers(dev);
 	if(!buffers->initBuffers()) {
@@ -131,12 +125,6 @@ int doCamera()
 
 /* ======================= IGNORE BELOW CODE ================================ */
 
-
-void doCamera2(GtkButton* gtkbutton, gpointer data)
-{
-	doCamera();
-}
-
 gboolean doCamera3(gpointer data)
 {
 	doCamera();
@@ -149,10 +137,13 @@ int main(int argc, char* argv[])
 	App::Gui* gui = 0;
 	Gtk::VBox* vbox = 0;
 	Gtk::HBox* hbox = 0;
-	Gtk::CheckButton* resize = 0;
+	std::string resizeStr = "r";
 
 	if(argc > 1) {
 		camNum = (int)argv[1];
+	}
+	if(argc > 2 && resizeStr == argv[2]) {
+		resize = false;
 	}
 
 	// Create main application elements
@@ -162,18 +153,11 @@ int main(int argc, char* argv[])
 	// Create other Gtk widgets
 	vbox = new Gtk::VBox(false, 0);
 	hbox = new Gtk::HBox(false, 0);
-	resize = new Gtk::CheckButton("_f_it to window", true);
-	button = new Gtk::Button("Grayscale");
 
 	// Construct GUI
 	gui->setChild(vbox);
 	vbox->packStart(hbox, false, false, 0);
-	hbox->packStart(resize, false, false, 0);
 	vbox->packStart(imgPane->getImage(), true, true, 0);
-	vbox->packStart(button, false, false, 0);
-
-	// Install grayscale callback
-	button->addClickedCb(doCamera2, gui);
 
 	prepCam();
 

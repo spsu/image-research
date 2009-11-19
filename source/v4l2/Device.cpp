@@ -38,7 +38,6 @@ Device::~Device()
 bool Device::open()
 {
 	if(isOpen()) {
-		fprintf(stderr, "Device::open() err: device is already open\n");
 		return false;
 	}
 

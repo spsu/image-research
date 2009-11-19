@@ -65,5 +65,4 @@ Buffer* Buffers::getBuffer(int offset)
 	return buffers->at(offset);
 }
 
-
 } // end namespace V4L2

@@ -197,7 +197,7 @@ bool Capability::doQuery()
 
 	queried = true;
 	reset();
-	ret = ioctl(device->fd, VIDIOC_QUERYCAP, &capability);
+	ret = ioctl(device->getFd(), VIDIOC_QUERYCAP, &capability);
 	if(ret != 0) {
 		fprintf(stderr, "There was an error in querying the camera.\n");
 		return false;

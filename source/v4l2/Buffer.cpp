@@ -45,7 +45,7 @@ void Buffer::reset()
 
 bool Buffer::query(Device* dev)
 {
-	if(ioctl(dev->fd, VIDIOC_QUERYBUF, &buffer) == -1) {
+	if(ioctl(dev->getFd(), VIDIOC_QUERYBUF, &buffer) == -1) {
 		fprintf(stderr, "Querying the buffer failed\n");
 		return false;
 	}
@@ -54,7 +54,7 @@ bool Buffer::query(Device* dev)
 
 bool Buffer::queue(Device* dev)
 {
-	if(ioctl(dev->fd, VIDIOC_QBUF, &buffer) == -1) {
+	if(ioctl(dev->getFd(), VIDIOC_QBUF, &buffer) == -1) {
 		switch(errno) {
 			case EAGAIN:
 				fprintf(stderr, "EAGAIN\n");
@@ -78,7 +78,7 @@ bool Buffer::queue(Device* dev)
 
 bool Buffer::dequeue(Device* dev)
 {
-	if(ioctl(dev->fd, VIDIOC_DQBUF, &buffer) == -1) {
+	if(ioctl(dev->getFd(), VIDIOC_DQBUF, &buffer) == -1) {
 		switch(errno) {
 			case EAGAIN:
 				fprintf(stderr, "EAGAIN\n");
@@ -136,7 +136,7 @@ bool Buffer::map(Device* dev)
 				 getLength(),
 				 PROT_READ | PROT_WRITE, // recommended
 				 MAP_SHARED,             // recommended
-				 dev->fd, 
+				 dev->getFd(), 
 				 getOffset()
 	);
 

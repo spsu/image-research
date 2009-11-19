@@ -39,7 +39,7 @@ bool RequestBuffers::makeRequest(Device* dev)
 		dev = device;
 	}
 
-	if(ioctl(dev->fd, VIDIOC_REQBUFS, &reqbuf) == -1) {
+	if(ioctl(dev->getFd(), VIDIOC_REQBUFS, &reqbuf) == -1) {
 		switch(errno) {
 			case EBUSY:
 				fprintf(stderr, 
