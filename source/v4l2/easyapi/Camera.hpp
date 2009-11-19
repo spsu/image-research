@@ -9,6 +9,11 @@
 #include "../wrap/Device.hpp"
 
 namespace V4L2 {
+	class Buffers;
+	class Frame;
+}
+
+namespace V4L2 {
 class Camera : public Device
 {
 	public: 
@@ -48,6 +53,14 @@ class Camera : public Device
 		 */
 		//void setFormat(Format* fmt);
 
+		void setupBuffers();
+		Buffers* getBuffers(){ return buffers; }; // TODO: Is this necessary?
+
+		/**
+		 * Get the next frame.
+		 */
+		Frame* grabFrame();
+
 	protected:
 		/**
 		 * Capabilities of the device
@@ -58,6 +71,11 @@ class Camera : public Device
 		 * Format of the device
 		 */
 		Format* format;
+
+		/**
+		 * Buffers.
+		 */
+		Buffers* buffers;
 
 };
 }

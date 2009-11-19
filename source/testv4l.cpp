@@ -21,19 +21,21 @@
 
 Gtk::Image* gtkImg = 0;
 App::ImagePane* imgPane = 0;
-int camNum = 0;
+int camNum1 = 0;
+int camNum2 = 1;
 bool resize = true;
 
-V4L2::Camera* dev = 0;
-V4L2::Buffers* buffers = 0;
+V4L2::Camera* cam1 = 0;
+V4L2::Camera* cam2 = 0;
+
 
 /////////////////////////////////////
 
 static void processImage(unsigned char *p, int len)
 {
 	GdkPixbuf* pixbuf = 0;
-	int width = dev->getFormat()->getWidth();
-	int height = dev->getFormat()->getHeight();
+	int width = cam1->getFormat()->getWidth();
+	int height = cam1->getFormat()->getHeight();
 	RgbImage2* rgb = new RgbImage2(width, height);
 
 	rgb->setFromYuyv((const unsigned char*)p, len);
@@ -60,57 +62,53 @@ static void processImage(unsigned char *p, int len)
 int prepCam()
 {
 	V4L2::Format* fmt = 0;
-	std::string cam = "/dev/video0";
+	std::string c1 = "/dev/video0";
+	std::string c2 = "/dev/video1";
 
 	// Choose device
-	if(camNum != 0) {
-		cam = "/dev/video";
-		cam += (const char*)camNum;
+	if(camNum1 != 0) {
+		c1 = "/dev/video";
+		c1 += (const char*)camNum1;
+	}
+	if(camNum2 != 0) {
+		c2 = "/dev/video";
+		c2 += (const char*)camNum2;
 	}
 
-	dev = new V4L2::Camera(cam);
+	cam1 = new V4L2::Camera(c1);
+	cam2 = new V4L2::Camera(c2);
 
 	// Try the following format:
-	fmt = dev->getFormat();
-	fmt->setWidth(640);
-	fmt->setHeight(480);
-	if(resize) {
-		fmt->setWidth(320);
-		fmt->setHeight(240);
-	}
+	fmt = cam1->getFormat();
+	fmt->setWidth(320);
+	fmt->setHeight(240);
 	fmt->setFormat();
 
-	dev->printInfo();
+	fmt = cam2->getFormat();
+	fmt->setWidth(320);
+	fmt->setHeight(240);
+	fmt->setFormat();
 
-	// Initialize buffers
-	buffers = new V4L2::Buffers(dev);
-	if(!buffers->initBuffers()) {
-		fprintf(stderr, "Could not init buffers\n");
-		return 1;
-	}
-
-	dev->streamOn();
+	cam1->printInfo();
+	cam1->streamOn();
+	cam2->streamOn();
 	return 0;
 }
 
 int doCamera()
 {
-	V4L2::Buffer buffer(buffers->getRequest());
+	static bool iter = true;
+	V4L2::Frame* frame = 0;
 
-	// Dequeue to process
-	if(!buffer.dequeue(dev)) {
-		return 1;
+	if(iter) {
+		frame = cam1->grabFrame();
 	}
-
-	processImage(
-		(unsigned char*)buffers->getBuffer(buffer.getIndex())->getStart(),
-		buffer.getBytesUsed()
-	);
-
-	// Queue it back at the camera 
-	if(!buffer.queue(dev)) {
-		return 1;
+	else {
+		frame = cam2->grabFrame();
 	}
+	iter = !iter;
+
+	processImage(frame->getData(), frame->getLength());
 
 	return 0;
 }
@@ -129,13 +127,12 @@ int main(int argc, char* argv[])
 	App::Gui* gui = 0;
 	Gtk::VBox* vbox = 0;
 	Gtk::HBox* hbox = 0;
-	std::string resizeStr = "r";
 
 	if(argc > 1) {
-		camNum = (int)argv[1];
+		camNum1 = (int)argv[1];
 	}
-	if(argc > 2 && resizeStr == argv[2]) {
-		resize = false;
+	if(argc > 2) {
+		camNum2 = (int)argv[2];
 	}
 
 	// Create main application elements
@@ -157,7 +154,7 @@ int main(int argc, char* argv[])
 	gtk_idle_add(doCamera3, NULL);
 
 	gui->start();
-	//doCamera();
+
 	printf("\nDone\n");
 	return 0;
 }

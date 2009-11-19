@@ -18,6 +18,7 @@
  */
 #include "easyapi/Buffers.hpp"
 #include "easyapi/Camera.hpp"
+#include "easyapi/Frame.hpp"
 #include "easyapi/RgbImage.hpp"
 
 #endif

@@ -1,4 +1,5 @@
 #include "Buffers.hpp"
+#include "Frame.hpp"
 #include "../wrap/Buffer.hpp"
 #include "../wrap/RequestBuffers.hpp"
 #include <stdio.h>
@@ -7,7 +8,8 @@ namespace V4L2 {
 
 Buffers::Buffers(Device* dev):
 	reqbuf(NULL),
-	buffers(NULL)
+	buffers(NULL),
+	lastFrame(NULL)
 {
 	device = dev;
 	reqbuf = new V4L2::RequestBuffers(dev);
@@ -63,6 +65,15 @@ Buffer* Buffers::getBuffer(int offset)
 {
 	// TODO: Bounds checking
 	return buffers->at(offset);
+}
+
+Frame* Buffers::grabFrame()
+{
+	if(lastFrame != NULL) {
+		delete lastFrame;
+	}
+	lastFrame = new Frame(this);
+	return lastFrame;
 }
 
 } // end namespace V4L2

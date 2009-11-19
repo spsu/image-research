@@ -4,15 +4,14 @@
 #include <vector>
 
 /**
- *		TODO
- *		TODO: RENAME TO SOMETHING OTHER THAN "Buffers",
- *					Perhaps BufferSet? BufferManagement, blah... 
+ * Vector of buffers, necessary to queue/dequeue from. 
  */
 
 namespace V4L2 {
 	class Buffer;
 	class RequestBuffers;
 	class Device;
+	class Frame;
 }
 
 namespace V4L2 {
@@ -44,12 +43,24 @@ class Buffers
 		 */
 		Buffer* getBuffer(int offset);
 
+		/**
+		 * Get a frame. (Queue, Grab, Dequeue)
+		 */
+		Frame* grabFrame();
+
+		/**
+		 * Get the device pointer
+		 */
+		Device* getDevice() { return device; };
+
 	private:
 		Device* device;
 
 		RequestBuffers* reqbuf;
 
 		std::vector<Buffer*>* buffers;
+
+		Frame* lastFrame;
 
 };
 }

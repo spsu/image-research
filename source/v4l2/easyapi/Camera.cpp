@@ -1,4 +1,6 @@
 #include "Camera.hpp"
+#include "Buffers.hpp"
+#include "Frame.hpp"
 #include "../wrap/Capability.hpp"
 #include "../wrap/Format.hpp"
 #include <stdio.h>
@@ -8,7 +10,8 @@ namespace V4L2 {
 Camera::Camera(const std::string& devicePath):
 	Device(devicePath),
 	capability(NULL),
-	format(NULL)
+	format(NULL),
+	buffers(NULL)
 {
 	capability = new Capability(this);
 	format = new Format(this);
@@ -51,5 +54,21 @@ Format* Camera::getFormat()
 	return format;
 }
 
+void Camera::setupBuffers()
+{
+	buffers = new Buffers(this);
+	if(!buffers->initBuffers()) {
+		fprintf(stderr, "Could not init buffers\n");
+		return;
+	}
+}
+
+Frame* Camera::grabFrame()
+{
+	if(buffers == NULL) {
+		setupBuffers();
+	}
+	return buffers->grabFrame();
+}
 
 } // end namespace V4L2
