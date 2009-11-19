@@ -1,6 +1,6 @@
 #include "Buffers.hpp"
-#include "Buffer.hpp"
-#include "RequestBuffers.hpp"
+#include "../wrap/Buffer.hpp"
+#include "../wrap/RequestBuffers.hpp"
 #include <stdio.h>
 
 namespace V4L2 {

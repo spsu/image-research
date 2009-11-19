@@ -28,7 +28,7 @@ class Device
 		/**
 		 * DTOR.
 		 */
-		~Device();
+		virtual ~Device();
 
 		/**
 		 * Open the device. Returns true if successful.
@@ -45,7 +45,10 @@ class Device
 		 */
 		void close();
 
-		// XXX XXX TEMPORARY!
+		/**
+		 * Get the file descriptor.
+		 * Opens the device if it is not already open. 
+		 */
 		int getFd();
 
 		/**
@@ -58,25 +61,7 @@ class Device
 		 */
 		bool streamOff();
 
-		/**
-		 * Print camera information. 
-		 * Includes capabilities, format, etc.
-		 */
-		void printInfo();
-
-		/**
-		 * Get the camera capability object.
-		 * Caller does not own the object.
-		 */
-		Capability* getCapability();
-
-		/**
-		 * Get the camera image format object.
-		 * Caller does not own the object, but may use it to set format options.
-		 */
-		Format* getFormat();
-
-	private:
+	protected:
 		/**
 		 * Name
 		 */
@@ -86,16 +71,6 @@ class Device
 		 * File descriptor.
 		 */
 		int fd;
-
-		/**
-		 * Capabilities of the device
-		 */
-		Capability* capability;
-
-		/**
-		 * Format of the device
-		 */
-		Format* format;
 };
 }
 

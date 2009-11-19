@@ -4,14 +4,7 @@
 
 #include "v4l2/all.hpp" // RgbImage is *temporary*, and Buffers is a bad name...
 
-#include <stropts.h> // ioctl
-#include <linux/videodev2.h>
-#include <errno.h>
-#include <string.h> // memset
 #include <stdlib.h> // calloc
-#include <sys/mman.h> // mmap
-#include <vector>
-
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtkmain.h>
 
@@ -28,15 +21,10 @@
 
 Gtk::Image* gtkImg = 0;
 App::ImagePane* imgPane = 0;
-int fd = 0;
 int camNum = 0;
 bool resize = true;
 
-V4L2::Device* dev = 0;
-V4L2::Capability* cap = 0;
-V4L2::Format* fmt = 0;
-V4L2::RequestBuffers* reqbuf = 0;
-//std::vector<V4L2::Buffer*> buffers;
+V4L2::Camera* dev = 0;
 V4L2::Buffers* buffers = 0;
 
 /////////////////////////////////////
@@ -65,18 +53,22 @@ static void processImage(unsigned char *p, int len)
 	gtkImg->setPixbuf(pixbuf);
 }
 
+
+/* ======================= IGNORE ABOVE CODE ================================ */
+
+
 int prepCam()
 {
+	V4L2::Format* fmt = 0;
 	std::string cam = "/dev/video0";
+
+	// Choose device
 	if(camNum != 0) {
 		cam = "/dev/video";
 		cam += (const char*)camNum;
 	}
 
-	gtkImg = imgPane->getImage();
-
-	printf("Using device: %s\n", cam.c_str());
-	dev = new V4L2::Device(cam);
+	dev = new V4L2::Camera(cam);
 
 	// Try the following format:
 	fmt = dev->getFormat();
@@ -90,6 +82,7 @@ int prepCam()
 
 	dev->printInfo();
 
+	// Initialize buffers
 	buffers = new V4L2::Buffers(dev);
 	if(!buffers->initBuffers()) {
 		fprintf(stderr, "Could not init buffers\n");
@@ -133,7 +126,6 @@ gboolean doCamera3(gpointer data)
 
 int main(int argc, char* argv[])
 {
-
 	App::Gui* gui = 0;
 	Gtk::VBox* vbox = 0;
 	Gtk::HBox* hbox = 0;
@@ -159,6 +151,7 @@ int main(int argc, char* argv[])
 	vbox->packStart(hbox, false, false, 0);
 	vbox->packStart(imgPane->getImage(), true, true, 0);
 
+	gtkImg = imgPane->getImage();
 	prepCam();
 
 	gtk_idle_add(doCamera3, NULL);
