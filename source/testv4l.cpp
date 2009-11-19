@@ -8,6 +8,7 @@
 #include "v4l2/RequestBuffers.hpp"
 #include "v4l2/Buffer.hpp"
 #include "v4l2/RgbImage.hpp" // XXX: Temp test
+#include "v4l2/Buffers.hpp" // XXX: Temp test, should rename?? Not a V4L2 primative
 
 #include <stropts.h> // ioctl
 #include <linux/videodev2.h>
@@ -49,8 +50,8 @@ V4L2::Device* dev = 0;
 V4L2::Capability* cap = 0;
 V4L2::Format* fmt = 0;
 V4L2::RequestBuffers* reqbuf = 0;
-std::vector<V4L2::Buffer*> buffers;
-
+//std::vector<V4L2::Buffer*> buffers;
+V4L2::Buffers* buffers = 0;
 
 /////////////////////////////////////
 
@@ -106,31 +107,10 @@ int prepCam()
 	fmt->setHeight(240);
 	fmt->setFormat();
 
-	reqbuf = new V4L2::RequestBuffers(dev);
-	reqbuf->makeRequest();
-
-	printf("\tNumber of buffers allocated: %d\n", reqbuf->getCount());
-
-	// Query, queue, and *map* the buffers.
-	for(int i = 0; i < reqbuf->getCount(); i++) {
-
-		V4L2::Buffer* buffer = new V4L2::Buffer(reqbuf, i);
-
-		if(!buffer->query(dev)) {
-			fprintf(stderr, "Buffer couldn't be queried.\n");
-			return 1;
-		}
-
-		if(!buffer->queue(dev)) {
-			return 1;
-		}
-
-		if(!buffer->map(dev)) {
-			fprintf(stderr, "Memory map failed!\n");
-			return 1;
-		}
-
-		buffers.push_back(buffer);
+	buffers = new V4L2::Buffers(dev);
+	if(!buffers->initBuffers()) {
+		fprintf(stderr, "Could not init buffers\n");
+		return 1;
 	}
 
 	dev->streamOn();
@@ -139,15 +119,17 @@ int prepCam()
 
 int doCamera()
 {
-	V4L2::Buffer buffer(reqbuf);
+	V4L2::Buffer buffer(buffers->getRequest());
 
 	// Dequeue to process
 	if(!buffer.dequeue(dev)) {
 		return 1;
 	}
 
-	processImage((unsigned char*)buffers[buffer.getIndex()]->getStart(),
-				buffer.getBytesUsed());
+	processImage(
+		(unsigned char*)buffers->getBuffer(buffer.getIndex())->getStart(),
+		buffer.getBytesUsed()
+	);
 
 	// Queue it back at the camera 
 	if(!buffer.queue(dev)) {
