@@ -37,6 +37,10 @@ typedef struct{
 typedef Canvas<RgbPixel> RgbImage;
 typedef Canvas<RgbPixel> RgbPix;
 
+namespace V4L2 {
+	class Frame;
+}
+
 /**
  * Cv::Image
  * A class to represent and operate on OpenCV images, as well as a method of 
@@ -75,10 +79,18 @@ class Image
 
 		/**
 		 * Pixbuf load CTOR.
-		 * Convert a pixbuf to IplImage.
+		 * Converts a GDK pixbuf into an IplImage.
 		 * Does not assume ownership of the pixbuf.
 		 */
 		Image(GdkPixbuf* pixbuf);
+
+		/**
+		 * V4L2 Frame CTOR.
+		 * Converts a V4L2 Frame (my own abstraction) into an IplImage.
+		 * Conversion is immediate, and we do not assume ownership of the frame.
+		 * XXX: V4L2::Frame is an abstraction of YUYV images only at present.
+		 */
+		Image(V4L2::Frame* frame);
 
 		/**
 		 * IplImage DTOR.

@@ -1,17 +1,15 @@
-
 #include <stdio.h>
 #include <string>
 
-#include "v4l2/all.hpp" // RgbImage is *temporary*, and Buffers is a bad name...
-
-#include <stdlib.h> // calloc
-#include <gdk-pixbuf/gdk-pixbuf.h>
-#include <gtk/gtkmain.h>
-
+#include "gtk/all.hpp"
+#include "v4l2/all.hpp"
 #include "app/Gui.hpp"
 #include "app/ImagePane.hpp"
 #include "cv/Image.hpp"
-#include "gtk/all.hpp"
+
+#include <gdk-pixbuf/gdk-pixbuf.h>
+#include <gtk/gtkmain.h>
+
 
 
 /**
@@ -21,12 +19,8 @@
 
 Gtk::Image* gtkImg = 0;
 App::ImagePane* imgPane = 0;
-int camNum1 = 0;
-int camNum2 = 1;
-bool resize = true;
-
-V4L2::Camera* cam1 = 0;
-V4L2::Camera* cam2 = 0;
+V4L2::Camera* cam = 0;
+int camNum = 0;
 
 
 /////////////////////////////////////
@@ -34,8 +28,8 @@ V4L2::Camera* cam2 = 0;
 static void processImage(unsigned char *p, int len)
 {
 	GdkPixbuf* pixbuf = 0;
-	int width = cam1->getFormat()->getWidth();
-	int height = cam1->getFormat()->getHeight();
+	int width = cam->getFormat()->getWidth();
+	int height = cam->getFormat()->getHeight();
 	RgbImage2* rgb = new RgbImage2(width, height);
 
 	rgb->setFromYuyv((const unsigned char*)p, len);
@@ -62,55 +56,38 @@ static void processImage(unsigned char *p, int len)
 int prepCam()
 {
 	V4L2::Format* fmt = 0;
-	std::string c1 = "/dev/video0";
-	std::string c2 = "/dev/video1";
+	std::string c = "/dev/video0";
 
 	// Choose device
-	if(camNum1 != 0) {
-		c1 = "/dev/video";
-		c1 += (const char*)camNum1;
+	if(camNum != 0) {
+		c = "/dev/video";
+		c += (const char*)camNum;
 	}
-	if(camNum2 != 0) {
-		c2 = "/dev/video";
-		c2 += (const char*)camNum2;
-	}
-
-	cam1 = new V4L2::Camera(c1);
-	cam2 = new V4L2::Camera(c2);
+	cam = new V4L2::Camera(c);
 
 	// Try the following format:
-	fmt = cam1->getFormat();
+	fmt = cam->getFormat();
 	fmt->setWidth(320);
 	fmt->setHeight(240);
 	fmt->setFormat();
 
-	fmt = cam2->getFormat();
-	fmt->setWidth(320);
-	fmt->setHeight(240);
-	fmt->setFormat();
 
-	cam1->printInfo();
-	cam1->streamOn();
-	cam2->streamOn();
+	cam->printInfo();
+	cam->streamOn();
 	return 0;
 }
 
-int doCamera()
+void doCamera()
 {
-	static bool iter = true;
 	V4L2::Frame* frame = 0;
+	Cv::Image* img = 0;
 
-	if(iter) {
-		frame = cam1->grabFrame();
-	}
-	else {
-		frame = cam2->grabFrame();
-	}
-	iter = !iter;
+	frame = cam->grabFrame();
+	//processImage(frame->getData(), frame->getBytesUsed());
 
-	processImage(frame->getData(), frame->getLength());
-
-	return 0;
+	img = new Cv::Image(frame);
+	gtkImg->setPixbuf(img->toPixbuf());
+	delete img;
 }
 
 
@@ -129,10 +106,7 @@ int main(int argc, char* argv[])
 	Gtk::HBox* hbox = 0;
 
 	if(argc > 1) {
-		camNum1 = (int)argv[1];
-	}
-	if(argc > 2) {
-		camNum2 = (int)argv[2];
+		camNum = (int)argv[1];
 	}
 
 	// Create main application elements

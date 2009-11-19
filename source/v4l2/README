@@ -1,0 +1,16 @@
+This API is very incomplete.
+
+The primary motivation behind this V4L2 wrapper was to overcome a long-standing
+bug in OpenCV that makes it impossible to resize camera feeds, and in the 
+process, learn about the V4L2 architecture.
+
+* The "wrap" directory code is incomplete and has a few faults.
+
+* The "easyapi" directory contains a lot of jumbled code, and certainly needs
+  to be refactored. 
+
+		* Why is there a need for RgbImage2?
+		* "Buffers" is a bad name for a class when wrap/Buffer.hpp exists.
+		* Frame is messy
+
+
