@@ -1,0 +1,11 @@
+OpenCV 2.0.0 Dependencies/Extras:
+	* sudo apt-get install libavformat-dev libswscale-dev (from OpenCV Wiki)
+	* ffmpeg ffmpeg-dbg libavdevice52 libavfilter0
+	* libgstreamer0.10-dev
+	* zlibc
+	* libtiff4-dev libtiffxx0c2
+	* libjasper-dev (JPEG-2000)
+	* libunicap2 libunicap2-dev libxv-dev x11proto-video-dev
+		(unified interface to video capture devices)
+	* libgtk2.0-dev
+	* libglib2.0-0-dbg
