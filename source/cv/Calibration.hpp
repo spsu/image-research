@@ -51,6 +51,11 @@ class Calibration
 		void drawBoardIter(Image* im);
 		bool findAndDrawBoardIter(Image* im); 
 
+		/**
+		 * Undistort an image, once calibrated.
+		 */
+		bool undistort(Image* im);
+
 	protected:
 		/**
 		 * The camera intrinsics matrix.
@@ -116,6 +121,16 @@ class Calibration
 		 * Class instance of BoardIterData.
 		 */
 		BoardIterData* iterData;
+
+		/**
+		 * Generate the intrinsics matricies.
+		 */
+		void generateIntrinsics(IplImage* img);
+
+		/**
+		 * Generate the undistort maps.
+		 */
+		void generateMap(IplImage* img);
 };
 }
 

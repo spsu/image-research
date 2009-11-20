@@ -58,9 +58,10 @@ void doCamera()
 
 	// ***** PROCESS HERE ***** // 
 	if(calib == NULL) {
-		calib = new Cv::Calibration(7, 7, 5); 
+		calib = new Cv::Calibration(7, 6, 20); 
 	}
 
+	// Calibrate camera
 	if(!calib->isCalibrated()) {
 		if(frameDt % 10 == 0) {
 			if(calib->findAndDrawBoardIter(img)) {
@@ -71,6 +72,11 @@ void doCamera()
 		if(calib->isCalibrated()) {
 			printf("Done calibrating!!\n");
 		}
+	}
+
+	// Undistort the image.
+	if(calib->isCalibrated()) {
+		calib->undistort(img);
 	}
 
 	gtkImg->setPixbuf(img->toPixbuf());

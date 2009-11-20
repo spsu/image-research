@@ -46,12 +46,6 @@ void Calibration::setBoardParams(int boardW, int boardH, int num)
 bool Calibration::findBoardIter(Image* im)
 {
 	IplImage* img = 0;
-	/*IplImage* gray = 0;
-	CvMat* imgPts = 0;
-	CvMat* objPts = 0;
-	CvMat* ptCounts = 0;
-	CvPoint2D32f* corners;
-	int area = 0;*/
 
 	if(calibrated || numToFind <= numFound) {
 		fprintf(stderr, "Calibration::findBoardIter() already found enough.\n");
@@ -91,13 +85,11 @@ bool Calibration::findBoardIter(Image* im)
 	if(!iterData->found) {
 		return false;
 	}
-	printf("Stage 1\n");
 
-
-	IplImage* gray = cvCreateImage(cvGetSize(img), 8, 1); // for subpixel
 
 	// Get subpixel accuracy
-	//cvCvtColor(img, iterData->gray, CV_BGR2GRAY);
+	IplImage* gray = cvCreateImage(cvGetSize(img), 8, 1); // XXX: Note below
+	//cvCvtColor(img, iterData->gray, CV_BGR2GRAY); // XXX: Why won't this work?
 	cvCvtColor(img, gray, CV_BGR2GRAY);
 	cvFindCornerSubPix(gray, iterData->corners, iterData->cornerCnt, 
 					 cvSize(11,11), cvSize(-1,-1),
@@ -111,7 +103,6 @@ bool Calibration::findBoardIter(Image* im)
 	// Save the board...
 	iterData->step = numFound * iterData->area;
 
-
 	for(int i = iterData->step, j = 0; j < iterData->area; i++, j++) {
 		CV_MAT_ELEM(*iterData->imgPts, float, i, 0) = iterData->corners[j].x;
 		CV_MAT_ELEM(*iterData->imgPts, float, i, 1) = iterData->corners[j].y;
@@ -122,8 +113,10 @@ bool Calibration::findBoardIter(Image* im)
 	CV_MAT_ELEM(*iterData->ptCounts, int, numFound, 0) = iterData->area;
 
 	numFound += 1;
+
+	// Finalize calibration... 
 	if(numFound == numToFind) {
-		calibrated = true;
+		generateIntrinsics(img); // sets calibrated = true
 	}
 	return true;
 }
@@ -143,6 +136,93 @@ bool Calibration::findAndDrawBoardIter(Image* im)
 	return true;
 }
 
+bool Calibration::undistort(Image* im)
+{
+	if(!calibrated) {
+		fprintf(stderr, "Calibration::undistort() can't use if uncalibrated\n");
+		return false;
+	}
 
+	cvRemap(im->getPtr(), im->getPtr(), xMap, yMap);
+
+	return true;
+}
+
+// ===================== PROTECTED METHODS ================================== //
+
+void Calibration::generateIntrinsics(IplImage* img)
+{
+	if(calibrated || numFound < numToFind) {
+		return;
+	}
+
+	// Must resize matrices
+	CvMat* objPts = cvCreateMat(numFound*iterData->area, 3, CV_32FC1);
+	CvMat* imgPts = cvCreateMat(numFound*iterData->area, 2, CV_32FC1);
+	CvMat* ptCounts = cvCreateMat(numFound, 1, CV_32SC1);
+
+	for(int i = 0; i < numFound*iterData->area; i++) {
+		CV_MAT_ELEM(*imgPts, float, i, 0) = 
+			CV_MAT_ELEM(*iterData->imgPts, float, i, 0);
+
+		CV_MAT_ELEM(*imgPts, float, i, 1) = 
+			CV_MAT_ELEM(*iterData->imgPts, float, i, 1);
+		
+		CV_MAT_ELEM(*objPts, float, i, 0) = 
+			CV_MAT_ELEM(*iterData->objPts, float, i, 0);
+
+		CV_MAT_ELEM(*objPts, float, i, 1) = 
+			CV_MAT_ELEM(*iterData->objPts, float, i, 1);
+
+		CV_MAT_ELEM(*objPts, float, i, 2) = 
+			CV_MAT_ELEM(*iterData->objPts, float, i, 2);
+	}
+
+	for(int i = 0; i < numFound; i++) {
+		CV_MAT_ELEM(*ptCounts, int, i, 0) = 
+			CV_MAT_ELEM(*iterData->ptCounts, int, i, 0);
+	}
+
+	intrinsics = cvCreateMat(3, 3, CV_32FC1);
+	distortion = cvCreateMat(5, 1, CV_32FC1);
+
+	CV_MAT_ELEM(*intrinsics, float, 0, 0) = 1.0f;
+	CV_MAT_ELEM(*intrinsics, float, 1, 1) = 1.0f;
+
+	cvCalibrateCamera2(
+		objPts, 
+		imgPts,
+		ptCounts,
+		cvGetSize(img), 
+		intrinsics,
+		distortion,
+		NULL,
+		NULL,
+		0
+	);
+
+	generateMap(img);
+
+	calibrated = true;
+}
+
+void Calibration::generateMap(IplImage* img)
+{
+	if(intrinsics == NULL || distortion == NULL) {
+		fprintf(stderr,
+			"Calibration::generateMap() intrinsics or distortion NULL\n");
+		return;
+	}
+
+	xMap = cvCreateImage(cvGetSize(img), IPL_DEPTH_32F, 1);
+	yMap = cvCreateImage(cvGetSize(img), IPL_DEPTH_32F, 1);
+
+	cvInitUndistortMap(
+		intrinsics,
+		distortion,
+		xMap,
+		yMap
+	);
+}
 
 } // end namespace Cv

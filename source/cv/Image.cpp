@@ -155,7 +155,7 @@ Image::Image(V4L2::Frame* frame):
 		}
 
 		// IplImage is BGR. 
-		/*// XXX: Is this code causing segfaults for users of the IplImage??
+		/* XXX: Is this code causing segfaults for users of the IplImage? (YES!)
 		image->imageData[j] = (int)b1;
 		image->imageData[j+1] = (int)g1;
 		image->imageData[j+2] = (int)r1;
