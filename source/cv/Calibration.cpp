@@ -136,17 +136,36 @@ bool Calibration::findAndDrawBoardIter(Image* im)
 	return true;
 }
 
+int Calibration::getNumFound()
+{
+	return numFound;
+}
+
 bool Calibration::undistort(Image* im)
 {
+	IplImage* clone = 0;
+
 	if(!calibrated) {
 		fprintf(stderr, "Calibration::undistort() can't use if uncalibrated\n");
 		return false;
 	}
 
-	cvRemap(im->getPtr(), im->getPtr(), xMap, yMap);
+	clone = cvCloneImage(im->getPtr());
+	cvRemap(clone, im->getPtr(), xMap, yMap);
+
+	cvReleaseImage(&clone);
 
 	return true;
 }
+
+/*Image* Calibration::getUndistorted(Image* im)
+{
+	IplImage* img2 = 0;
+
+	
+
+	return new Image(img2);
+}*/
 
 // ===================== PROTECTED METHODS ================================== //
 
@@ -155,6 +174,7 @@ void Calibration::generateIntrinsics(IplImage* img)
 	if(calibrated || numFound < numToFind) {
 		return;
 	}
+	printf("Generating intrinsics...\n");
 
 	// Must resize matrices
 	CvMat* objPts = cvCreateMat(numFound*iterData->area, 3, CV_32FC1);
@@ -213,6 +233,7 @@ void Calibration::generateMap(IplImage* img)
 			"Calibration::generateMap() intrinsics or distortion NULL\n");
 		return;
 	}
+	printf("Generating map...\n");
 
 	xMap = cvCreateImage(cvGetSize(img), IPL_DEPTH_32F, 1);
 	yMap = cvCreateImage(cvGetSize(img), IPL_DEPTH_32F, 1);

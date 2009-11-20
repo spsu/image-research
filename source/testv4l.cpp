@@ -43,6 +43,8 @@ int prepCam()
 	fmt = cam->getFormat();
 	fmt->setWidth(320);
 	fmt->setHeight(240);
+	//fmt->setWidth(320*2);
+	//fmt->setHeight(240*2);
 	fmt->setFormat();
 
 	cam->printInfo();
@@ -53,19 +55,20 @@ int prepCam()
 void doCamera()
 {
 	Cv::Image* img = 0;
+	Cv::Image* img2 = 0;
 
 	img = new Cv::Image(cam->grabFrame());
 
 	// ***** PROCESS HERE ***** // 
 	if(calib == NULL) {
-		calib = new Cv::Calibration(7, 6, 20); 
+		calib = new Cv::Calibration(7, 6, 30); 
 	}
 
 	// Calibrate camera
 	if(!calib->isCalibrated()) {
-		if(frameDt % 10 == 0) {
+		if(frameDt % 20 == 0) {
 			if(calib->findAndDrawBoardIter(img)) {
-				printf("Found board!\n");
+				printf("Found board! %d\n", calib->getNumFound());
 			}
 		}
 		frameDt++;
@@ -76,7 +79,11 @@ void doCamera()
 
 	// Undistort the image.
 	if(calib->isCalibrated()) {
-		calib->undistort(img);
+		static bool turn = true;
+		if(turn) {
+			calib->undistort(img);
+		}
+		turn = !turn;
 	}
 
 	gtkImg->setPixbuf(img->toPixbuf());

@@ -15,7 +15,7 @@ class Calibration
 		 * Calibration CTOR.
 		 * Supply the chessboard size and the number of boards to find.
 		 */		
-		Calibration(int boardW = 0, int boardH = 0, int num = 7);
+		Calibration(int boardW = 0, int boardH = 0, int num = 20);
 
 		/**
 		 * Calibration DTOR.
@@ -52,9 +52,19 @@ class Calibration
 		bool findAndDrawBoardIter(Image* im); 
 
 		/**
+		 * Return the number of found boards thus far.
+		 */
+		int getNumFound();
+
+		/**
 		 * Undistort an image, once calibrated.
 		 */
 		bool undistort(Image* im);
+
+		/**
+		 * Make a new undistorted image.
+		 */
+		//Image* getUndistorted(Image* im);
 
 	protected:
 		/**
