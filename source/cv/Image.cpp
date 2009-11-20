@@ -86,10 +86,14 @@ Image::Image(V4L2::Frame* frame):
 	p = frame->getData();
 	len = frame->getBytesUsed();
 
+	RgbPix pix = getPix();
+
 	// For YUYV information:
 	// http://v4l2spec.bytesex.org/spec/r4339.htm
 	// http://www.fourcc.org/fccyvrgb.php
 	int j = 0;
+	int x = 0;
+	int y = 0;
 	for(int i = 0; i < len; i+=4) 
 	{
 		int y1 = p[i];
@@ -151,13 +155,34 @@ Image::Image(V4L2::Frame* frame):
 		}
 
 		// IplImage is BGR. 
+		/*// XXX: Is this code causing segfaults for users of the IplImage??
 		image->imageData[j] = (int)b1;
 		image->imageData[j+1] = (int)g1;
 		image->imageData[j+2] = (int)r1;
 
 		image->imageData[j+3] = (int)b2;
 		image->imageData[j+4] = (int)g2;
-		image->imageData[j+5] = (int)r2;
+		image->imageData[j+5] = (int)r2;*/ 
+
+		pix[y][x].r = (int)r1;
+		pix[y][x].g = (int)g1;
+		pix[y][x].b = (int)b1;
+
+		x += 1;
+		if(x >= width) {
+			x = 0;
+			y += 1;
+		}
+
+		pix[y][x].r = (int)r2;
+		pix[y][x].g = (int)g2;
+		pix[y][x].b = (int)b2;
+
+		x += 1;
+		if(x >= width) {
+			x = 0;
+			y += 1;
+		}
 
 		j += 6;
 	}

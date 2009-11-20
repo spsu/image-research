@@ -6,6 +6,7 @@
 #include "app/Gui.hpp"
 #include "app/ImagePane.hpp"
 #include "cv/Image.hpp"
+#include "cv/Calibration.hpp"
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtkmain.h>
@@ -19,6 +20,9 @@ Gtk::Image* gtkImg = 0;
 App::ImagePane* imgPane = 0;
 V4L2::Camera* cam = 0;
 int camNum = 0;
+int frameDt = 0;
+
+Cv::Calibration* calib = 0;
 
 
 /////////////////////////////////////
@@ -53,6 +57,21 @@ void doCamera()
 	img = new Cv::Image(cam->grabFrame());
 
 	// ***** PROCESS HERE ***** // 
+	if(calib == NULL) {
+		calib = new Cv::Calibration(7, 7, 5); 
+	}
+
+	if(!calib->isCalibrated()) {
+		if(frameDt % 10 == 0) {
+			if(calib->findAndDrawBoardIter(img)) {
+				printf("Found board!\n");
+			}
+		}
+		frameDt++;
+		if(calib->isCalibrated()) {
+			printf("Done calibrating!!\n");
+		}
+	}
 
 	gtkImg->setPixbuf(img->toPixbuf());
 	delete img;
