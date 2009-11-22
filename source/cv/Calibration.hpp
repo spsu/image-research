@@ -24,6 +24,7 @@ class Calibration
 
 		/**
 		 * Set the board finding parameters.
+		 * This can also be done from the CTOR.
 		 */
 		void setBoardParams(int boardW, int boardH, int num);
 
@@ -33,15 +34,22 @@ class Calibration
 		bool isCalibrated() { return calibrated; };
 
 		/**
-		 * Load a calibration XML file.
-		 * XXX TODO: Make this a CTOR instead...
+		 * Load calibration matrices from XML files.
+		 * TODO: Provide an additional CTOR to do this.
 		 */
-		//bool loadFiles(std::string intrinsicsFile, std::string distortionFile);
+		bool loadIntrinsics(std::string filename);
+		bool loadDistortion(std::string filename);
 
 		/**
-		 * Save a calibration XML file.
+		 * Generate maps for undistortion after configs are loaded.
 		 */
-		//bool saveFiles(std::string intrinsicsFile, std::string distortionFile);
+		bool doGenerateMap(Cv::Image* img);
+
+		/**
+		 * Save calibration matrices in XML files.
+		 */
+		bool saveIntrinsics(std::string filename);
+		bool saveDistortion(std::string filename);
 
 		/**
 		 * An iteration to find a calibration board.

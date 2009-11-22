@@ -40,6 +40,85 @@ void Calibration::setBoardParams(int boardW, int boardH, int num)
 	numToFind = num;
 }
 
+bool Calibration::loadIntrinsics(std::string filename)
+{
+	CvMat* data = 0;
+
+	if(isCalibrated()) {
+		fprintf(stderr, 
+			"Cannot load intrinsics for an already-calibrated camera.\n");
+		return false;
+	}
+
+	data = (CvMat*)cvLoad(filename.c_str());
+	if(data == NULL) {
+		fprintf(stderr, "Could not load data from file.\n");
+		return false;
+	}
+
+	intrinsics = data;
+	return true;
+}
+
+bool Calibration::loadDistortion(std::string filename)
+{
+	CvMat* data = 0;
+
+	if(isCalibrated()) {
+		fprintf(stderr, 
+			"Cannot load distortion for an already-calibrated camera.\n");
+		return false;
+	}
+
+	data = (CvMat*)cvLoad(filename.c_str());
+	if(data == NULL) {
+		fprintf(stderr, "Could not load data from file.\n");
+		return false;
+	}
+
+	distortion = data;
+	return true;
+}
+
+bool Calibration::doGenerateMap(Cv::Image* img)
+{
+	if(isCalibrated()) {
+		return false;
+	}
+	if(intrinsics == NULL || distortion == NULL) {
+		return false;
+	}
+
+	generateMap(img->getPtr());
+
+	if(xMap == NULL || yMap == NULL) {
+		fprintf(stderr, 
+			"Calibration::doGenerateMap() could not generate x or y maps\n");
+		return false;
+	}
+
+	calibrated = true;
+	return true;
+}
+
+bool Calibration::saveIntrinsics(std::string filename)
+{
+	if(!isCalibrated()) {
+		return false;
+	}
+	cvSave(filename.c_str(), intrinsics);
+	return true;
+}
+
+bool Calibration::saveDistortion(std::string filename)
+{
+	if(!isCalibrated()) {
+		return false;
+	}
+	cvSave(filename.c_str(), distortion);
+	return true;
+}
+
 // This code based on O'Reilly's text on OpenCV,
 // "Learning OpenCV" [Bradski & Kaehler 2008]
 // Chapter 11: Camera Models and Calibration, pg 398 - 401
@@ -147,6 +226,10 @@ bool Calibration::undistort(Image* im)
 
 	if(!calibrated) {
 		fprintf(stderr, "Calibration::undistort() can't use if uncalibrated\n");
+		return false;
+	}
+	if(xMap == NULL || yMap == NULL) {
+		fprintf(stderr, "Calibration::undistort() x and/or y maps are NULL\n");
 		return false;
 	}
 

@@ -12,6 +12,8 @@
 #include <gtk/gtkmain.h>
 #include <vector>
 
+#include <boost/lexical_cast.hpp>
+
 /**
  * Globals.
  * TODO: Globals are bad. Make a lookup system/dictionary in App::Gui.
@@ -68,9 +70,37 @@ int prepCam()
 	return 0;
 }
 
-void doCalibration(Cv::Image* frame, Cv::Calibration* calib, int camNum)
+void doCalibration(Cv::Image* frame, Cv::Calibration* calib, int camNum, bool undistort = true)
 {
+	std::string intrinsicsFile = "";
+	std::string distortionFile = "";
 
+	switch(camNum) {
+		case 1:
+			intrinsicsFile = "./media/intrinsics1.xml";
+			distortionFile = "./media/distortion1.xml";
+			break;
+		case 2:
+		default:
+			intrinsicsFile = "./media/intrinsics2.xml";
+			distortionFile = "./media/distortion2.xml";
+			break;
+	}
+
+	// Try to load calibrated camera first...
+	if(!calib->isCalibrated()) {
+		if(!calib->loadIntrinsics(intrinsicsFile)) {
+			printf("Could not load %s.\n", intrinsicsFile.c_str());
+		}
+		else if(!calib->loadDistortion(distortionFile)) {
+			printf("Could not load %s.\n", distortionFile.c_str());
+		}
+		else {
+			if(calib->doGenerateMap(frame)) {
+				printf("Calibration successfully loaded for camera %d\n", camNum);
+			}
+		}
+	}
 
 	// Calibrate camera
 	if(!calib->isCalibrated()) {
@@ -83,6 +113,8 @@ void doCalibration(Cv::Image* frame, Cv::Calibration* calib, int camNum)
 		frameDt++;
 		if(calib->isCalibrated()) {
 			printf("Done calibrating cam %d!!\n", camNum);
+			calib->saveIntrinsics(intrinsicsFile);
+			calib->saveDistortion(distortionFile);
 		}
 	}
 
@@ -94,7 +126,7 @@ void doCalibration(Cv::Image* frame, Cv::Calibration* calib, int camNum)
 		}
 		turn = !turn;
 	}*/
-	if(calib->isCalibrated()) {
+	if(calib->isCalibrated() && undistort) {
 		calib->undistort(frame);
 	}
 }
@@ -104,6 +136,7 @@ void doCamera()
 	Cv::Image* frame1 = 0;
 	Cv::Image* frame2 = 0;
 	//Cv::Image* img2 = 0;
+	static bool undistort = true;
 
 	frame1 = new Cv::Image(cam1->grabFrame());
 	frame2 = new Cv::Image(cam2->grabFrame());
@@ -115,13 +148,15 @@ void doCamera()
 		calib2 = new Cv::Calibration(7, 6, 30); 
 	}
 
-	doCalibration(frame1, calib1, 1);
-	doCalibration(frame2, calib2, 2);
+	doCalibration(frame1, calib1, 1, undistort);
+	doCalibration(frame2, calib2, 2, undistort);
 
 	gtkImg1->setPixbuf(frame1->toPixbuf());
 	gtkImg2->setPixbuf(frame2->toPixbuf());
 	delete frame1;
 	delete frame2;
+
+	undistort = !undistort;
 }
 
 
@@ -178,7 +213,12 @@ int main(int argc, char* argv[])
 
 	gui->start();
 
-	printf("\nDone\n");
+	// Finish
+	printf("\nClosing cameras...\n");
+	cam1->close();
+	cam2->close();
+
+	printf("Done\n");
 	return 0;
 }
 
