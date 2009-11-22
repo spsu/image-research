@@ -65,6 +65,11 @@ void Camera::setupBuffers()
 
 Frame* Camera::grabFrame()
 {
+	if(!isStreaming() && !streamOn()) {
+		fprintf(stderr, 
+			"Camera could not grab frame: streaming could not be turned on.\n");
+		return NULL;
+	}
 	if(buffers == NULL) {
 		setupBuffers();
 	}

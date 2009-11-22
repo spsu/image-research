@@ -9,7 +9,8 @@ namespace V4L2 {
 
 Device::Device(const std::string& fName):
 	name(fName),
-	fd(0)
+	fd(0),
+	streaming(false)
 {
 	// Nothing
 }
@@ -31,7 +32,8 @@ bool Device::open()
 	fd = ::open(name.c_str(), O_RDWR);
 	if(fd == -1) {
 		// TODO: Report error.
-		fprintf(stderr, "Device::open() err: could not open device\n");
+		fprintf(stderr, 
+			"Device::open() err: could not open device %s.\n", name.c_str());
 		fd = 0;
 		return false;
 	}
@@ -45,6 +47,9 @@ bool Device::isOpen()
 
 void Device::close()
 {
+	if(isStreaming()) {
+		streamOff();
+	}
 	::close(fd);
 	fd = 0;
 }
@@ -57,21 +62,33 @@ int Device::getFd()
 
 bool Device::streamOn()
 {
+	if(!isOpen()) {
+		open();
+	}
+	if(isStreaming()) {
+		return true;
+	}
+
 	v4l2_buf_type buffType = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	if(ioctl(fd, VIDIOC_STREAMON, &buffType) == -1) {
-		fprintf(stderr, "Could not turn stream on.");
+		fprintf(stderr, "Could not turn stream on.\n");
 		return false;
 	}
+	streaming = true; 
 	return true;
 }
 
 bool Device::streamOff()
 {
+	if(!isStreaming()) {
+		return true;
+	}
 	v4l2_buf_type buffType = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	if(ioctl(fd, VIDIOC_STREAMOFF, &buffType) == -1) {
-		fprintf(stderr, "Could not turn stream off.");
+		fprintf(stderr, "Could not turn stream off.\n");
 		return false;
 	}
+	streaming = false;
 	return true;
 }
 

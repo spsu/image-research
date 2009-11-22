@@ -22,6 +22,7 @@ class Device
 	public:
 		/**
 		 * CTOR.
+		 * Maps the device with the given path. 
 		 */
 		Device(const std::string& fName);
 
@@ -47,12 +48,13 @@ class Device
 
 		/**
 		 * Get the file descriptor.
-		 * Opens the device if it is not already open. 
+		 * Automatically opens the device if it is not already open. 
 		 */
 		int getFd();
 
 		/**
 		 * Turn the stream on.
+		 * Automatically opens the device if it is not already open. 
 		 */
 		bool streamOn();
 
@@ -61,16 +63,26 @@ class Device
 		 */
 		bool streamOff();
 
+		/**
+		 * Whether the device is streaming.
+		 */
+		bool isStreaming() { return streaming; };
+
 	protected:
 		/**
-		 * Name
+		 * Filename/path
 		 */
 		std::string name;
 
 		/**
-		 * File descriptor.
+		 * File descriptor of an open device.
 		 */
 		int fd;
+
+		/**
+		 * Device is streaming.
+		 */
+		bool streaming;
 };
 }
 

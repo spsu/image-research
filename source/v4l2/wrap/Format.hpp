@@ -100,8 +100,9 @@ class Format
 
 		/**
 		 * Perform the 'get', 'set', or 'try' format query.
+		 * If the device is busy, it will try the request again numTries. 
 		 */
-		bool query(int fd, int request);
+		bool query(int fd, int request, int numTries = 4);
 
 	private:
 

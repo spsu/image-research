@@ -285,13 +285,22 @@ void Format::printAll()
 
 // ============================ PROTECTED METHODS =========================== //
 
-bool Format::query(int fd, int request)
+bool Format::query(int fd, int request, int numTries)
 {
+	if(fd <= 0) {
+		fprintf(stderr,
+			"Cannot query format: There is an error with the file descr.\n");
+		return false;
+	}
+
 	if(ioctl(fd, request, &format) != 0) {
 		switch(errno) {
 			case EBUSY:
 				fprintf(stderr,
-					"Could not query camera because the device was busy.\n"); 
+					"Could not query camera format: the device was busy.\n"); 
+				if(numTries > 0) {
+					return query(fd, request, --numTries);
+				}
 				break;
 			case EINVAL:
 				fprintf(stderr,

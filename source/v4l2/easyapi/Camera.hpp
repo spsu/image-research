@@ -58,6 +58,7 @@ class Camera : public Device
 
 		/**
 		 * Get the next frame.
+		 * If the device isn't streaming (or open), turn it on. 
 		 */
 		Frame* grabFrame();
 
