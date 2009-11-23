@@ -14,8 +14,9 @@ class Calibration
 		/**
 		 * Calibration CTOR.
 		 * Supply the chessboard size and the number of boards to find.
+		 * Setting the number of boards to find is optional.
 		 */		
-		Calibration(int boardW = 0, int boardH = 0, int num = 20);
+		Calibration(int boardW, int boardH, int num = 0);
 
 		/**
 		 * Calibration DTOR.
@@ -24,9 +25,15 @@ class Calibration
 
 		/**
 		 * Set the board finding parameters.
-		 * This can also be done from the CTOR.
+		 * This is NECESSARY, but can also be done from the CTOR.
 		 */
 		void setBoardParams(int boardW, int boardH, int num);
+
+		/**
+		 * Set the camera image frame size.
+		 * This is NECESSARY. 
+		 */
+		void setCameraFrameSize(int width, int height);
 
 		/**
 		 * If the object calibration is ready for processing images.
@@ -43,7 +50,7 @@ class Calibration
 		/**
 		 * Generate maps for undistortion after configs are loaded.
 		 */
-		bool doGenerateMap(Cv::Image* img);
+		bool doGenerateMap();
 
 		/**
 		 * Save calibration matrices in XML files.
@@ -95,7 +102,12 @@ class Calibration
 		/**
 		 * The calibration board size.
 		 */
-		CvSize size;
+		CvSize boardSize;
+
+		/**
+		 * The camera image frame size.
+		 */
+		CvSize frameSize;
 
 		/**
 		 * The number of completely identified calibration boards to find.
@@ -143,12 +155,12 @@ class Calibration
 		/**
 		 * Generate the intrinsics matricies.
 		 */
-		void generateIntrinsics(IplImage* img);
+		bool generateIntrinsics();
 
 		/**
 		 * Generate the undistort maps.
 		 */
-		void generateMap(IplImage* img);
+		bool generateMap();
 };
 }
 
