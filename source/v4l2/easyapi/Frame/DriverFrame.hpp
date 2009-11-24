@@ -1,17 +1,10 @@
-#ifndef V4L2_Frame
-#define V4L2_Frame
+#ifndef V4L2_Frame_DriverFrame
+#define V4L2_Frame_DriverFrame
 
-/**
- * Provides easy access to the memory mapped segment.
- * TODO: This code, as well as the code in "Buffers", is *really* bad.
- */
-namespace V4L2 {
-	class Buffer;
-	class Buffers;
-}
+#include "../Frame.hpp"
 
 namespace V4L2 {
-class Frame
+class DriverFrame: public Frame
 {
 	public:
 		/**
@@ -46,9 +39,6 @@ class Frame
 		 */
 		virtual int getHeight();
 
-	protected:
-		Buffer* curBuffer;
-		Buffers* buffers;
 };
 }
 

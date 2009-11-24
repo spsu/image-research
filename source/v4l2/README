@@ -4,7 +4,7 @@ The primary motivation behind this V4L2 wrapper was to overcome a long-standing
 bug in OpenCV that makes it impossible to resize camera feeds, and in the 
 process, learn about the V4L2 architecture.
 
-* The "wrap" directory code is incomplete and has a few faults.
+* The "wrap" directory code is incomplete and has a number of faults.
 
 * The "easyapi" directory contains a lot of jumbled code, and certainly needs
   to be refactored. 
@@ -14,3 +14,9 @@ process, learn about the V4L2 architecture.
 		* Frame is messy
 
 
+=== NOTE!! ===
+
+* Right now, the only kind of camera IO supported is streaming through memory 
+  mapping. Read() nor user pointers are implemented. 
+
+* Only YUYV images are supported at present. 

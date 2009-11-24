@@ -21,6 +21,10 @@ clean:
 	$(RM) $(GEN) fourier wavelet test testv4l grayscale
 	cd ./build && $(RM) */*.o */*.so */*/*.o */*/*.so 
 
+.PHONY: stats
+stats:
+	@wc -l -w -c -L */*.*pp */*/*.*pp */*/*/*.*pp */*/*/*/*.*pp
+	@echo " Lines\tWords\tBytes\tLine\t"
 # ============================================================================ #
 # 					Applications:
 

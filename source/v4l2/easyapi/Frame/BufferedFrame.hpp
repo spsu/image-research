@@ -1,17 +1,17 @@
-#ifndef V4L2_Frame
-#define V4L2_Frame
+#ifndef V4L2_Frame_BufferedFrame
+#define V4L2_Frame_BufferedFrame
 
 /**
- * Provides easy access to the memory mapped segment.
- * TODO: This code, as well as the code in "Buffers", is *really* bad.
+ * Buffered Frame
+ * This class copies the image present in device driver memory to an in-object
+ * buffer. The class will not require access to the device driver after 
+ * instantiation. 
  */
-namespace V4L2 {
-	class Buffer;
-	class Buffers;
-}
+
+#include "../Frame.hpp"
 
 namespace V4L2 {
-class Frame
+class BufferedFrame: public Frame
 {
 	public:
 		/**
@@ -22,6 +22,7 @@ class Frame
 
 		/**
 		 * DTOR.
+		 * Clears buffer memory. 
 		 */
 		virtual ~Frame();
 
@@ -47,8 +48,16 @@ class Frame
 		virtual int getHeight();
 
 	protected:
-		Buffer* curBuffer;
-		Buffers* buffers;
+		/**
+		 * Image data.
+		 */
+		unsigned char* data;
+
+		/**
+		 * Image length.
+		 */
+		int numBytes; 
+
 };
 }
 

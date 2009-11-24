@@ -5,6 +5,8 @@
 
 /**
  * Vector of buffers, necessary to queue/dequeue from. 
+ * XXX: This shouldn't be a part of the public API. 
+ * TODO: "Buffers" is a bad class name wrt "Buffer" and "RequestBuffer"
  */
 
 namespace V4L2 {
@@ -44,9 +46,15 @@ class Buffers
 		Buffer* getBuffer(int offset);
 
 		/**
-		 * Get a frame. (Queue, Grab, Dequeue)
+		 * Get a frame in one shot. (Queue->Grab->Dequeue)
+		 * This is great for one camera, but for 2+ cameras where timing is 
+		 * important, this will result in poor timing between the frames. 
 		 */
 		Frame* grabFrame();
+
+		bool queueFrame();
+		Frame* getFrame();
+		bool dequeueFrame();
 
 		/**
 		 * Get the device pointer
