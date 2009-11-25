@@ -18,7 +18,9 @@ class Frame
 		 * Wraps the current buffer. 
 		 * Very slow for dual camera use.
 		 */
-		Frame(Buffers* bufs);
+		Frame(Buffers* bufs); // TODO: DEPRECATE
+
+		Frame(Buffers* bufs, Buffer* curBuf, bool doQueue);
 
 		/**
 		 * DTOR.
@@ -49,6 +51,14 @@ class Frame
 	protected:
 		Buffer* curBuffer;
 		Buffers* buffers;
+
+		/**
+		 * Whether the object should requeue the buffer when DTOR called. 
+		 * (Should be true if the frame was automatically dequeued, false if
+		 * manually dequeued.)
+		 */
+		bool doAutoQueue;
+
 };
 }
 

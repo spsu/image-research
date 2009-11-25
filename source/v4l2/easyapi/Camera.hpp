@@ -62,6 +62,12 @@ class Camera : public Device
 		 */
 		Frame* grabFrame();
 
+		/**
+		 * TODO: DOCS, basically these pass through
+		 */
+		bool dequeue();
+		bool dequeueOne();
+
 	protected:
 		/**
 		 * Capabilities of the device

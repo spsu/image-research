@@ -2,6 +2,7 @@
 #define V4L2_Buffers
 
 #include <vector>
+#include <queue>
 
 /**
  * Vector of buffers, necessary to queue/dequeue from. 
@@ -77,6 +78,7 @@ class Buffers
 		 * Returns a buffer to the device driver.
 		 */
 		bool queue();
+		void reportQueued();
 
 	protected:
 		/**
@@ -117,7 +119,9 @@ class Buffers
 		 * far better for the user to manually queue/dequeue to ensure the 
 		 * pipeline is as close to realtime as possible.
 		 */
-		 bool manuallyDequeued;
+		//bool manuallyDequeued;
+
+		std::queue<Buffer*> manuallyDequeued;
 };
 }
 

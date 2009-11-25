@@ -169,20 +169,32 @@ void doCalibration(Cv::Image* frame, Cv::Calibration* calib, int camNum)
 
 void doCamera()
 {
+	V4L2::Frame* f1 = 0;
+	V4L2::Frame* f2 = 0;
 	Cv::Image* frame1 = 0;
 	Cv::Image* frame2 = 0;
 	//Cv::Image* img2 = 0;
 
-	frame1 = new Cv::Image(cam1->grabFrame());
-	frame2 = new Cv::Image(cam2->grabFrame());
+	// XXX: Will this result in magic synchronization? Please!
+	cam1->dequeue();
+	cam2->dequeue();
+
+	f1 = cam1->grabFrame();
+	f2 = cam2->grabFrame();
+
+	if(f1 == NULL || f2 == NULL) {
+		fprintf(stderr, "A frame could not be grabbed. (MEMLEAK!)\n");
+		return;
+	}
+
+	frame1 = new Cv::Image(f1);
+	frame2 = new Cv::Image(f2);
 
 	// ***** PROCESS HERE ***** // 
 
-	//doCalibration(frame1, calib1, 1);
-	//doCalibration(frame2, calib2, 2);
+	doCalibration(frame1, calib1, 1);
+	doCalibration(frame2, calib2, 2);
 
-	//gtkImg1->setPixbuf(frame1->toPixbuf());
-	//gtkImg2->setPixbuf(frame2->toPixbuf());
 	gtkImages[0]->setPixbuf(frame1->toPixbuf());
 	gtkImages[1]->setPixbuf(frame2->toPixbuf());
 

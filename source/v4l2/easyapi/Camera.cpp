@@ -76,4 +76,20 @@ Frame* Camera::grabFrame()
 	return buffers->grabFrame();
 }
 
+bool Camera::dequeue()
+{
+	if(buffers == NULL) {
+		setupBuffers();
+	}
+	return buffers->dequeue();
+}
+
+bool Camera::dequeueOne()
+{
+	if(buffers == NULL) {
+		setupBuffers();
+	}
+	return buffers->dequeueOne();
+}
+
 } // end namespace V4L2

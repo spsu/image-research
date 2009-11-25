@@ -8,10 +8,12 @@
 
 namespace V4L2 {
 
+// TODO: DEPRECATE
 Frame::Frame(Buffers* bufs)
 {
 	buffers = bufs;
 	curBuffer = new Buffer(buffers->getRequest());
+	doAutoQueue = true;
 
 	// Dequeue to process
 	if(!curBuffer->dequeue(buffers->getDevice())) {
@@ -19,13 +21,24 @@ Frame::Frame(Buffers* bufs)
 	}
 }
 
+Frame::Frame(Buffers* bufs, Buffer* curBuf, bool doQueue)
+{
+	buffers = bufs;
+	curBuffer = curBuf;
+	//doAutoQueue = doQueue;
+	doAutoQueue = true; // XXX: TEMP
+}
+
 Frame::~Frame()
 {
-	// Queue it back at the camera 
-	if(!curBuffer->queue(buffers->getDevice())) {
-		fprintf(stderr, "Could not queue buffer\n");
+	if(doAutoQueue) {
+		// Queue it back at the camera 
+		if(!curBuffer->queue(buffers->getDevice())) {
+			fprintf(stderr, "Could not queue buffer\n");
+		}
+		delete curBuffer;
+		buffers->reportQueued();
 	}
-	delete curBuffer;
 }
 
 unsigned char* Frame::getData()
@@ -51,6 +64,5 @@ int Frame::getHeight()
 	cam = (Camera*)buffers->getDevice();
 	return cam->getFormat()->getHeight();
 }
-
 
 } // end namespace V4L2

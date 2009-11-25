@@ -10,8 +10,7 @@ Buffers::Buffers(Device* dev):
 	reqbuf(NULL),
 	buffers(NULL),
 	lastFrame(NULL),
-	numDequeued(0),
-	manuallyDequeued(false)
+	numDequeued(0)
 {
 	device = dev;
 	reqbuf = new V4L2::RequestBuffers(dev);
@@ -21,6 +20,7 @@ Buffers::Buffers(Device* dev):
 Buffers::~Buffers()
 {
 	// TODO: DELETE BUFFERS
+	// TODO: Actually a lot to clean up...
 	delete reqbuf;
 }
 
@@ -69,36 +69,48 @@ Buffer* Buffers::getBuffer(int offset)
 	return buffers->at(offset);
 }
 
-Frame* Buffers::grabFrame()
+/*Frame* Buffers::grabFrame()
 {
 	if(lastFrame != NULL) {
 		delete lastFrame;
 	}
 	lastFrame = new Frame(this);
 	return lastFrame;
-}
+}*/
 
-Frame* Buffers::grabFrame2()
+Frame* Buffers::grabFrame()
 {
+	Buffer* buffer = 0;
+
 	// If a buffer wasn't manually dequeued by the user prior to calling, we 
 	// need to dequeue a buffer now. 
-	if(!manuallyDequeued && !dequeue(false)) {
-		fprintf(stderr,
-			"Buffers::grabFrame() a buffer could not be auto dequeued " \
-			"to grab a frame.\nPerhaps all buffers are already dequeued.\n");
-		return 0;
+	if(manuallyDequeued.size() == 0) {
+		if(!dequeue(false)) {
+			fprintf(stderr,
+				"Buffers::grabFrame() a buffer could not be auto dequeued to " \
+				"grab a frame.\nPerhaps all buffers are already dequeued.\n");
+			return 0;
+		}
 	}
-	manuallyDequeued = false;
+
+	buffer = manuallyDequeued.front(); // This doesn't requeue at the driver!!!
+	manuallyDequeued.pop();
 
 	// TODO: DO GRAB FRAME.
 	// XXX: If the frame was auto-dequeued, we need to tell it to auto-queue on
 	// delete.
 
+	if(lastFrame != NULL) {
+		delete lastFrame; // TODO: Shared ptr would be nice here
+	}
+	lastFrame = new Frame(this, buffer, true);
+	return lastFrame;
 }
 
 bool Buffers::dequeue(bool manual)
 {
 	int count = 0;
+	Buffer* buffer = 0; // the dequeued buffer
 
 	count = reqbuf->getCount();
 	if(count < 1 ) {
@@ -113,11 +125,17 @@ bool Buffers::dequeue(bool manual)
 	}
 
 	// TODO: Buffer class needs refactor, so thus does the following:
-	if(!buffers->at(0)->dequeue(device)) {
+	buffer = new Buffer(reqbuf);
+	/*if(!buffers->at(0)->dequeue(device)) {
+		return false;
+	}*/
+	if(!buffer->dequeue(device)) {
+		delete buffer;
 		return false;
 	}
+
 	numDequeued++;
-	manuallyDequeued = manual;
+	manuallyDequeued.push(buffer);
 	return true;
 }
 
@@ -133,7 +151,7 @@ bool Buffers::dequeueOne(bool manual)
 
 bool Buffers::queue()
 {
-	if(numDequeued < 1) {
+	/*if(numDequeued < 1) {
 		fprintf(stderr, 
 			"Buffers::queue() there is nothing to return to queue\n");
 		return false;
@@ -142,7 +160,18 @@ bool Buffers::queue()
 		return false;
 	}
 	numDequeued--;
-	return true;
+	return true;*/
+	return false; // DOn't think this method will work...
+}
+
+void Buffers::reportQueued()
+{
+	if(numDequeued < 1) {
+		fprintf(stderr, 
+			"Buffers::reportQueued() queue numbers don't match\n");
+		return;
+	}
+	numDequeued--;
 }
 
 } // end namespace V4L2
