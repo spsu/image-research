@@ -32,6 +32,7 @@ class Buffer
 		int getBytesUsed();
 
 		// XXX: NOTE, NEED CLEANUP MECHANISM:
+		// NOT IMPLEMENTING UNTIL/UNLESS IT IS VITAL
 		// Cleanup
 		//for (i = 0; i < reqbuf.count; i++)
 		//	munmap (buffers[i].start, buffers[i].length);
@@ -52,6 +53,8 @@ class Buffer
 		 * Get the length of the mapped memory.
 		 */
 		//size_t getLength() { return length; };
+
+
 
 	protected:
 		/**

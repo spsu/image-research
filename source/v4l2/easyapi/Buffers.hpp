@@ -7,6 +7,7 @@
  * Vector of buffers, necessary to queue/dequeue from. 
  * XXX: This shouldn't be a part of the public API. 
  * TODO: "Buffers" is a bad class name wrt "Buffer" and "RequestBuffer"
+ * TODO: Rename BufferManagement or BufferManager
  */
 
 namespace V4L2 {
@@ -52,24 +53,71 @@ class Buffers
 		 */
 		Frame* grabFrame();
 
-		bool queueFrame();
-		Frame* getFrame();
-		bool dequeueFrame();
-
 		/**
 		 * Get the device pointer
 		 */
 		Device* getDevice() { return device; };
 
-	private:
+		// ==================== NEW API STUFF ==================== //
+
+		/**
+		 * Dequeues a buffer from the device driver.
+		 * Can't exceed the number of buffers allocated. 
+		 */
+		bool dequeue(bool manual = true);
+
+		/**
+		 * Dequeues a buffer from the device driver, but only if there are no
+		 * outstanding buffers already dequeued. This ensures only one buffer
+		 * is checked out at a time if this method is used exclusively.
+		 */
+		bool dequeueOne(bool manual = true);
+
+		/**
+		 * Returns a buffer to the device driver.
+		 */
+		bool queue();
+
+	protected:
+		/**
+		 * Shared pointer to the device class.
+		 * This allows access to the device.
+		 */
 		Device* device;
 
+		/**
+		 * Shared pointer(?) to RequestBuffers structure, which sets up driver
+		 * buffers. This tells us how many of our requested buffers were granted
+		 * and generally what type of buffers we have. 
+		 */
 		RequestBuffers* reqbuf;
 
+		/**
+		 * The buffers being managed by this class.
+		 * TODO: Verify this is necessary. 
+		 */
 		std::vector<Buffer*>* buffers;
 
+		/**
+		 * TODO: Verify this is necessary.
+		 */
 		Frame* lastFrame;
 
+		/**
+		 * Number of currently dequeued buffers (for the application to use).
+		 * This must be compared with the RequestBuffers structure to ensure we
+		 * don't hit the limit/need to wait. 
+		 */
+		int numDequeued;
+
+		/**
+		 * If the *user* just manually dequeued a buffer, this is set to true.
+		 * When grabFrame() is called, if this is false the method must assume
+		 * a buffer needs to be automatically dequeued. THIS IS SLOW!!! It's 
+		 * far better for the user to manually queue/dequeue to ensure the 
+		 * pipeline is as close to realtime as possible.
+		 */
+		 bool manuallyDequeued;
 };
 }
 

@@ -52,6 +52,30 @@ bool Buffer::query(Device* dev)
 	return true;
 }
 
+bool Buffer::dequeue(Device* dev)
+{
+	if(ioctl(dev->getFd(), VIDIOC_DQBUF, &buffer) == -1) {
+		switch(errno) {
+			case EAGAIN:
+				fprintf(stderr, "EAGAIN\n");
+				break;
+			case EINVAL:
+				fprintf(stderr, "EINVAL\n");
+				break;
+			case ENOMEM:
+				fprintf(stderr, "ENOMEM\n");
+				break;
+			case EIO:
+				fprintf(stderr, "EIO\n");
+				break;
+			default:
+				fprintf(stderr, "There was an error dequeueing\n");
+		}
+		return false;
+	}
+	return true;
+}
+
 bool Buffer::queue(Device* dev)
 {
 	if(ioctl(dev->getFd(), VIDIOC_QBUF, &buffer) == -1) {
@@ -76,29 +100,6 @@ bool Buffer::queue(Device* dev)
 	return true;
 }
 
-bool Buffer::dequeue(Device* dev)
-{
-	if(ioctl(dev->getFd(), VIDIOC_DQBUF, &buffer) == -1) {
-		switch(errno) {
-			case EAGAIN:
-				fprintf(stderr, "EAGAIN\n");
-				break;
-			case EINVAL:
-				fprintf(stderr, "EINVAL\n");
-				break;
-			case ENOMEM:
-				fprintf(stderr, "ENOMEM\n");
-				break;
-			case EIO:
-				fprintf(stderr, "EIO\n");
-				break;
-			default:
-				fprintf(stderr, "There was an error dequeueing\n");
-		}
-		return false;
-	}
-	return true;
-}
 
 int Buffer::getLength()
 {

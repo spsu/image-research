@@ -4,6 +4,11 @@
 #include "../Frame.hpp"
 
 namespace V4L2 {
+	class Buffers;
+	class Buffer;
+}
+
+namespace V4L2 {
 class DriverFrame: public Frame
 {
 	public:
@@ -38,6 +43,18 @@ class DriverFrame: public Frame
 		 * Get the height of the image.
 		 */
 		virtual int getHeight();
+
+	protected:
+		/**
+		 * The current buffer representation.
+		 * TODO: This is really ugly...
+		 */
+		Buffer* curBuf;
+
+		/**
+		 * Pointer to the allocated buffers.
+		 */
+		Buffers* buffers;
 
 };
 }
