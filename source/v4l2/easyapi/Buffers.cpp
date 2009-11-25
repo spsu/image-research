@@ -1,5 +1,5 @@
 #include "Buffers.hpp"
-#include "Frame.hpp"
+#include "Frame/DriverFrame.hpp"
 #include "../wrap/Buffer.hpp"
 #include "../wrap/RequestBuffers.hpp"
 #include <stdio.h>
@@ -69,7 +69,7 @@ Buffer* Buffers::getBuffer(int offset)
 	return buffers->at(offset);
 }
 
-Frame* Buffers::grabFrame()
+DriverFrame* Buffers::grabTemporaryFrame()
 {
 	Buffer* buffer = 0;
 
@@ -95,7 +95,7 @@ Frame* Buffers::grabFrame()
 	if(lastFrame != NULL) {
 		delete lastFrame; // TODO: Shared ptr would be nice here
 	}
-	lastFrame = new Frame(this, buffer, true);
+	lastFrame = new DriverFrame(this, buffer, true);
 	return lastFrame;
 }
 

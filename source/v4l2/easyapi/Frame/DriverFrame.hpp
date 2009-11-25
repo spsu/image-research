@@ -13,15 +13,15 @@ class DriverFrame: public Frame
 {
 	public:
 		/**
-		 * Wraps the current buffer. 
-		 * Very slow for dual camera use.
+		 * Wraps the current buffer.
+		 * XXX: Still needs refactoring!
 		 */
-		Frame(Buffers* bufs);
+		DriverFrame(Buffers* bufs, Buffer* curBuf, bool doQueue);
 
 		/**
 		 * DTOR.
 		 */
-		virtual ~Frame();
+		virtual ~DriverFrame();
 
 		/**
 		 * Get the starting pointer where data is located.
@@ -47,14 +47,21 @@ class DriverFrame: public Frame
 	protected:
 		/**
 		 * The current buffer representation.
-		 * TODO: This is really ugly...
+		 * TODO: This whole design is really ugly...
 		 */
-		Buffer* curBuf;
+		Buffer* curBuffer;
 
 		/**
 		 * Pointer to the allocated buffers.
 		 */
 		Buffers* buffers;
+
+		/**
+		 * Whether the frame should auto-queue the buffer back to the driver on
+		 * object deletion. (TODO: Defaults to true. Is there another way to do
+		 * this sensibly?)
+		 */
+		bool doAutoQueue;
 
 };
 }

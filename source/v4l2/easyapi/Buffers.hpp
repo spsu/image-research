@@ -15,7 +15,7 @@ namespace V4L2 {
 	class Buffer;
 	class RequestBuffers;
 	class Device;
-	class Frame;
+	class DriverFrame;
 }
 
 namespace V4L2 {
@@ -48,16 +48,43 @@ class Buffers
 		Buffer* getBuffer(int offset);
 
 		/**
-		 * Get a frame in one shot. (Queue->Grab->Dequeue)
-		 * This is great for one camera, but for 2+ cameras where timing is 
-		 * important, this will result in poor timing between the frames. 
-		 */
-		Frame* grabFrame();
-
-		/**
 		 * Get the device pointer
 		 */
 		Device* getDevice() { return device; };
+
+
+		// ===================== IMAGE CAPTURE ============================== //
+
+		/**
+		 * Grab a temporary frame (a buffer wrapper object) from the driver.
+		 * Temporary frames are deleted and have their buffers requeued
+		 * automatically when this method is called again.
+		 *
+		 * DO NOT MANUALLY DEALLOCATE THE DRIVERFRAME!
+		 *
+		 * Note: If the device isn't already streaming (or open), this turns it
+		 * on as a matter of convenience.
+		 *
+		 * Also note that if the frame wasn't manually dequeued prior to grab,
+		 * this will dequeue and grab in one shot (which should result in poor
+		 * timing with dual [or more] synchronous cameras.)
+		 */ 
+		DriverFrame* grabTemporaryFrame();
+
+		/**
+		 * Grab a buffered frame from the driver, saving its memory into the
+		 * object and allowing many frames to be captured and reused. This 
+		 * requires the caller to delete the frame when they are done. 
+		 *
+		 * Note: If the device isn't already streaming (or open), this turns it
+		 * on as a matter of convenience.
+		 *
+		 * Also note that if the frame wasn't manually dequeued prior to grab,
+		 * this will dequeue and grab in one shot (which should result in poor
+		 * timing with dual [or more] synchronous cameras.)
+		 */ 
+		//BufferFrame* grabPersistentFrame(); // XXX TODO (I don't need it now)
+
 
 		// ==================== NEW API STUFF ==================== //
 
@@ -103,7 +130,7 @@ class Buffers
 		/**
 		 * TODO: Verify this is necessary.
 		 */
-		Frame* lastFrame;
+		DriverFrame* lastFrame;
 
 		/**
 		 * Number of currently dequeued buffers (for the application to use).

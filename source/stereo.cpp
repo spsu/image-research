@@ -169,8 +169,8 @@ void doCalibration(Cv::Image* frame, Cv::Calibration* calib, int camNum)
 
 void doCamera()
 {
-	V4L2::Frame* f1 = 0;
-	V4L2::Frame* f2 = 0;
+	V4L2::DriverFrame* f1 = 0;
+	V4L2::DriverFrame* f2 = 0;
 	Cv::Image* frame1 = 0;
 	Cv::Image* frame2 = 0;
 	//Cv::Image* img2 = 0;
@@ -184,8 +184,8 @@ void doCamera()
 	cam1->dequeue();
 	cam2->dequeue(); 
 
-	f1 = cam1->grabFrame();
-	f2 = cam2->grabFrame();
+	f1 = cam1->grabTemporaryFrame();
+	f2 = cam2->grabTemporaryFrame();
 
 	if(f1 == NULL || f2 == NULL) {
 		fprintf(stderr, "A frame could not be grabbed. (MEMLEAK!)\n");

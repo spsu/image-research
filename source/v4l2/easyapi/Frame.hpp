@@ -2,8 +2,8 @@
 #define V4L2_Frame
 
 /**
- * Provides easy access to the memory mapped segment.
- * TODO: This code, as well as the code in "Buffers", is *really* bad.
+ * Provides easy (relatively abstract) access to the memory mapped buffer.
+ * INTERFACE.
  */
 namespace V4L2 {
 	class Buffer;
@@ -14,50 +14,27 @@ namespace V4L2 {
 class Frame
 {
 	public:
-		/**
-		 * Wraps the current buffer. 
-		 * Very slow for dual camera use.
-		 */
-		Frame(Buffers* bufs); // TODO: DEPRECATE
-
-		Frame(Buffers* bufs, Buffer* curBuf, bool doQueue);
-
-		/**
-		 * DTOR.
-		 */
-		virtual ~Frame();
 
 		/**
 		 * Get the starting pointer where data is located.
 		 * You'll have to call getBytesUsed() to read the exact amount.
 		 */
-		virtual unsigned char* getData();
+		virtual unsigned char* getData() = 0;
 
 		/**
 		 * Get the number of bytes used to represent the image frame.
 		 */
-		virtual int getBytesUsed();
+		virtual int getBytesUsed() = 0;
 
 		/**
 		 * Get the width of the image.
 		 */
-		virtual int getWidth();
+		virtual int getWidth() = 0;
 
 		/**
 		 * Get the height of the image.
 		 */
-		virtual int getHeight();
-
-	protected:
-		Buffer* curBuffer;
-		Buffers* buffers;
-
-		/**
-		 * Whether the object should requeue the buffer when DTOR called. 
-		 * (Should be true if the frame was automatically dequeued, false if
-		 * manually dequeued.)
-		 */
-		bool doAutoQueue;
+		virtual int getHeight() = 0;
 
 };
 }

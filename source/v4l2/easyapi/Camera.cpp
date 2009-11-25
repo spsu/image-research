@@ -1,6 +1,6 @@
 #include "Camera.hpp"
 #include "Buffers.hpp"
-#include "Frame.hpp"
+#include "Frame/DriverFrame.hpp"
 #include "../wrap/Capability.hpp"
 #include "../wrap/Format.hpp"
 #include <stdio.h>
@@ -63,7 +63,7 @@ void Camera::setupBuffers()
 	}
 }
 
-Frame* Camera::grabFrame()
+DriverFrame* Camera::grabTemporaryFrame()
 {
 	if(!isStreaming() && !streamOn()) {
 		fprintf(stderr, 
@@ -73,7 +73,7 @@ Frame* Camera::grabFrame()
 	if(buffers == NULL) {
 		setupBuffers();
 	}
-	return buffers->grabFrame();
+	return buffers->grabTemporaryFrame();
 }
 
 bool Camera::dequeue()

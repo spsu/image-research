@@ -19,6 +19,7 @@
 #include "easyapi/Buffers.hpp"
 #include "easyapi/Camera.hpp"
 #include "easyapi/Frame.hpp"
+#include "easyapi/Frame/DriverFrame.hpp" // TODO: Rename MemMappedFrame ??
 #include "easyapi/RgbImage.hpp"
 
 #endif

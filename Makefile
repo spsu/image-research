@@ -110,8 +110,9 @@ build/out/gtk/*.o: source/gtk/*.hpp source/gtk/*.cpp source/gtk/*/*.hpp source/g
 build/lib/liblocal_v4l2.so: build/out/v4l2/*.o
 	@echo "[linking] Video4Linux2 Wrapper Code"
 	@$(CD) ./build/lib && $(SHARED) ../out/v4l2/*.o -o liblocal_v4l2.so
-build/out/v4l2/*.o: source/v4l2/wrap/*.cpp source/v4l2/easyapi/*.cpp
+build/out/v4l2/*.o: source/v4l2/wrap/*.cpp source/v4l2/easyapi/*.cpp source/v4l2/easyapi/*/*.cpp
 	@echo "[compile] Video4Linux2 Wrapper Code"
 	@$(CD) ./build/out/v4l2 && $(C) $(INC) -c ../../../source/v4l2/wrap/*.cpp
 	@$(CD) ./build/out/v4l2 && $(C) $(INC) -c ../../../source/v4l2/easyapi/*.cpp
+	@$(CD) ./build/out/v4l2 && $(C) $(INC) -c ../../../source/v4l2/easyapi/*/*.cpp
 
