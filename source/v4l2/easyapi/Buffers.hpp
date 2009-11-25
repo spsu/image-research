@@ -22,8 +22,14 @@ namespace V4L2 {
 class Buffers 
 {
 	public:
+		/**
+		 * CTOR.
+		 */
 		Buffers(Device* dev);
 
+		/**
+		 * DTOR.
+		 */
 		~Buffers();
 
 		/**
@@ -98,13 +104,20 @@ class Buffers
 		 * Dequeues a buffer from the device driver, but only if there are no
 		 * outstanding buffers already dequeued. This ensures only one buffer
 		 * is checked out at a time if this method is used exclusively.
+		 * XXX: Currently doesn't work since Frames are deallocated in grabFrame
+		 * method(s). It's impossible to manually requeue before dequeuing 
+		 * currently.
 		 */
 		bool dequeueOne(bool manual = true);
 
 		/**
 		 * Returns a buffer to the device driver.
 		 */
-		bool queue();
+		//bool queue(); // TODO: Not sure how this would work just yet
+
+		/**
+		 * Report that a buffer has been requeued by another object.
+		 */
 		void reportQueued();
 
 	protected:
@@ -128,7 +141,7 @@ class Buffers
 		std::vector<Buffer*>* buffers;
 
 		/**
-		 * TODO: Verify this is necessary.
+		 * Used for auto-deallocation with the grabTemporaryFrame() method. 
 		 */
 		DriverFrame* lastFrame;
 
@@ -140,14 +153,9 @@ class Buffers
 		int numDequeued;
 
 		/**
-		 * If the *user* just manually dequeued a buffer, this is set to true.
-		 * When grabFrame() is called, if this is false the method must assume
-		 * a buffer needs to be automatically dequeued. THIS IS SLOW!!! It's 
-		 * far better for the user to manually queue/dequeue to ensure the 
-		 * pipeline is as close to realtime as possible.
+		 * Every time the user manually dequeues, the buffer is stored here 
+		 * until it is used (eg. from grabTemporaryFrame() or related.)
 		 */
-		//bool manuallyDequeued;
-
 		std::queue<Buffer*> manuallyDequeued;
 };
 }

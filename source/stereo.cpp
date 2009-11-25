@@ -131,8 +131,6 @@ int prepCams()
 	return 0;
 }
 
-
-
 void doCalibration(Cv::Image* frame, Cv::Calibration* calib, int camNum)
 {
 	std::string intrinsicsFile = "";
@@ -154,14 +152,6 @@ void doCalibration(Cv::Image* frame, Cv::Calibration* calib, int camNum)
 		}
 	}
 
-	// Undistort the image.
-	/*if(calib->isCalibrated()) {
-		static bool turn = true;
-		if(turn) {
-			calib->undistort(frame);
-		}
-		turn = !turn;
-	}*/
 	if(calib->isCalibrated()) {
 		calib->undistort(frame);
 	}
@@ -173,14 +163,7 @@ void doCamera()
 	V4L2::DriverFrame* f2 = 0;
 	Cv::Image* frame1 = 0;
 	Cv::Image* frame2 = 0;
-	//Cv::Image* img2 = 0;
 
-	// XXX: Will this result in magic synchronization? Please!
-	// XXX: dequeueOne() has error message at present since Frame is deallocated 
-	// within the grabFrame() method
-	// XXX: Reduce more overhead by not doing NULL checking in dequeue/grabframe 
-	// XXX XXX XXX XXX XXX: Not sure why, but reqbuf.count > 2 makes lag. Is it
-	// my code, or V4L2? Should I need more than 2 buffers?
 	cam1->dequeue();
 	cam2->dequeue(); 
 
@@ -230,8 +213,6 @@ int main(int argc, char* argv[])
 
 	// Create main application elements
 	gui = new App::Gui("Stereoscopic Demo");
-	//imgPane1 = new App::ImagePane("");
-	//imgPane2 = new App::ImagePane("");
 
 	imgPanes.push_back(new App::ImagePane(""));
 	imgPanes.push_back(new App::ImagePane(""));
@@ -245,9 +226,6 @@ int main(int argc, char* argv[])
 	vbox->packStart(hbox, false, false, 0);
 	hbox->packStart(imgPanes[0]->getImage(), true, true, 0);
 	hbox->packStart(imgPanes[1]->getImage(), true, true, 0);
-
-	//gtkImg1 = imgPane1->getImage();
-	//gtkImg2 = imgPane2->getImage();
 
 	gtkImages.push_back(imgPanes[0]->getImage());
 	gtkImages.push_back(imgPanes[1]->getImage());

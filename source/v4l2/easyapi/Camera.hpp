@@ -50,12 +50,9 @@ class Camera : public Device
 		/**
 		 * Set the camera image format.
 		 * This destroys the old format object, and the caller no longer owns 
-		 * the passed object.
+		 * the passed object. Perhaps useful for format reuse between cameras.
 		 */
 		//void setFormat(Format* fmt);
-
-		void setupBuffers();
-		Buffers* getBuffers(){ return buffers; }; // TODO: Is this necessary?
 
 
 		// ===================== IMAGE CAPTURE ============================== //
@@ -107,6 +104,11 @@ class Camera : public Device
 		 * called together with the other camera. 
 		 */
 		bool dequeueOne();
+
+		// XXX TODO MESSY CODE:
+
+		void setupBuffers();
+		Buffers* getBuffers(){ return buffers; }; // TODO: Is this necessary?
 
 	protected:
 		/**
