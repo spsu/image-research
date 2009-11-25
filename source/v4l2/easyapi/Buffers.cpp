@@ -69,15 +69,6 @@ Buffer* Buffers::getBuffer(int offset)
 	return buffers->at(offset);
 }
 
-/*Frame* Buffers::grabFrame()
-{
-	if(lastFrame != NULL) {
-		delete lastFrame;
-	}
-	lastFrame = new Frame(this);
-	return lastFrame;
-}*/
-
 Frame* Buffers::grabFrame()
 {
 	Buffer* buffer = 0;
@@ -85,6 +76,7 @@ Frame* Buffers::grabFrame()
 	// If a buffer wasn't manually dequeued by the user prior to calling, we 
 	// need to dequeue a buffer now. 
 	if(manuallyDequeued.size() == 0) {
+		printf("Automatically dequeuing.\n"); // XXX TEMP DEBUG
 		if(!dequeue(false)) {
 			fprintf(stderr,
 				"Buffers::grabFrame() a buffer could not be auto dequeued to " \
@@ -113,6 +105,7 @@ bool Buffers::dequeue(bool manual)
 	Buffer* buffer = 0; // the dequeued buffer
 
 	count = reqbuf->getCount();
+	//printf("Dequeuing: Num buffs avail=%d, num already deq=%d\n", count, numDequeued);
 	if(count < 1 ) {
 		fprintf(stderr, "Buffers::dequeue() no buffers available.\n");
 		return false;
@@ -166,6 +159,7 @@ bool Buffers::queue()
 
 void Buffers::reportQueued()
 {
+	//printf("Report queued\n");
 	if(numDequeued < 1) {
 		fprintf(stderr, 
 			"Buffers::reportQueued() queue numbers don't match\n");

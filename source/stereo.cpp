@@ -176,8 +176,13 @@ void doCamera()
 	//Cv::Image* img2 = 0;
 
 	// XXX: Will this result in magic synchronization? Please!
+	// XXX: dequeueOne() has error message at present since Frame is deallocated 
+	// within the grabFrame() method
+	// XXX: Reduce more overhead by not doing NULL checking in dequeue/grabframe 
+	// XXX XXX XXX XXX XXX: Not sure why, but reqbuf.count > 2 makes lag. Is it
+	// my code, or V4L2? Should I need more than 2 buffers?
 	cam1->dequeue();
-	cam2->dequeue();
+	cam2->dequeue(); 
 
 	f1 = cam1->grabFrame();
 	f2 = cam2->grabFrame();

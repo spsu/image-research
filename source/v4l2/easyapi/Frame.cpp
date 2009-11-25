@@ -26,7 +26,7 @@ Frame::Frame(Buffers* bufs, Buffer* curBuf, bool doQueue)
 	buffers = bufs;
 	curBuffer = curBuf;
 	//doAutoQueue = doQueue;
-	doAutoQueue = true; // XXX: TEMP
+	doAutoQueue = true; // XXX: TEMP. All Requeues in DTOR for now
 }
 
 Frame::~Frame()
