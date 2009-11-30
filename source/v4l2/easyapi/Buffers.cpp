@@ -142,9 +142,9 @@ bool Buffers::dequeueOne(bool manual)
 	return dequeue(manual);
 }
 
-bool Buffers::queue()
+/*bool Buffers::queue()
 {
-	/*if(numDequeued < 1) {
+	if(numDequeued < 1) {
 		fprintf(stderr, 
 			"Buffers::queue() there is nothing to return to queue\n");
 		return false;
@@ -153,9 +153,9 @@ bool Buffers::queue()
 		return false;
 	}
 	numDequeued--;
-	return true;*/
+	return true;
 	return false; // DOn't think this method will work...
-}
+}*/
 
 void Buffers::reportQueued()
 {
