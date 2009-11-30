@@ -1,25 +1,37 @@
-#include "Calibration.hpp"
+#include "StereoCalibration.hpp"
 #include "Image.hpp"
 #include <stdio.h>
 
 namespace Cv {
 
-Calibration::Calibration(int boardW, int boardH, int num):
-	intrinsics(0),
-	distortion(0),
-	xMap(0),
-	yMap(0),
+StereoCalibration::StereoCalibration(int boardW, int boardH, int num):
+	// State
+	stereoState(STEREO_INSTANTIATED),
+	// Matrices 
+	intrinsics1(0),
+	intrinsics2(0),
+	distortion1(0),
+	distortion2(0),
+	rotation(0),
+	translation(0),
+	essential(0),
+	fundamental(0),
+	rotation1(0),
+	rotation2(0),
+	projection1(0),
+	projection2(0),
+	reprojection(0),
+	// Calibration process
 	boardSize(cvSize(boardW, boardH)),
 	frameSize(cvSize(0,0)),
 	numToFind(num),
 	numFound(0),
-	calibrated(false),
 	iterData(0)
 {
 	// Nothing
 }
 
-Calibration::~Calibration()
+StereoCalibration::~StereoCalibration()
 {
 	if(intrinsics != NULL) {
 		cvReleaseMat(&intrinsics);
@@ -34,14 +46,14 @@ Calibration::~Calibration()
 	}
 }
 
-void Calibration::setBoardParams(int boardW, int boardH, int num)
+void StereoCalibration::setBoardParams(int boardW, int boardH, int num)
 {
 	// XXX Note: We don't want to change these params while finding boards.
 	boardSize = cvSize(boardW, boardH);
 
 	if(num < 8) {
 		fprintf(stderr, 
-			"Calibration::setBoardParams(): num < 10, so setting to 10.\n");
+		  "StereoCalibration::setBoardParams(): num < 10, so setting to 10.\n");
 		numToFind = 10;
 	}
 	else {
@@ -49,52 +61,48 @@ void Calibration::setBoardParams(int boardW, int boardH, int num)
 	}
 }
 
-void Calibration::setCameraFrameSize(int width, int height)
+void StereoCalibration::setCameraFrameSize(int width, int height)
 {
 	frameSize = cvSize(width, height);
 }
 
-bool Calibration::loadIntrinsics(std::string filename)
+
+
+// XXX NOTE: Returns true only if found in BOTH images. (XXX Not sure if this
+// is the desired behavior XXX)
+bool StereoCalibration::findBoards(Image* im1, Image* im2)
 {
-	CvMat* data = 0;
+	IplImage* img1 = 0;
+	IplImage* img2 = 0;
 
-	if(isCalibrated()) {
+	if(numToFind <= numFound) {
 		fprintf(stderr, 
-			"Cannot load intrinsics for an already-calibrated camera.\n");
+			"StereoCalibration::findBoards() already found enough.\n");
 		return false;
 	}
 
-	data = (CvMat*)cvLoad(filename.c_str());
-	if(data == NULL) {
-		fprintf(stderr, "Could not load data from file.\n");
+	if(im1 == NULL || im2 == NULL) {
+		fprintf(stderr, 
+			"StereoCalibration::findBoards() one or both images NULL.\n");
 		return false;
 	}
 
-	intrinsics = data;
-	return true;
+	img1 = im1->getPtr();
+	img2 = im2->getPtr();
+
+
+
+
 }
 
-bool Calibration::loadDistortion(std::string filename)
-{
-	CvMat* data = 0;
 
-	if(isCalibrated()) {
-		fprintf(stderr, 
-			"Cannot load distortion for an already-calibrated camera.\n");
-		return false;
-	}
 
-	data = (CvMat*)cvLoad(filename.c_str());
-	if(data == NULL) {
-		fprintf(stderr, "Could not load data from file.\n");
-		return false;
-	}
 
-	distortion = data;
-	return true;
-}
 
-bool Calibration::doGenerateMap()
+
+
+
+bool StereoCalibration::doGenerateMap()
 {
 	// Error conditions
 	if(isCalibrated()) {
@@ -109,7 +117,7 @@ bool Calibration::doGenerateMap()
 
 	if(!generateMap()) {
 		fprintf(stderr, 
-			"Calibration::doGenerateMap() error generating undistort map.\n");
+			"StereoCalibration::doGenerateMap() error generating undistort map.\n");
 		return false;
 	}
 
@@ -117,46 +125,21 @@ bool Calibration::doGenerateMap()
 	return true;
 }
 
-bool Calibration::saveIntrinsics(std::string filename)
-{
-	if(!isCalibrated()) {
-		return false;
-	}
-	if(filename.size() < 1) {
-		fprintf(stderr, "Cannot save intrinsics: filename too short.\n");
-		return false;
-	}
-	cvSave(filename.c_str(), intrinsics);
-	return true;
-}
-
-bool Calibration::saveDistortion(std::string filename)
-{
-	if(!isCalibrated()) {
-		return false;
-	}
-	if(filename.size() < 1) {
-		fprintf(stderr, "Cannot save distortion: filename too short.\n");
-		return false;
-	}
-	cvSave(filename.c_str(), distortion);
-	return true;
-}
 
 // This code based on O'Reilly's text on OpenCV,
 // "Learning OpenCV" [Bradski & Kaehler 2008]
 // Chapter 11: Camera Models and Calibration, pg 398 - 401
-bool Calibration::findBoardIter(Image* im)
+bool StereoCalibration::findBoardIter(Image* im)
 {
 	IplImage* img = 0;
 
 	if(calibrated || numToFind <= numFound) {
-		fprintf(stderr, "Calibration::findBoardIter() already found enough.\n");
+		fprintf(stderr, "StereoCalibration::findBoardIter() already found enough.\n");
 		return false;
 	}
 
 	if(im == NULL) {
-		fprintf(stderr, "Calibration::findBoardIter() no image given.\n");
+		fprintf(stderr, "StereoCalibration::findBoardIter() no image given.\n");
 		return false;
 	}
 
@@ -224,13 +207,13 @@ bool Calibration::findBoardIter(Image* im)
 	return true;
 }
 
-void Calibration::drawBoardIter(Image* im)
+void StereoCalibration::drawBoardIter(Image* im)
 {
 	cvDrawChessboardCorners(im->getPtr(), boardSize, iterData->corners, 
 							iterData->cornerCnt, iterData->found);
 }
 
-bool Calibration::findAndDrawBoardIter(Image* im)
+bool StereoCalibration::findAndDrawBoardIter(Image* im)
 {
 	if(!findBoardIter(im)) {
 		return false;
@@ -239,21 +222,21 @@ bool Calibration::findAndDrawBoardIter(Image* im)
 	return true;
 }
 
-int Calibration::getNumFound()
+int StereoCalibration::getNumFound()
 {
 	return numFound;
 }
 
-bool Calibration::undistort(Image* im)
+bool StereoCalibration::undistort(Image* im)
 {
 	IplImage* clone = 0;
 
 	if(!calibrated) {
-		fprintf(stderr, "Calibration::undistort() can't use if uncalibrated\n");
+		fprintf(stderr, "StereoCalibration::undistort() can't use if uncalibrated\n");
 		return false;
 	}
 	if(xMap == NULL || yMap == NULL) {
-		fprintf(stderr, "Calibration::undistort() x and/or y maps are NULL\n");
+		fprintf(stderr, "StereoCalibration::undistort() x and/or y maps are NULL\n");
 		return false;
 	}
 
@@ -276,7 +259,7 @@ bool Calibration::undistort(Image* im)
 
 // ===================== PROTECTED METHODS ================================== //
 
-bool Calibration::generateIntrinsics()
+bool StereoCalibration::generateIntrinsics()
 {
 	if(calibrated || numFound < numToFind) {
 		return false;
@@ -336,16 +319,16 @@ bool Calibration::generateIntrinsics()
 	return true;
 }
 
-bool Calibration::generateMap()
+bool StereoCalibration::generateMap()
 {
 	if(intrinsics == NULL || distortion == NULL) {
 		fprintf(stderr,
-			"Calibration::generateMap() intrinsics or distortion NULL\n");
+			"StereoCalibration::generateMap() intrinsics or distortion NULL\n");
 		return false;
 	}
 	if(frameSize.width == 0 || frameSize.height == 0) {
 		fprintf(stderr,
-			"Calibration::generateMap() frameSize has not been set!\n");
+			"StereoCalibration::generateMap() frameSize has not been set!\n");
 		return false;
 	}
 
@@ -361,11 +344,37 @@ bool Calibration::generateMap()
 
 	if(xMap == NULL || yMap == NULL) {
 		fprintf(stderr, 
-			"Calibration::generateMap() could not generate x or y maps\n");
+			"StereoCalibration::generateMap() could not generate x or y maps\n");
 		return false;
 	}
 
 	return true; // XXX: assumed. 
 }
+
+
+// ====================================== PRIVATE METHODS =================== //
+
+void StereoCalibration::setupMatrices()
+{
+	// Camera Intrinsics & Calibration 
+	intrinsics1 = cvCreateMat(3, 3, CV_64F);
+	intrinsics2 = cvCreateMat(3, 3, CV_64F);
+	distortion1 = cvCreateMat(1, 5, CV_64F);
+	distortion2 = cvCreateMat(1, 5, CV_64F);
+	rotation    = cvCreateMat(3, 3, CV_64F);
+	translation = cvCreateMat(3, 1, CV_64F);
+	essential   = cvCreateMat(3, 3, CV_64F);
+	fundamental = cvCreateMat(3, 3, CV_64F);
+
+	// Stereo Rectification
+	rotation1	= cvCreateMat(3, 3, CV_64F);
+	rotation2	= cvCreateMat(3, 3, CV_64F);
+	projection1 = cvCreateMat(3, 4, CV_64F);
+	projection2 = cvCreateMat(3, 4, CV_64F);
+	reprojection = cvCreateMat(4, 4, CV_64F);
+}
+
+
+
 
 } // end namespace Cv

@@ -12,11 +12,14 @@
 #include <gtk/gtkmain.h>
 #include <vector>
 
+#include <cv.h>
+
 /**
  * Globals.
  * TODO: Globals are bad. Make a lookup system/dictionary in App::Gui.
  */
 
+Gtk::VBox* vbox = 0;
 std::vector<Gtk::Image*> gtkImages;
 std::vector<App::ImagePane*> imgPanes;
 
@@ -29,8 +32,6 @@ Cv::Calibration* calib1 = 0;
 Cv::Calibration* calib2 = 0;
 
 int frameDt = 0;
-
-Gtk::VBox* vbox = 0;
 
 /////////////////////////////////////
 
@@ -47,8 +48,61 @@ struct ConfigFiles
 		distortionStereo("") {};
 };
 
+/**
+ * Stereo configs for both cams.
+ */
+struct ConfigBoth
+{
+	std::string rotation;
+	std::string translation;
+	std::string essential;
+	std::string fundamental;
+	ConfigBoth(): rotation(""), translation(""), essential(""), fundamental("")
+		{};
+};
+
 ConfigFiles* config1;
 ConfigFiles* config2;
+ConfigBoth* configBoth;
+
+
+
+
+
+
+
+
+
+/////////////////////////////////////
+// STEREO CALIBRATION SPECIFICS
+
+bool matricesCreated;
+CvMat* camIntrinsics1;
+CvMat* camIntrinsics2;
+CvMat* camDistortion1;
+CvMat* camDistortion2;
+CvMat* rotation;
+CvMat* translation;
+CvMat* essential;
+CvMat* fundamental;
+
+
+void stereoCreateMatrices()
+{
+	camIntrinsics1 = cvCreateMat(3, 3, CV_64F);
+	camIntrinsics2 = cvCreateMat(3, 3, CV_64F);
+	camDistortion1 = cvCreateMat(1, 5, CV_64F);
+	camDistortion2 = cvCreateMat(1, 5, CV_64F);
+
+	rotation    = cvCreateMat(3, 3, CV_64F);
+	translation = cvCreateMat(3, 1, CV_64F);
+	essential   = cvCreateMat(3, 3, CV_64F);
+	fundamental = cvCreateMat(3, 3, CV_64F);
+
+	printf("Done creating matrices.\n");
+}
+
+
 
 // Set the formats and stream the camera
 void startStream(V4L2::Camera* cam)
@@ -65,32 +119,33 @@ void startStream(V4L2::Camera* cam)
 }
 
 // Load the calibration files
-void loadCalibrationFiles(Cv::Calibration* calib, ConfigFiles* cf, int camNum)
+bool loadCalibrationFiles(Cv::Calibration* calib, ConfigFiles* cf, int camNum)
 {
 	calib->setCameraFrameSize(320, 240);
 
 	if(calib->isCalibrated()) {
 		printf("Already calibrated (camera %d).\n", camNum);
-		return;
+		return true;
 	}
 	if(!calib->loadIntrinsics(cf->intrinsics)) {
 		printf("Could not load %s.\n", cf->intrinsics.c_str());
-		return;
+		return false;
 	}
 	if(!calib->loadDistortion(cf->distortion)) {
 		printf("Could not load %s.\n", cf->distortion.c_str());
-		return;
+		return false;
 	}
 	
 	if(!calib->doGenerateMap()) {
 		printf("Calibration map couldn't be generated for cam %d...\n", camNum);
-		return;
+		return false;
 	}
 	printf("Calibration successfully loaded for camera %d\n", camNum);
+	return true;
 }
 
 // Prepare the cameras
-int prepCams()
+void prepCams()
 {
 	std::string c1 = "/dev/video0";
 	std::string c2 = "/dev/video1";
@@ -99,7 +154,7 @@ int prepCams()
 	config1 = new ConfigFiles();
 	config2 = new ConfigFiles();
 
-	config1->intrinsics = "./media/intrinsics1.xml";
+	config1->intrinsics = "./media/intrinsics1.xml"; // XXX TEMP NOT FOUND
 	config1->distortion = "./media/distortion1.xml";
 	config2->intrinsics = "./media/intrinsics2.xml";
 	config2->distortion = "./media/distortion2.xml";
@@ -128,7 +183,8 @@ int prepCams()
 	loadCalibrationFiles(calib1, config1, 1);
 	loadCalibrationFiles(calib2, config2, 2);
 
-	return 0;
+	// XXX: STEREO XXX //
+	stereoCreateMatrices();
 }
 
 void doCalibration(Cv::Image* frame, Cv::Calibration* calib, int camNum)
@@ -156,6 +212,13 @@ void doCalibration(Cv::Image* frame, Cv::Calibration* calib, int camNum)
 		calib->undistort(frame);
 	}
 }
+
+
+
+
+
+
+
 
 void doCamera()
 {
