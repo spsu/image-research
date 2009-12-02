@@ -74,6 +74,7 @@ bool StereoCalibration::findBoards(Image* im1, Image* im2)
 {
 	IplImage* img1 = 0;
 	IplImage* img2 = 0;
+	bool found = false;
 
 	if(numToFind <= numFound) {
 		fprintf(stderr, 
@@ -90,9 +91,97 @@ bool StereoCalibration::findBoards(Image* im1, Image* im2)
 	img1 = im1->getPtr();
 	img2 = im2->getPtr();
 
+	// Initialize the temporary data that we will reuse on every call of this 
+	// method. Initializing once and saving makes things faster. 
+	if(tempData == NULL) {
+		tempData = new TempData();
+		tempData->area = boardSize.height * boardSize.width; 
 
+		tempData->imgPts1 = cvCreateMat(numToFind*tempData->area, 2, CV_32FC1);
+		tempData->imgPts2 = cvCreateMat(numToFind*tempData->area, 2, CV_32FC1);
+		tempData->objPts = cvCreateMat(numToFind*tempData->area, 3, CV_32FC1);
+		tempData->ptCounts = cvCreateMat(numToFind, 1, CV_32FC1);
 
+		tempData->corners1 = new CvPoint2D32f[numToFind];
+		tempData->corners2 = new CvPoint2D32f[numToFind];
+		tempData->gray1 = cvCreateImage(cvGetSize(img1), 8, 1); // for subpixel
+		tempData->gray2 = cvCreateImage(cvGetSize(img2), 8, 1); // for subpixel
+	}
 
+	// ===== Find chessboards in each image ====== //
+
+	found = cvFindChessboardCorners(
+				img1, 
+				boardSize, 
+				tempData->corners1,
+				&tempData->cornerCnt1, 
+				CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_NORMALZE_IMAGE
+	);
+
+	if(!found) {
+		return false;
+	}
+
+	found = cvFindChessboardCorners(
+				img2, 
+				boardSize, 
+				tempData->corners2,
+				&tempData->cornerCnt2, 
+				CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_NORMALZE_IMAGE
+	);
+
+	if(!found) {
+		return false;
+	}
+
+	// ===== Try to gain subpixel accuracy in each image ====== //
+
+	//cvCvtColor(img, iterData->gray, CV_BGR2GRAY); // XXX: Why won't this work?
+	IplImage* gray = cvCreateImage(cvGetSize(img1), 8, 1);
+	cvCvtColor(img1, gray, CV_BGR2GRAY);
+	cvFindCornerSubPix(gray, tempData->corners1, tempData->cornerCnt1, 
+			 cvSize(11,11), cvSize(-1,-1),
+			 cvTermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1)
+	);
+
+	if(tempData->cornerCnt1 != tempData->area) {
+		return false;
+	}
+
+	cvCvtColor(img2, gray, CV_BGR2GRAY);
+	cvFindCornerSubPix(gray, tempData->corners2, tempData->cornerCnt2, 
+			 cvSize(11,11), cvSize(-1,-1),
+			 cvTermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1)
+	);
+
+	if(tempData->cornerCnt2 != tempData->area) {
+		return false;
+	}
+
+	// ===== Save the information ====== //
+
+	// XXX XXX TODO: THIS PROBABLY ISN'T RIGHT
+
+	tempData->step = numFound * tempData->area;
+
+	for(int i = tempData->step, j = 0; j < tempData->area; i++, j++) {
+		CV_MAT_ELEM(*tempData->imgPts1, float, i, 0) = tempData->corners1[j].x;
+		CV_MAT_ELEM(*tempData->imgPts1, float, i, 1) = tempData->corners1[j].y;
+		CV_MAT_ELEM(*tempData->imgPts2, float, i, 0) = tempData->corners2[j].x;
+		CV_MAT_ELEM(*tempData->imgPts2, float, i, 1) = tempData->corners2[j].y;
+		CV_MAT_ELEM(*tempData->objPts, float, i, 0) = j / boardSize.width; 
+		CV_MAT_ELEM(*tempData->objPts, float, i, 1) = j % boardSize.width; 
+		CV_MAT_ELEM(*tempData->objPts, float, i, 2) = 0.0f; 
+	}
+	CV_MAT_ELEM(*tempData->ptCounts, int, numFound, 0) = tempData->area;
+
+	numFound += 1;
+
+	// Finalize calibration... 
+	if(numFound == numToFind) {
+		//generateIntrinsics(); // sets calibrated = true
+	}
+	return true;
 }
 
 

@@ -63,7 +63,7 @@ class StereoCalibration
 		/**
 		 * If the object calibration is ready for processing images.
 		 */
-		bool isCalibrated() { return calibrated; };
+		//bool isCalibrated() { return calibrated; };
 
 
 		/**
@@ -76,9 +76,9 @@ class StereoCalibration
 		 * An iteration to find a calibration board.
 		 * Returns true if found.
 		 */
-		bool findBoardIter(Image* im);
-		void drawBoardIter(Image* im);
-		bool findAndDrawBoardIter(Image* im); 
+		bool findBoardsIter(Image* im1, Image* im2);
+		void drawBoardIter(Image* im1, Image* im2);
+		bool findAndDrawBoardIter(Image* im1, Image* im2); 
 
 		/**
 		 * Return the number of found boards thus far.
@@ -142,21 +142,26 @@ class StereoCalibration
 		 * not elsewhere. 
 		 */
 		struct TempData {
-			IplImage* gray;
-			CvMat* imgPts;
+			IplImage* gray1;
+			IplImage* gray2;
 			CvMat* objPts;
+			CvMat* imgPts1;
+			CvMat* imgPts2;
 			CvMat* ptCounts;
-			CvPoint2D32f* corners;
-			int cornerCnt;
-			int found;
+			CvPoint2D32f* corners1;
+			CvPoint2D32f* corners2;
+			int cornerCnt1;
+			int cornerCnt2;
 			int area;
 			int step;
 			/**
 			 * CTOR.
 		 	 */
-			BoardIterData(): 
-				gray(0), imgPts(0), objPts(0), ptCounts(0),
-				corners(0), cornerCnt(0), found(0), area(0), step(0) {};
+			TempData(): 
+				gray1(0), gray2(0), objPts(0), imgPts1(0), imgPts2(0),
+				ptCounts(0), corners1(0), corners2(0), 
+				cornerCnt(0), cornerCnt(0), area(0), 
+				step(0) {};
 		};
 
 		/**
