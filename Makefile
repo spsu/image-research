@@ -25,6 +25,8 @@ clean:
 stats:
 	@wc -l -w -c -L */*.*pp */*/*.*pp */*/*/*.*pp */*/*/*/*.*pp
 	@echo " Lines\tWords\tBytes\tLine\t"
+
+
 # ============================================================================ #
 # 					Applications:
 
@@ -42,34 +44,13 @@ stereo: source/stereo.cpp libs
 	@$(LN) $(LIB) $(LOCALLIB) build/out/stereo.o -o stereo
 	@chmod +x stereo
 
-### Video 4 Linux test ####################
-testv4l: source/testv4l.cpp libs
-	@echo "[compile] testv4l"
-	@$(CD) ./build/out && $(C) $(INC) -c ../../source/testv4l.cpp
-	@$(LN) $(LIB) $(LOCALLIB) build/out/testv4l.o -o testv4l
-	@chmod +x testv4l
-
-### test ####################
-#test: source/test.cpp libs
-#	echo "[compile] test"
-#	$(CD) ./build/out && $(C) $(INC) -c ../../source/test.cpp
-#	$(LN) $(LIB) $(LOCALLIB) build/out/test.o -o test
-#	chmod +x test
-
 ### NEGATIVE #########################
-negative: negative.cpp libs
+negative: source/negative.cpp libs
 	@echo "[compile] negative"
-	@$(C) $(INC) -c negative.cpp
-	@$(LN) $(LIB) $(LOCALLIB) negative.o -o negative
+	@$(CD) ./build/out && $(C) $(INC) -c ../../source/negative.cpp
+	@$(LN) $(LIB) $(LOCALLIB) build/out/negative.o -o negative
+	@chmod +x negative
 
-
-### FOURIER #########################
-fourier: 
-	@echo "TODO"
-
-### WAVELET #########################
-wavelet: 
-	@echo "TODO"
 
 # ============================================================================ #
 # 					Libraries:
@@ -87,6 +68,7 @@ build/out/app/*.o: source/app/*.hpp source/app/*.cpp
 	@echo "[compile] App Library Code"
 	@$(CD) ./build/out/app && $(C) $(INC) -c ../../../source/app/*.cpp
 
+
 ### CV WRAPPER LIB ####################
 build/lib/liblocal_cv.so: build/out/cv/*.o
 	@echo "[linking] OpenCV Wrapper Code"
@@ -100,7 +82,8 @@ build/out/cv/*.o: source/cv/*.hpp source/cv/*.cpp
 build/lib/liblocal_gtk.so: build/out/gtk/*.o
 	@echo "[linking] Gtk Wrapper Code"
 	@$(CD) ./build/lib && $(SHARED) ../out/gtk/*.o -o liblocal_gtk.so
-build/out/gtk/*.o: source/gtk/*.hpp source/gtk/*.cpp source/gtk/*/*.hpp source/gtk/*/*.cpp
+build/out/gtk/*.o: source/gtk/*.hpp source/gtk/*.cpp source/gtk/*/*.hpp \
+				   source/gtk/*/*.cpp
 	@echo "[compile] Gtk Wrapper Code"
 	@$(CD) ./build/out/gtk && $(C) $(INC) -c ../../../source/gtk/*.cpp
 	@$(CD) ./build/out/gtk && $(C) $(INC) -c ../../../source/gtk/*/*.cpp
@@ -110,9 +93,11 @@ build/out/gtk/*.o: source/gtk/*.hpp source/gtk/*.cpp source/gtk/*/*.hpp source/g
 build/lib/liblocal_v4l2.so: build/out/v4l2/*.o
 	@echo "[linking] Video4Linux2 Wrapper Code"
 	@$(CD) ./build/lib && $(SHARED) ../out/v4l2/*.o -o liblocal_v4l2.so
-build/out/v4l2/*.o: source/v4l2/wrap/*.cpp source/v4l2/easyapi/*.cpp source/v4l2/easyapi/*/*.cpp
+build/out/v4l2/*.o: source/v4l2/wrap/*.cpp source/v4l2/easyapi/*.cpp \
+					source/v4l2/easyapi/*/*.cpp
 	@echo "[compile] Video4Linux2 Wrapper Code"
 	@$(CD) ./build/out/v4l2 && $(C) $(INC) -c ../../../source/v4l2/wrap/*.cpp
 	@$(CD) ./build/out/v4l2 && $(C) $(INC) -c ../../../source/v4l2/easyapi/*.cpp
-	@$(CD) ./build/out/v4l2 && $(C) $(INC) -c ../../../source/v4l2/easyapi/*/*.cpp
+	@$(CD) ./build/out/v4l2 && $(C) $(INC) -c \
+		   ../../../source/v4l2/easyapi/*/*.cpp
 
