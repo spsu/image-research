@@ -8,6 +8,7 @@ test
 testv4l
 negative
 stereo
+panorama
 
 # Images (Don't add to repo: unnecessary!)
 *png
