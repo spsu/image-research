@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 
 	// Create main application elements
 	gui = new App::Gui("Negative Demo");
-	imgPane = new App::ImagePane("./discovery-small.jpg");
+	imgPane = new App::ImagePane("./media/example.jpg");
 
 	// Create other Gtk widgets
 	vbox = new Gtk::VBox(false, 0);
