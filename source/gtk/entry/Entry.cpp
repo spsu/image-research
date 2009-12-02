@@ -36,4 +36,14 @@ int Entry::getLength()
 	return (int)gtk_entry_get_text_length(GTK_ENTRY(widget));
 }
 
+void Entry::setMaxLength(int len)
+{
+	gtk_entry_set_max_length(GTK_ENTRY(widget), len);
+}
+
+void Entry::setWidthChars(int len)
+{
+	gtk_entry_set_width_chars(GTK_ENTRY(widget), len);
+}
+
 } // end namespace Gtk
