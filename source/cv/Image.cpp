@@ -18,6 +18,19 @@ Image::Image(IplImage* img, bool shared):
 	image = img;
 }
 
+// Copy CTOR
+Image::Image(const Image& c):
+	image(0),
+	isOwner(true)
+{
+	image = cvCreateImage(
+				cvSize(c.image->width, c.image->height), 
+				c.image->depth, 
+				c.image->nChannels
+	);
+	cvCopy(c.image, image);
+}
+
 Image::Image(int width, int height, int numChannels):
 	image(0),
 	isOwner(true)
@@ -195,6 +208,11 @@ Image::~Image()
 	}
 }
 
+Image* Image::copy()
+{
+	return new Image(*this);
+}
+
 IplImage* Image::getPtr()
 {
 	return image;
@@ -228,6 +246,11 @@ GdkPixbuf* Image::toPixbuf()
 	return pb;
 }
 
+CvSize Image::getSize()
+{
+	return cvSize(image->width, image->height);
+}
+
 int Image::getWidth()
 {
 	if(image == NULL) {
@@ -247,6 +270,32 @@ int Image::getHeight()
 RgbPix Image::getPix()
 {
 	return RgbPix(image);
+}
+
+void Image::resize(int width, int height)
+{
+	IplImage* dst = 0;
+
+	if(width < 1 || height < 1) {
+		fprintf(stderr, "Cannot resize image to smaller than 1x1\n");
+		return;
+	}
+
+	dst = cvCreateImage(
+				cvSize(width, height), 
+				image->depth, 
+				image->nChannels
+	);
+
+	cvResize(image, dst);
+
+	cvReleaseImage(&image);
+	image = dst;
+}
+
+void Image::resize(double factor)
+{
+	resize((int)(image->width*factor), (int)(image->height*factor));
 }
 
 // Closure for destroying copy IplImages used in creating pixbufs
