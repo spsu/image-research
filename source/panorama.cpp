@@ -13,6 +13,7 @@
 #include <cv.h>
 #include <vector>
 #include <boost/lexical_cast.hpp>
+#include <math.h>
 
 /**
  * Globals.
@@ -29,32 +30,74 @@ std::vector<Gtk::Entry*> entries;
 std::vector<App::ImagePane*> imgPanes;
 Gtk::VBox* vbox = 0;
 
-std::vector<int> pos;
+std::vector<Gtk::Entry*> entries2;
+Gtk::Button* button2 = 0;
+
 
 /**
  * Do panorama stitching.
  */
 void panoramaStitch()
 {
-	Cv::Image* img = new Cv::Image(resizeImages[0]->getWidth()*2, 
-									resizeImages[0]->getHeight()*2);
+	/*Cv::Image* img = new Cv::Image(resizeImages[0]->getWidth()*2, 
+									resizeImages[0]->getHeight()*2);*/
+	Cv::Image* img = 0;
 	Cv::Image* t = resizeImages[0];
-	IplImage* cimg = 0;
 
 	CvPoint2D32f src[4];
 	CvPoint2D32f dst[4];
 	CvMat* warpMat = cvCreateMat(3, 3, CV_32FC1);
 
-	pos.clear();
+	std::vector<int> pos;
+
+	// For image dimension calculation
+	int xHi = 0;
+	int xLow = 0;
+	int yHi = 0;
+	int yLow = 0;
+	int newWidth = 0;
+	int newHeight = 0;
+
 	try {
 		for(unsigned int i = 0; i < 8; i++) {
-			pos.push_back(boost::lexical_cast<int>(entries[i]->getText()));
+			bool isY = (bool)(i%2); 
+			int val = boost::lexical_cast<int>(entries[i]->getText());
+			pos.push_back(val);
+
+			printf("Val: %d, isX: %s\n", val, isY? "Yes" : "No");
+
+			// Set max and min for x/y coordinates for creating proper img size
+			if(isY) {
+				if(i < 2 || val > yHi) {
+					yHi = val;
+				}
+				if(i < 2 || val < yLow) {
+					yLow = val;
+				}
+			}
+			else {
+				if(i < 2 || val > xHi) {
+					xHi = val;
+				}
+				if(i < 2 || val < xLow) {
+					xLow = val;
+				}
+			}
 		}
 	}
 	catch(boost::bad_lexical_cast&) {
 		fprintf(stderr, "Bad lexical cast\n");
 		return;
 	}
+
+	newWidth = abs(xLow - xHi) + resizeImages[0]->getWidth();
+	newHeight = abs(yLow - yHi) + resizeImages[0]->getHeight();
+
+	printf("X lo: %d hi: %d\n", xLow, xHi);
+	printf("Y lo: %d hi: %d\n", yLow, yHi);
+	printf("Size: %d x %d\n", newWidth, newHeight);
+
+	img = new Cv::Image(newWidth, newHeight);
 
 	src[0].x = 0;
 	src[0].y = 0;
@@ -82,9 +125,58 @@ void panoramaStitch()
 	pos.clear();
 }
 
+/**
+ * Do panorama stitching.
+ */
+void panoramaStitch2()
+{
+	std::vector<int> nums;
+	std::vector<int> outNum;
+
+	for(unsigned int i = 0; i < 8; i++) {
+		outNum.push_back(0);
+	}
+
+	try {
+		for(unsigned int i = 0; i < entries2.size(); i++) {
+			nums.push_back(boost::lexical_cast<int>(entries2[i]->getText()));
+		}
+	}
+	catch(boost::bad_lexical_cast&) {
+		fprintf(stderr, "Bad lexical cast\n");
+		return;
+	}
+
+	int a = nums[0];
+	int b = nums[0] * -1;
+
+	outNum[0] = a;
+	outNum[1] = b;
+	outNum[2] = b;
+	outNum[3] = a;
+	outNum[4] = b;
+	outNum[5] = a;
+	outNum[6] = a;
+	outNum[7] = b;
+
+	for(unsigned int i = 0; i < outNum.size(); i++) {
+		entries[i]->setText(boost::lexical_cast<std::string>(outNum[i]));
+	}
+
+	panoramaStitch();
+}
+
+/**
+ * Callbacks
+ */
 void panoramaCb(GtkButton* gtkbutton, gpointer data)
 {
 	panoramaStitch();
+}
+
+void panoramaCb2(GtkButton* gtkbutton, gpointer data)
+{
+	panoramaStitch2();
 }
 
 /**
@@ -115,6 +207,7 @@ int main(int argc, char *argv[])
 	Gtk::HBox* hbox1 = 0;
 	Gtk::HBox* hbox2 = 0;
 	Gtk::HBox* hbox3 = 0;
+	Gtk::HBox* hbox4 = 0;
 
 	// Create main application elements
 	gui = new App::Gui("Panorama");
@@ -138,14 +231,22 @@ int main(int argc, char *argv[])
 	hbox1 = new Gtk::HBox(true, 0);
 	hbox2 = new Gtk::HBox(true, 0);
 	hbox3 = new Gtk::HBox(false, 0);
-	button = new Gtk::Button("update");
+	hbox4 = new Gtk::HBox(false, 0);
+	button = new Gtk::Button("update x/y");
+	button2 = new Gtk::Button("update roll(z)/pitch(x)/yaw(y)");
 
 	// Entries.
 	for(unsigned int i = 0; i < 8; i++) {
 		entries.push_back(new Gtk::Entry());
 		entries[i]->setText("0");
-		entries[i]->setMaxLength(3);
-		entries[i]->setWidthChars(3);
+		entries[i]->setMaxLength(4);
+		entries[i]->setWidthChars(4);
+	}
+	for(unsigned int i = 0; i < 2; i++) {
+		entries2.push_back(new Gtk::Entry());
+		entries2[i]->setText("0");
+		entries2[i]->setMaxLength(4);
+		entries2[i]->setWidthChars(4);
 	}
 
 
@@ -157,14 +258,21 @@ int main(int argc, char *argv[])
 	vbox->packStart(hbox2, false, false, 0);
 	hbox2->packStart(imgPanes[2]->getImage(), true, true, 0);
 
+	// Entries 1
 	vbox->packStart(hbox3, false, false, 0);
 	for(unsigned int i = 0; i < entries.size(); i++) {
 		hbox3->packStart(entries[i], false, false, 0);
 	}
 	hbox3->packStart(button, false, false, 0);
-
-	// Install grayscale callback
 	button->addClickedCb(panoramaCb, gui);
+
+	// Entries 2
+	vbox->packStart(hbox4, false, false, 0);
+	for(unsigned int i = 0; i < entries2.size(); i++) {
+		hbox4->packStart(entries2[i], false, false, 0);
+	}
+	hbox4->packStart(button2, false, false, 0);
+	button2->addClickedCb(panoramaCb2, gui);
 
 	setupImages();
 	//panoramaStitch();
