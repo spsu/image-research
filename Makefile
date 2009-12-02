@@ -42,6 +42,13 @@ stereo: source/stereo.cpp libs
 	@$(LN) $(LIB) $(LOCALLIB) build/out/stereo.o -o stereo
 	@chmod +x stereo
 
+### PANORAMA ########################
+panorama: source/panorama.cpp libs
+	@echo "[compile] panorama"
+	@$(CD) ./build/out && $(C) $(INC) -c ../../source/panorama.cpp
+	@$(LN) $(LIB) $(LOCALLIB) build/out/panorama.o -o panorama
+	@chmod +x panorama
+
 ### Video 4 Linux test ####################
 testv4l: source/testv4l.cpp libs
 	@echo "[compile] testv4l"
@@ -59,8 +66,9 @@ testv4l: source/testv4l.cpp libs
 ### NEGATIVE #########################
 negative: negative.cpp libs
 	@echo "[compile] negative"
-	@$(C) $(INC) -c negative.cpp
-	@$(LN) $(LIB) $(LOCALLIB) negative.o -o negative
+	@$(CD) ./build/out && $(C) $(INC) -c ../../source/negative.cpp
+	@$(LN) $(LIB) $(LOCALLIB) build/out/negative.o -o negative
+	@chmod +x negative
 
 
 ### FOURIER #########################
