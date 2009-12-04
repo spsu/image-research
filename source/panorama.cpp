@@ -272,7 +272,7 @@ CvMat* rotateY2(float deg, int width, int height)
 	src[3].x = width - 1;
 	src[3].y = height - 1;
 
-	int xshift = 200;
+	int xshift = 350;
 	int yshift = 50;
 
 	dst[0].x = 0 + xshift;
@@ -310,7 +310,7 @@ void panoramaStitch2()
 
 	t = resizeImages[0];
 
-	img = new Cv::Image(700, 500);
+	img = new Cv::Image(750, 500);
 	img->getPtr()->origin = 1;
 	warpMat = rotateY2(theta, t->getWidth(), t->getHeight()); // TODO: MEMLEAK
 	cvWarpPerspective(t->getPtr(), img->getPtr(), warpMat);
@@ -337,7 +337,7 @@ void panoramaCb2(GtkButton* gtkbutton, gpointer data)
 #include <signal.h>
 
 
-bool isDoRotateX = true;
+bool isDoRotateX = false;
 float theta = 0.0f;
 
 void panoramaCbX(GtkButton* gtkbutton, gpointer data)
@@ -354,7 +354,7 @@ gboolean doRotateX(gpointer data)
 	if(isDoRotateX) {
 		t = resizeImages[0];
 
-		img = new Cv::Image(700, 500);
+		img = new Cv::Image(750, 500);
 		warpMat = rotateY2(theta, t->getWidth(), t->getHeight()); // TODO: MEMLEAK
 		cvWarpPerspective(t->getPtr(), img->getPtr(), warpMat);
 		gtkImages[2]->setPixbuf(img->toPixbuf()); // TODO: MEMLEAK	
@@ -371,6 +371,30 @@ gboolean doRotateX(gpointer data)
 
 	return true;
 }
+
+/**
+ * HScale callback
+ */
+void hscaleCb(GtkRange* a, gpointer data)
+{
+	Gtk::HScale* hscale = (Gtk::HScale*)data;
+	double theta = 0.0;
+	Cv::Image* img = 0;
+	Cv::Image* t = 0;
+	CvMat* warpMat = 0;
+
+	theta = hscale->getValue();
+	t = resizeImages[0];
+
+	img = new Cv::Image(700, 500);
+	img->getPtr()->origin = 1;
+	warpMat = rotateY2(theta, t->getWidth(), t->getHeight()); // TODO: MEMLEAK
+	cvWarpPerspective(t->getPtr(), img->getPtr(), warpMat);
+	gtkImages[2]->setPixbuf(img->toPixbuf()); // TODO: MEMLEAK	
+
+	delete img;
+}
+
 
 /**
  * Setup images.
@@ -401,6 +425,7 @@ int main(int argc, char *argv[])
 	Gtk::HBox* hbox2 = 0;
 	Gtk::HBox* hbox3 = 0;
 	Gtk::HBox* hbox4 = 0;
+	Gtk::HScale* hscale = 0; 
 
 	// Create main application elements
 	gui = new App::Gui("Panorama");
@@ -428,6 +453,14 @@ int main(int argc, char *argv[])
 	button = new Gtk::Button("update x/y");
 	button2 = new Gtk::Button("update roll(z)/pitch(x)/yaw(y)");
 	Gtk::Button* buttonX = new Gtk::Button("rotate X");
+
+	hscale = new Gtk::HScale(0.0, 360.0);
+	hscale->addMark(0.0, Gtk::POS_BOTTOM, "0");
+	hscale->addMark(90.0, Gtk::POS_BOTTOM, "90");
+	hscale->addMark(180.0, Gtk::POS_BOTTOM, "180");
+	hscale->addMark(270.0, Gtk::POS_BOTTOM, "270");
+	hscale->addMark(360.0, Gtk::POS_BOTTOM, "360");
+	hscale->addValueChangedCb(hscaleCb);
 
 	// Entries.
 	for(unsigned int i = 0; i < 8; i++) {
@@ -471,6 +504,8 @@ int main(int argc, char *argv[])
 
 	hbox4->packStart(buttonX, false, false, 0);
 	buttonX->addClickedCb(panoramaCbX, gui);
+
+	vbox->packStart(hscale, true, true, 7);
 
 	setupImages();
 	//panoramaStitch();
