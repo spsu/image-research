@@ -33,6 +33,14 @@ Gtk::VBox* vbox = 0;
 std::vector<Gtk::Entry*> entries2;
 Gtk::Button* button2 = 0;
 
+#define pi 3.14159265358979323846
+
+// Not in math.h
+double deg2rad(double deg)
+{
+	return deg * pi / 180;
+}
+
 
 /**
  * Do panorama stitching.
@@ -117,7 +125,22 @@ void panoramaStitch()
 	dst[3].x = img->getWidth() - 1 - pos[6];
 	dst[3].y = img->getHeight() - 1 - pos[7];
 	
-	cvGetPerspectiveTransform(src, dst, warpMat);
+	//cvGetPerspectiveTransform(src, dst, warpMat);
+	// See http://en.wikipedia.org/wiki/Rotation_matrix#Dimension_three
+
+	//float theta = 30.0;
+
+
+	/*CV_MAT_ELEM(*warpMat, float, 0, 0) = ct;
+	CV_MAT_ELEM(*warpMat, float, 0, 1) = st * -1.0f;
+	CV_MAT_ELEM(*warpMat, float, 0, 2) = 0.0f;
+	CV_MAT_ELEM(*warpMat, float, 1, 0) = st;
+	CV_MAT_ELEM(*warpMat, float, 1, 1) = ct;
+	CV_MAT_ELEM(*warpMat, float, 1, 2) = 0.0f;
+	CV_MAT_ELEM(*warpMat, float, 2, 0) = 0.0f;
+	CV_MAT_ELEM(*warpMat, float, 2, 1) = 0.0f;
+	CV_MAT_ELEM(*warpMat, float, 2, 2) = 1.0f;*/
+
 	cvWarpPerspective(t->getPtr(), img->getPtr(), warpMat);
 
 	gtkImages[2]->setPixbuf(img->toPixbuf()); // TODO: MEMLEAK
@@ -125,45 +148,174 @@ void panoramaStitch()
 	pos.clear();
 }
 
+CvMat* rotateX(double deg)
+{
+	double theta = 0.0f;
+	float sin_t = 0.0f;
+	float cos_t = 0.0f;
+	CvMat* mat = 0;
+
+	theta = deg2rad(deg);
+	sin_t = (float)sin(theta);
+	cos_t = (float)cos(theta);
+
+	mat = cvCreateMat(3, 3, CV_32FC1);
+
+	CV_MAT_ELEM(*mat, float, 0, 0) = 1.0f;
+	CV_MAT_ELEM(*mat, float, 0, 1) = 0.0f;
+	CV_MAT_ELEM(*mat, float, 0, 2) = 0.0f;
+	CV_MAT_ELEM(*mat, float, 1, 0) = 0.0f;
+	//CV_MAT_ELEM(*mat, float, 1, 1) = cos_t;
+	//CV_MAT_ELEM(*mat, float, 1, 2) = sin_t * -1.0f;
+	//CV_MAT_ELEM(*mat, float, 2, 0) = 0.0f;
+	//CV_MAT_ELEM(*mat, float, 2, 1) = sin_t;
+	//CV_MAT_ELEM(*mat, float, 2, 2) = cos_t;
+	CV_MAT_ELEM(*mat, float, 1, 1) = cos_t;
+	CV_MAT_ELEM(*mat, float, 1, 2) = sin_t;
+	CV_MAT_ELEM(*mat, float, 2, 0) = 0.0f;
+	CV_MAT_ELEM(*mat, float, 2, 1) = sin_t * -1.0f;
+	CV_MAT_ELEM(*mat, float, 2, 2) = cos_t;
+
+	return mat;
+}
+
+CvMat* rotateY(double deg)
+{
+	double theta = 0.0f;
+	float sin_t = 0.0f;
+	float cos_t = 0.0f;
+	CvMat* mat = 0;
+
+	theta = deg2rad(deg);
+	sin_t = (float)sin(theta);
+	cos_t = (float)cos(theta);
+
+	mat = cvCreateMat(3, 3, CV_32FC1);
+
+	CV_MAT_ELEM(*mat, float, 0, 0) = cos_t;
+	CV_MAT_ELEM(*mat, float, 0, 1) = 0.0f;
+	CV_MAT_ELEM(*mat, float, 0, 2) = sin_t;
+	CV_MAT_ELEM(*mat, float, 1, 0) = 0.0f;
+	CV_MAT_ELEM(*mat, float, 1, 1) = 1.0f;
+	CV_MAT_ELEM(*mat, float, 1, 2) = 0.0f;
+	CV_MAT_ELEM(*mat, float, 2, 0) = sin_t * -1.0f;
+	CV_MAT_ELEM(*mat, float, 2, 1) = 0.0f;
+	CV_MAT_ELEM(*mat, float, 2, 2) = cos_t;
+
+	return mat;
+}
+
+CvMat* rotateZ(double deg)
+{
+	double theta = 0.0f;
+	float sin_t = 0.0f;
+	float cos_t = 0.0f;
+	CvMat* mat = 0;
+
+	theta = deg2rad(deg);
+	sin_t = (float)sin(theta);
+	cos_t = (float)cos(theta);
+
+	mat = cvCreateMat(3, 3, CV_32FC1);
+
+	CV_MAT_ELEM(*mat, float, 0, 0) = cos_t;
+	CV_MAT_ELEM(*mat, float, 0, 1) = sin_t * -1.0f;
+	CV_MAT_ELEM(*mat, float, 0, 2) = 0.0f;
+	CV_MAT_ELEM(*mat, float, 1, 0) = sin_t;
+	CV_MAT_ELEM(*mat, float, 1, 1) = cos_t;
+	CV_MAT_ELEM(*mat, float, 1, 2) = 0.0f;
+	CV_MAT_ELEM(*mat, float, 2, 0) = 0.0f;
+	CV_MAT_ELEM(*mat, float, 2, 1) = 0.0f;
+	CV_MAT_ELEM(*mat, float, 2, 2) = 1.0f;
+
+	return mat;
+}
+
+CvMat* rotateY2(float deg, int width, int height)
+{
+	double theta = 0.0f;
+	float sin_t = 0.0f;
+	float cos_t = 0.0f;
+	CvMat* mat = 0;
+	CvPoint2D32f src[4];
+	CvPoint2D32f dst[4];
+
+	theta = deg2rad(deg);
+	sin_t = (float)sin(theta);
+	cos_t = (float)cos(theta);
+
+	mat = cvCreateMat(3, 3, CV_32FC1);
+
+	float xp = (cos_t * width - 1); // irrelevant: - (sin_t* 0);
+	float yp = (sin_t * width - 1); // irrelevant: - (cos_t* 0);
+	float xtest = xp;
+	float ytest = height + yp; // value if NOT rhombus
+	ytest = height - yp;
+
+	printf("Height: %d, yp: %f, ytest: %f\n", height, yp, ytest);
+
+	//float swap = 0.0f;
+	if(yp - ytest > 0.0f) {
+		ytest = height - 1;
+		//xtest = width - xp;
+	}
+
+
+	src[0].x = 0;
+	src[0].y = 0;
+	src[1].x = width - 1;
+	src[1].y = 0;
+	src[2].x = 0;
+	src[2].y = height - 1;
+	src[3].x = width - 1;
+	src[3].y = height - 1;
+
+	int xshift = 200;
+	int yshift = 50;
+
+	dst[0].x = 0 + xshift;
+	dst[0].y = 0 + yshift;
+	dst[1].x = xp + xshift;
+	dst[1].y = yp + yshift;
+	dst[2].x = 0 + xshift;
+	dst[2].y = height - 1 + yshift;
+	dst[3].x = xtest + xshift;
+	dst[3].y = ytest + yshift; //height - 1;
+
+	cvGetPerspectiveTransform(src, dst, mat);
+	return mat;
+}
+
+	// See http://en.wikipedia.org/wiki/Rotation_matrix#Dimension_three
 /**
  * Do panorama stitching.
  */
 void panoramaStitch2()
 {
-	std::vector<int> nums;
-	std::vector<int> outNum;
+	float theta = 0.0f;
 
-	for(unsigned int i = 0; i < 8; i++) {
-		outNum.push_back(0);
-	}
+	Cv::Image* img = 0;
+	Cv::Image* t = 0;
+	CvMat* warpMat = 0;
 
 	try {
-		for(unsigned int i = 0; i < entries2.size(); i++) {
-			nums.push_back(boost::lexical_cast<int>(entries2[i]->getText()));
-		}
+		theta = boost::lexical_cast<float>(entries2[0]->getText());
 	}
 	catch(boost::bad_lexical_cast&) {
 		fprintf(stderr, "Bad lexical cast\n");
 		return;
 	}
 
-	int a = nums[0];
-	int b = nums[0] * -1;
+	t = resizeImages[0];
 
-	outNum[0] = a;
-	outNum[1] = b;
-	outNum[2] = b;
-	outNum[3] = a;
-	outNum[4] = b;
-	outNum[5] = a;
-	outNum[6] = a;
-	outNum[7] = b;
+	img = new Cv::Image(500, 500);
+	img->getPtr()->origin = 1;
+	warpMat = rotateY2(theta, t->getWidth(), t->getHeight()); // TODO: MEMLEAK
+	cvWarpPerspective(t->getPtr(), img->getPtr(), warpMat);
+	gtkImages[2]->setPixbuf(img->toPixbuf()); // TODO: MEMLEAK	
 
-	for(unsigned int i = 0; i < outNum.size(); i++) {
-		entries[i]->setText(boost::lexical_cast<std::string>(outNum[i]));
-	}
+	delete img;
 
-	panoramaStitch();
 }
 
 /**
@@ -177,6 +329,45 @@ void panoramaCb(GtkButton* gtkbutton, gpointer data)
 void panoramaCb2(GtkButton* gtkbutton, gpointer data)
 {
 	panoramaStitch2();
+}
+
+#include <time.h>
+#include <signal.h>
+
+
+bool isDoRotateX = true;
+float theta = 0.0f;
+
+void panoramaCbX(GtkButton* gtkbutton, gpointer data)
+{
+	isDoRotateX = !isDoRotateX;
+}
+
+gboolean doRotateX(gpointer data)
+{
+	Cv::Image* img = 0;
+	Cv::Image* t = 0;
+	CvMat* warpMat = 0;
+
+	if(isDoRotateX) {
+		t = resizeImages[0];
+
+		img = new Cv::Image(500, 500);
+		warpMat = rotateY2(theta, t->getWidth(), t->getHeight()); // TODO: MEMLEAK
+		cvWarpPerspective(t->getPtr(), img->getPtr(), warpMat);
+		gtkImages[2]->setPixbuf(img->toPixbuf()); // TODO: MEMLEAK	
+
+		entries2[0]->setText(boost::lexical_cast<std::string>(theta));
+
+		theta += 1.0f;
+		if(theta >= 360.0f) {
+			theta = 0.0f;
+		}
+
+		delete img;
+	}
+
+	return true;
 }
 
 /**
@@ -234,6 +425,7 @@ int main(int argc, char *argv[])
 	hbox4 = new Gtk::HBox(false, 0);
 	button = new Gtk::Button("update x/y");
 	button2 = new Gtk::Button("update roll(z)/pitch(x)/yaw(y)");
+	Gtk::Button* buttonX = new Gtk::Button("rotate X");
 
 	// Entries.
 	for(unsigned int i = 0; i < 8; i++) {
@@ -274,8 +466,14 @@ int main(int argc, char *argv[])
 	hbox4->packStart(button2, false, false, 0);
 	button2->addClickedCb(panoramaCb2, gui);
 
+
+	hbox4->packStart(buttonX, false, false, 0);
+	buttonX->addClickedCb(panoramaCbX, gui);
+
 	setupImages();
 	//panoramaStitch();
+
+	gtk_idle_add(doRotateX, NULL);
 
 	gui->start();
 
