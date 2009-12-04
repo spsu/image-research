@@ -18,7 +18,9 @@ namespace Gtk {
  *			Widget > Range > Scale > ... 
  *
  *		Usage (with HScale or VScale): 
- *			adjust = new Adjustment(0.0, 0.0, 100.0);
+ *			// TODO: Change adjustment params to be more in line with *Scale,
+ *			// albeit at a cost to non-Gtk conformance
+ *			adjust = new Adjustment(0.0, 0.0, 100.0); 
  *			hscale = new HScale(adjust);
  *					OR
  *			hscale = new HScale(0.0, 100.0); // step defaults to 1.0
@@ -112,8 +114,7 @@ class Scale : public Widget
 		/**
 		 * Attach a signal handler callback to the "value-changed" signal.
 		 */
-		void addValueChangedCb(void(*userFunc)(GtkRange*, gpointer), 
-				gpointer data);
+		void addValueChangedCb(void(*userFunc)(GtkRange*, gpointer));
 
 	protected:
 

@@ -124,23 +124,22 @@ Adjustment* Scale::getAdjustment()
 
 double Scale::getValue()
 {
-	return gtk_range_get_value(GTK_RANGE(adjustment));
+	return gtk_range_get_value(GTK_RANGE(widget));
 }
 
 void Scale::setValue(double val)
 {
-	gtk_range_set_value(GTK_RANGE(adjustment), val);
+	gtk_range_set_value(GTK_RANGE(widget), val);
 }
 
 void Scale::setRange(double min, double max)
 {
-	gtk_range_set_range(GTK_RANGE(adjustment), min, max);
+	gtk_range_set_range(GTK_RANGE(widget), min, max);
 }
 
-void Scale::addValueChangedCb(void(*userFunc)(GtkRange*, gpointer), 
-				gpointer data)
+void Scale::addValueChangedCb(void(*userFunc)(GtkRange*, gpointer))
 {
-	g_signal_connect(widget, "value-changed", G_CALLBACK(userFunc), data);
+	g_signal_connect(widget, "value-changed", G_CALLBACK(userFunc), this);
 }
 
 } // end namespace Gtk
