@@ -21,16 +21,17 @@
  */
 
 Gtk::Button* button = 0;
+Gtk::Button* buttonAuto = 0;
 App::ImagePane* imgPane = 0;
 
 std::vector<Cv::Image*> origImages;
 std::vector<Cv::Image*> resizeImages;
 std::vector<Gtk::Image*> gtkImages;
-std::vector<Gtk::Entry*> entries;
 std::vector<App::ImagePane*> imgPanes;
 Gtk::VBox* vbox = 0;
+Gtk::HScale* hscale = 0;
 
-std::vector<Gtk::Entry*> entries2;
+std::vector<Gtk::Entry*> entries;
 Gtk::Button* button2 = 0;
 
 #define pi 3.14159265358979323846
@@ -39,113 +40,6 @@ Gtk::Button* button2 = 0;
 double deg2rad(double deg)
 {
 	return deg * pi / 180;
-}
-
-
-/**
- * Do panorama stitching.
- */
-void panoramaStitch()
-{
-	/*Cv::Image* img = new Cv::Image(resizeImages[0]->getWidth()*2, 
-									resizeImages[0]->getHeight()*2);*/
-	Cv::Image* img = 0;
-	Cv::Image* t = resizeImages[0];
-
-	CvPoint2D32f src[4];
-	CvPoint2D32f dst[4];
-	CvMat* warpMat = cvCreateMat(3, 3, CV_32FC1);
-
-	std::vector<int> pos;
-
-	// For image dimension calculation
-	int xHi = 0;
-	int xLow = 0;
-	int yHi = 0;
-	int yLow = 0;
-	int newWidth = 0;
-	int newHeight = 0;
-
-	try {
-		for(unsigned int i = 0; i < 8; i++) {
-			bool isY = (bool)(i%2); 
-			int val = boost::lexical_cast<int>(entries[i]->getText());
-			pos.push_back(val);
-
-			printf("Val: %d, isX: %s\n", val, isY? "Yes" : "No");
-
-			// Set max and min for x/y coordinates for creating proper img size
-			if(isY) {
-				if(i < 2 || val > yHi) {
-					yHi = val;
-				}
-				if(i < 2 || val < yLow) {
-					yLow = val;
-				}
-			}
-			else {
-				if(i < 2 || val > xHi) {
-					xHi = val;
-				}
-				if(i < 2 || val < xLow) {
-					xLow = val;
-				}
-			}
-		}
-	}
-	catch(boost::bad_lexical_cast&) {
-		fprintf(stderr, "Bad lexical cast\n");
-		return;
-	}
-
-	newWidth = abs(xLow - xHi) + resizeImages[0]->getWidth();
-	newHeight = abs(yLow - yHi) + resizeImages[0]->getHeight();
-
-	printf("X lo: %d hi: %d\n", xLow, xHi);
-	printf("Y lo: %d hi: %d\n", yLow, yHi);
-	printf("Size: %d x %d\n", newWidth, newHeight);
-
-	img = new Cv::Image(newWidth, newHeight);
-
-	src[0].x = 0;
-	src[0].y = 0;
-	src[1].x = t->getWidth() - 1;
-	src[1].y = 0;
-	src[2].x = 0;
-	src[2].y = t->getHeight() -1;
-	src[3].x = t->getWidth() - 1;
-	src[3].y = t->getHeight() -1;
-
-	dst[0].x = pos[0];
-	dst[0].y = pos[1];
-	dst[1].x = img->getWidth() - 1 - pos[2];
-	dst[1].y = pos[3];
-	dst[2].x = pos[4];
-	dst[2].y = img->getHeight() - 1 - pos[5];
-	dst[3].x = img->getWidth() - 1 - pos[6];
-	dst[3].y = img->getHeight() - 1 - pos[7];
-	
-	//cvGetPerspectiveTransform(src, dst, warpMat);
-	// See http://en.wikipedia.org/wiki/Rotation_matrix#Dimension_three
-
-	//float theta = 30.0;
-
-
-	/*CV_MAT_ELEM(*warpMat, float, 0, 0) = ct;
-	CV_MAT_ELEM(*warpMat, float, 0, 1) = st * -1.0f;
-	CV_MAT_ELEM(*warpMat, float, 0, 2) = 0.0f;
-	CV_MAT_ELEM(*warpMat, float, 1, 0) = st;
-	CV_MAT_ELEM(*warpMat, float, 1, 1) = ct;
-	CV_MAT_ELEM(*warpMat, float, 1, 2) = 0.0f;
-	CV_MAT_ELEM(*warpMat, float, 2, 0) = 0.0f;
-	CV_MAT_ELEM(*warpMat, float, 2, 1) = 0.0f;
-	CV_MAT_ELEM(*warpMat, float, 2, 2) = 1.0f;*/
-
-	cvWarpPerspective(t->getPtr(), img->getPtr(), warpMat);
-
-	gtkImages[2]->setPixbuf(img->toPixbuf()); // TODO: MEMLEAK
-
-	pos.clear();
 }
 
 CvMat* rotateX(double deg)
@@ -252,15 +146,16 @@ CvMat* rotateY2(float deg, int width, int height)
 	float ytest = height + yp; // value if NOT rhombus
 	ytest = height - yp;
 
-	printf("Height: %d, sin: %f, cos: %f, yp: %f, ytest: %f\n", height, sin_t, cos_t, yp, ytest);
+	printf("sin: %f, cos: %f, yp: %f, ytest: %f\n",  sin_t, cos_t, yp, ytest);
 
 	//float swap = 0.0f;
 	if(yp - ytest > 0.0f) {
 		ytest = height - 1;
 		//xtest = width - xp;
-		printf("TESTING ******* \n");
-		printf("\tHeight: %d, sin: %f, cos: %f, yp: %f, ytest: %f\n", height, sin_t, cos_t, yp, ytest);
+		printf("******* TESTING ******* \n");
+		printf("\tsin: %f, cos: %f\n\typ: %f, ytest: %f\n",  sin_t, cos_t, yp, ytest);
 	}
+	printf("\n");
 
 
 	src[0].x = 0;
@@ -292,21 +187,11 @@ CvMat* rotateY2(float deg, int width, int height)
 /**
  * Do panorama stitching.
  */
-void panoramaStitch2()
+void rotateAxis(float theta)
 {
-	float theta = 0.0f;
-
 	Cv::Image* img = 0;
 	Cv::Image* t = 0;
 	CvMat* warpMat = 0;
-
-	try {
-		theta = boost::lexical_cast<float>(entries2[0]->getText());
-	}
-	catch(boost::bad_lexical_cast&) {
-		fprintf(stderr, "Bad lexical cast\n");
-		return;
-	}
 
 	t = resizeImages[0];
 
@@ -317,58 +202,62 @@ void panoramaStitch2()
 	gtkImages[2]->setPixbuf(img->toPixbuf()); // TODO: MEMLEAK	
 
 	delete img;
-
 }
 
 /**
  * Callbacks
  */
-void panoramaCb(GtkButton* gtkbutton, gpointer data)
+
+void entryCb(GtkButton* gtkbutton, gpointer data)
 {
-	panoramaStitch();
+	float theta = 0.0f;
+	float val = 0.0f;
+	try {
+		theta = boost::lexical_cast<float>(entries[0]->getText());
+	}
+	catch(boost::bad_lexical_cast&) {
+		fprintf(stderr, "Bad lexical cast\n");
+		return;
+	}
+
+	//rotateAxis(theta); // XXX: The hscale callback does this for us. 
+	val = (float)hscale->getValue();
+	if(abs(val - theta) > 0.005) {
+		hscale->setValue(theta);
+	}
 }
 
-void panoramaCb2(GtkButton* gtkbutton, gpointer data)
+bool isDoGtkIdleRotate = false;
+
+void autoRotateToggleCb(GtkButton* gtkbutton, gpointer data)
 {
-	panoramaStitch2();
+	isDoGtkIdleRotate = !isDoGtkIdleRotate;
+	if(isDoGtkIdleRotate) {
+		buttonAuto->setLabel("auto rotate [turn off]");
+	}
+	else {
+		buttonAuto->setLabel("auto rotate [turn on]");
+	}
 }
 
-#include <time.h>
-#include <signal.h>
-
-
-bool isDoRotateX = false;
-float theta = 0.0f;
-
-void panoramaCbX(GtkButton* gtkbutton, gpointer data)
+gboolean gtkIdleRotateFn(gpointer data)
 {
-	isDoRotateX = !isDoRotateX;
-}
+	static float theta = 0.0f;
+	float val = 0.0f;
 
-gboolean doRotateX(gpointer data)
-{
-	Cv::Image* img = 0;
-	Cv::Image* t = 0;
-	CvMat* warpMat = 0;
-
-	if(isDoRotateX) {
-		t = resizeImages[0];
-
-		img = new Cv::Image(750, 500);
-		warpMat = rotateY2(theta, t->getWidth(), t->getHeight()); // TODO: MEMLEAK
-		cvWarpPerspective(t->getPtr(), img->getPtr(), warpMat);
-		gtkImages[2]->setPixbuf(img->toPixbuf()); // TODO: MEMLEAK	
-
-		entries2[0]->setText(boost::lexical_cast<std::string>(theta));
-
+	if(isDoGtkIdleRotate) {
 		theta += 1.0f;
 		if(theta >= 360.0f) {
 			theta = 0.0f;
 		}
+		entries[0]->setText(boost::lexical_cast<std::string>(theta));
 
-		delete img;
+		// XXX: hscale callback calls rotate!!
+		val = (float)hscale->getValue();
+		if(abs(val - theta) > 0.005) {
+			hscale->setValue(theta);
+		}
 	}
-
 	return true;
 }
 
@@ -379,20 +268,10 @@ void hscaleCb(GtkRange* a, gpointer data)
 {
 	Gtk::HScale* hscale = (Gtk::HScale*)data;
 	double theta = 0.0;
-	Cv::Image* img = 0;
-	Cv::Image* t = 0;
-	CvMat* warpMat = 0;
 
 	theta = hscale->getValue();
-	t = resizeImages[0];
-
-	img = new Cv::Image(700, 500);
-	img->getPtr()->origin = 1;
-	warpMat = rotateY2(theta, t->getWidth(), t->getHeight()); // TODO: MEMLEAK
-	cvWarpPerspective(t->getPtr(), img->getPtr(), warpMat);
-	gtkImages[2]->setPixbuf(img->toPixbuf()); // TODO: MEMLEAK	
-
-	delete img;
+	entries[0]->setText(boost::lexical_cast<std::string>(theta));
+	rotateAxis(theta);
 }
 
 
@@ -412,8 +291,6 @@ void setupImages()
 }
 
 
-
-
 /**
  * Main function
  * Sets up the Gui, attaches any callbacks, then starts Gtk.
@@ -425,7 +302,7 @@ int main(int argc, char *argv[])
 	Gtk::HBox* hbox2 = 0;
 	Gtk::HBox* hbox3 = 0;
 	Gtk::HBox* hbox4 = 0;
-	Gtk::HScale* hscale = 0; 
+	 
 
 	// Create main application elements
 	gui = new App::Gui("Panorama");
@@ -450,9 +327,8 @@ int main(int argc, char *argv[])
 	hbox2 = new Gtk::HBox(true, 0);
 	hbox3 = new Gtk::HBox(false, 0);
 	hbox4 = new Gtk::HBox(false, 0);
-	button = new Gtk::Button("update x/y");
 	button2 = new Gtk::Button("update roll(z)/pitch(x)/yaw(y)");
-	Gtk::Button* buttonX = new Gtk::Button("rotate X");
+	buttonAuto = new Gtk::Button("auto rotate [turn on]");
 
 	hscale = new Gtk::HScale(0.0, 360.0);
 	hscale->addMark(0.0, Gtk::POS_BOTTOM, "0");
@@ -460,22 +336,6 @@ int main(int argc, char *argv[])
 	hscale->addMark(180.0, Gtk::POS_BOTTOM, "180");
 	hscale->addMark(270.0, Gtk::POS_BOTTOM, "270");
 	hscale->addMark(360.0, Gtk::POS_BOTTOM, "360");
-	hscale->addValueChangedCb(hscaleCb);
-
-	// Entries.
-	for(unsigned int i = 0; i < 8; i++) {
-		entries.push_back(new Gtk::Entry());
-		entries[i]->setText("0");
-		entries[i]->setMaxLength(4);
-		entries[i]->setWidthChars(4);
-	}
-	for(unsigned int i = 0; i < 2; i++) {
-		entries2.push_back(new Gtk::Entry());
-		entries2[i]->setText("0");
-		entries2[i]->setMaxLength(4);
-		entries2[i]->setWidthChars(4);
-	}
-
 
 	// Construct GUI
 	gui->setChild(vbox);
@@ -484,33 +344,29 @@ int main(int argc, char *argv[])
 	hbox1->packStart(imgPanes[1]->getImage(), true, true, 0);
 	vbox->packStart(hbox2, false, false, 0);
 	hbox2->packStart(imgPanes[2]->getImage(), true, true, 0);
-
-	// Entries 1
-	vbox->packStart(hbox3, false, false, 0);
-	for(unsigned int i = 0; i < entries.size(); i++) {
-		hbox3->packStart(entries[i], false, false, 0);
-	}
-	hbox3->packStart(button, false, false, 0);
-	button->addClickedCb(panoramaCb, gui);
-
-	// Entries 2
 	vbox->packStart(hbox4, false, false, 0);
-	for(unsigned int i = 0; i < entries2.size(); i++) {
-		hbox4->packStart(entries2[i], false, false, 0);
+
+	// Entries.
+	for(unsigned int i = 0; i < 1; i++) {
+		entries.push_back(new Gtk::Entry());
+		entries[i]->setText("0");
+		entries[i]->setMaxLength(4);
+		entries[i]->setWidthChars(4);
+		hbox4->packStart(entries[i], false, false, 0);
 	}
+
 	hbox4->packStart(button2, false, false, 0);
-	button2->addClickedCb(panoramaCb2, gui);
+	hbox4->packStart(buttonAuto, false, false, 0);
 
-
-	hbox4->packStart(buttonX, false, false, 0);
-	buttonX->addClickedCb(panoramaCbX, gui);
+	// CALLBACKS & IDLE
+	button2->addClickedCb(entryCb, gui);
+	buttonAuto->addClickedCb(autoRotateToggleCb, gui);
+	hscale->addValueChangedCb(hscaleCb);
+	gtk_idle_add(gtkIdleRotateFn, NULL); // TODO: Add to Gtk class
 
 	vbox->packStart(hscale, true, true, 7);
 
 	setupImages();
-	//panoramaStitch();
-
-	gtk_idle_add(doRotateX, NULL);
 
 	gui->start();
 
