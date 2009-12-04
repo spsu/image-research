@@ -137,4 +137,10 @@ void Scale::setRange(double min, double max)
 	gtk_range_set_range(GTK_RANGE(adjustment), min, max);
 }
 
+void Scale::addValueChangedCb(void(*userFunc)(GtkRange*, gpointer), 
+				gpointer data)
+{
+	g_signal_connect(widget, "value-changed", G_CALLBACK(userFunc), data);
+}
+
 } // end namespace Gtk

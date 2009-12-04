@@ -109,6 +109,12 @@ class Scale : public Widget
 		 */
 		void setRange(double min, double max);
 
+		/**
+		 * Attach a signal handler callback to the "value-changed" signal.
+		 */
+		void addValueChangedCb(void(*userFunc)(GtkRange*, gpointer), 
+				gpointer data);
+
 	protected:
 
 		/**
