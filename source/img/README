@@ -1,0 +1,8 @@
+This directory contains various image processing functions. 
+
+The required libraries are:
+
+	* OpenCV
+	* My OpenCV wrapper classes (reference branch in ../cv/)
+
+

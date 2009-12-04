@@ -9,8 +9,8 @@
 #include "app/ImagePane.hpp"
 #include "cv/Image.hpp"
 #include "gtk/all.hpp"
+#include "img/negative.hpp"
 #include <stdio.h>
-#include <cstdlib>
 
 /**
  * Globals.
@@ -21,43 +21,22 @@ Gtk::Button* button = 0;
 App::ImagePane* imgPane = 0;
 
 /**
- * Negative function.
- * TODO: Needs cleanup, also requires Cv::Image pixel access refactor (TODO).
- */
-void negative()
-{
-	Gtk::Image* gtkImg = 0;
-	Cv::Image* img = 0;
-	int width, height;
-
-	gtkImg = imgPane->getImage();
-	img = new Cv::Image(gtkImg->getPixbuf());
-
-	width = img->getWidth();
-	height = img->getHeight();
-
-	RgbImage pix = RgbImage(img->getPtr());
-
-	for(int i = 0; i < height; i++) {
-		for(int j = 0; j < width; j++) {
-			pix[i][j].r = abs(pix[i][j].r - 255);
-			pix[i][j].g = abs(pix[i][j].g - 255);
-			pix[i][j].b = abs(pix[i][j].b - 255);
-		}
-	}
-
-	gtkImg->setPixbuf(img->toPixbuf());
-	delete img;
-}
-
-/**
  * Callback for conversion to negative. 
  * Changes the gui a little and dispatches to relevant function.
  */
 void negativeCb(GtkButton* gtkbutton, gpointer data)
 {
+	Gtk::Image* gtkImg = 0;
+	Cv::Image* img = 0;
+
 	// Negative
-	negative();
+	gtkImg = imgPane->getImage();
+	img = new Cv::Image(gtkImg->getPixbuf());
+
+	Img::negative(img);
+
+	gtkImg->setPixbuf(img->toPixbuf());
+	delete img;
 }
 
 /**
