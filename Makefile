@@ -9,7 +9,7 @@ RM = /bin/rm -f
 INC = `pkg-config --cflags-only-I opencv gtk+-2.0` # missing libfeat 
 LIB = `pkg-config --libs opencv  gtk+-2.0` # missing lpthread, lfeat, lstdc++
 LOCALLIB = -Lbuild/lib -Wl,-rpath build/lib -llocal_app -llocal_cv \
-		   -llocal_gtk -llocal_v4l2
+		   -llocal_gtk -llocal_v4l2 -llocal_img
 GEN = *.o *.a *.so *.out
 
 all: 
@@ -57,7 +57,8 @@ negative: source/negative.cpp libs
 
 ### ALL LIBS ##########################
 libs: build/lib/liblocal_app.so build/lib/liblocal_cv.so \
-	  build/lib/liblocal_gtk.so build/lib/liblocal_v4l2.so
+	  build/lib/liblocal_gtk.so build/lib/liblocal_v4l2.so \
+	  build/lib/liblocal_img.so
 		@$(CD) .
 
 ### APP CODE LIB ######################
@@ -100,4 +101,13 @@ build/out/v4l2/*.o: source/v4l2/wrap/*.cpp source/v4l2/easyapi/*.cpp \
 	@$(CD) ./build/out/v4l2 && $(C) $(INC) -c ../../../source/v4l2/easyapi/*.cpp
 	@$(CD) ./build/out/v4l2 && $(C) $(INC) -c \
 		   ../../../source/v4l2/easyapi/*/*.cpp
+
+### IMAGE FUNCTIONS #####################
+build/lib/liblocal_img.so: build/out/img/*.o
+	@echo "[linking] Image Functions"
+	@$(CD) ./build/lib && $(SHARED) ../out/img/*.o -o liblocal_img.so
+build/out/img/*.o: source/img/*.hpp source/img/*.cpp
+	@echo "[compile] Image Functions"
+	@$(CD) ./build/out/img && $(C) $(INC) -c ../../../source/img/*.cpp
+
 
