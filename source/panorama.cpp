@@ -252,12 +252,14 @@ CvMat* rotateY2(float deg, int width, int height)
 	float ytest = height + yp; // value if NOT rhombus
 	ytest = height - yp;
 
-	printf("Height: %d, yp: %f, ytest: %f\n", height, yp, ytest);
+	printf("Height: %d, sin: %f, cos: %f, yp: %f, ytest: %f\n", height, sin_t, cos_t, yp, ytest);
 
 	//float swap = 0.0f;
 	if(yp - ytest > 0.0f) {
 		ytest = height - 1;
 		//xtest = width - xp;
+		printf("TESTING ******* \n");
+		printf("\tHeight: %d, sin: %f, cos: %f, yp: %f, ytest: %f\n", height, sin_t, cos_t, yp, ytest);
 	}
 
 
@@ -308,7 +310,7 @@ void panoramaStitch2()
 
 	t = resizeImages[0];
 
-	img = new Cv::Image(500, 500);
+	img = new Cv::Image(700, 500);
 	img->getPtr()->origin = 1;
 	warpMat = rotateY2(theta, t->getWidth(), t->getHeight()); // TODO: MEMLEAK
 	cvWarpPerspective(t->getPtr(), img->getPtr(), warpMat);
@@ -352,7 +354,7 @@ gboolean doRotateX(gpointer data)
 	if(isDoRotateX) {
 		t = resizeImages[0];
 
-		img = new Cv::Image(500, 500);
+		img = new Cv::Image(700, 500);
 		warpMat = rotateY2(theta, t->getWidth(), t->getHeight()); // TODO: MEMLEAK
 		cvWarpPerspective(t->getPtr(), img->getPtr(), warpMat);
 		gtkImages[2]->setPixbuf(img->toPixbuf()); // TODO: MEMLEAK	
