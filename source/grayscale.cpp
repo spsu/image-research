@@ -9,6 +9,7 @@
 #include "app/ImagePane.hpp"
 #include "cv/Image.hpp"
 #include "gtk/all.hpp"
+#include "img/grayscale.hpp"
 #include <stdio.h>
 
 /**
@@ -20,49 +21,13 @@ Gtk::Button* button = 0;
 App::ImagePane* imgPane = 0;
 
 /**
- * Grayscale function.
- * TODO: Needs cleanup, also requires Cv::Image pixel access refactor (TODO).
- */
-void grayscale()
-{
-	Gtk::Image* gtkImg = 0;
-	Cv::Image* img = 0;
-	int width, height;
-	int r, g, b;
-	int avg;
-
-	gtkImg = imgPane->getImage();
-	img = new Cv::Image(gtkImg->getPixbuf());
-
-	width = img->getWidth();
-	height = img->getHeight();
-
-	RgbPix pix = img->getPix(); // TODO: Rename Cv::Pix
-
-	for(int i = 0; i < height; i++) {
-		for(int j = 0; j < width; j++) {
-			r = pix[i][j].r;
-			g = pix[i][j].g;
-			b = pix[i][j].b;
-
-			avg = (r+g+b)/3;
-			pix[i][j].r = avg;
-			pix[i][j].g = avg;
-			pix[i][j].b = avg;
-		}
-	}
-
-	gtkImg->setPixbuf(img->toPixbuf());
-	delete img;
-}
-
-/**
  * Callback for conversion to grayscale. 
  * Changes the gui a little and dispatches to relevant function.
  */
 void grayscaleCb(GtkButton* gtkbutton, gpointer data)
 {
 	static bool next = 0;
+	Cv::Image* img = 0;
 
 	// Revert
 	if(next == 1) {
@@ -73,7 +38,12 @@ void grayscaleCb(GtkButton* gtkbutton, gpointer data)
 	}
 
 	// Grayscale
-	grayscale();
+	img = new Cv::Image(imgPane->getImage()->getPixbuf());
+	Img::grayscale(img);
+
+	imgPane->getImage()->setPixbuf(img->toPixbuf());
+	delete img;
+
 	button->setLabel("Revert Grayscale");
 	next = 1;
 }
