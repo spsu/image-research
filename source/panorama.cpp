@@ -140,23 +140,66 @@ CvMat* rotateY2(float deg, int width, int height)
 
 	mat = cvCreateMat(3, 3, CV_32FC1);
 
-	float xp = (cos_t * width - 1); // irrelevant: - (sin_t* 0);
-	float yp = (sin_t * width - 1); // irrelevant: - (cos_t* 0);
-	float xtest = xp;
-	float ytest = height + yp; // value if NOT rhombus
-	ytest = height - yp;
+	float xp1 = cos_t * (width - 1); // irrelevant: - (sin_t* 0);
+	float yp1 = sin_t * (width - 1); // irrelevant: - (cos_t* 0);
+	float xp3 = xp1;
+	float yp3 = height + yp1; // value if NOT rhombus
+	yp3 = height - yp1;
 
-	printf("sin: %f, cos: %f, yp: %f, ytest: %f\n",  sin_t, cos_t, yp, ytest);
-
-	//float swap = 0.0f;
-	if(yp - ytest > 0.0f) {
-		ytest = height - 1;
+	/*double swap = 0.0f;
+	if(yp1 - yp3 > 0.0f) {
+		//ytest = height - 1;
 		//xtest = width - xp;
 		printf("******* TESTING ******* \n");
-		printf("\tsin: %f, cos: %f\n\typ: %f, ytest: %f\n",  sin_t, cos_t, yp, ytest);
+		//printf("\tsin: %f, cos: %f\n\typ1: %f, yp2: %f\n\n\txp1: %f xp2: %f",  sin_t, cos_t, yp1, yp2, xp1, xp2);
+		//yp3 = abs(height - (sin_t * (width - 1)));
+
+		swap = yp3;
+		yp3 = yp1;
+		yp1 = swap;
+	}*/
+
+	if((int)deg < 180) {
+		yp1 = sin_t * (height - 1);
+		yp3 = height + yp1;
+
+
+		std::vector<int> xs;
+
+		xs.push_back( sin_t * (height - 1) );
+		xs.push_back( sin_t * (width - 1) );
+		xs.push_back( cos_t * (height - 1) );
+		xs.push_back( cos_t * (width - 1) );
+		xs.push_back( sin_t * (height-1) + cos_t * (width-1) );
+		xs.push_back( sin_t * (height-1) + cos_t * (1) );
+
+		for(unsigned int i = 0; i < xs.size(); i++) {
+			printf("Theta: %d, Y val: %d\n", (int)deg, xs[i]);
+		}
+
 	}
+	else {
+
+
+
+		printf("== THETA IS %d [   ] ==\n", (int)deg);
+		printf("\tsin: %f cos: %f\n", sin_t, cos_t);
+		printf("\txy0:\t\t\t\t\ty1\n");
+		printf("\t%f, %f\t\t\t%f\n", 0.0f, 0.0f, yp1);
+		printf("\txy2:\t\t\t\t\ty3\n");
+		printf("\t%f, %f    \t\t%f\n",0.0f, (float)(height-1), yp3 );
+
+	}
+
+	//yp1: %f yp2: %f\n\txp1: %f xp2: %f\n",  sin_t, cos_t, yp1, yp2, xp1, xp2);
 	printf("\n");
 
+
+	//  x0		x1
+	//	*********
+	//	*		*
+	//	*********
+	//  x2		x3
 
 	src[0].x = 0;
 	src[0].y = 0;
@@ -172,12 +215,15 @@ CvMat* rotateY2(float deg, int width, int height)
 
 	dst[0].x = 0 + xshift;
 	dst[0].y = 0 + yshift;
-	dst[1].x = xp + xshift;
-	dst[1].y = yp + yshift;
+
+	dst[1].x = xp1 + xshift;
+	dst[1].y = yp1 + yshift;
+
 	dst[2].x = 0 + xshift;
 	dst[2].y = height - 1 + yshift;
-	dst[3].x = xtest + xshift;
-	dst[3].y = ytest + yshift; //height - 1;
+
+	dst[3].x = xp3 + xshift;
+	dst[3].y = yp3 + yshift; //height - 1;
 
 	cvGetPerspectiveTransform(src, dst, mat);
 	return mat;
