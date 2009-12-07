@@ -42,7 +42,7 @@ double deg2rad(double deg)
 	return deg * pi / 180;
 }
 
-CvMat* rotateX(double deg)
+CvMat* rotateX(double deg, int width, int height)
 {
 	double theta = 0.0f;
 	float sin_t = 0.0f;
@@ -73,7 +73,7 @@ CvMat* rotateX(double deg)
 	return mat;
 }
 
-CvMat* rotateY(double deg)
+CvMat* rotateY(double deg, int width, int height)
 {
 	double theta = 0.0f;
 	float sin_t = 0.0f;
@@ -99,7 +99,7 @@ CvMat* rotateY(double deg)
 	return mat;
 }
 
-CvMat* rotateZ(double deg)
+CvMat* rotateZ(double deg, int width, int height)
 {
 	double theta = 0.0f;
 	float sin_t = 0.0f;
@@ -160,8 +160,8 @@ CvMat* rotateY2(float deg, int width, int height)
 	}*/
 
 	if((int)deg < 180) {
-		yp1 = sin_t * (height - 1);
-		yp3 = height + yp1;
+		yp1 = sin_t * (height - 1) * 0.3; // XXX: Hack: 0.3 is necessary so points don't converge at infinity
+		yp3 = height - yp1;
 
 
 		std::vector<int> xs;
@@ -172,6 +172,10 @@ CvMat* rotateY2(float deg, int width, int height)
 		xs.push_back( cos_t * (width - 1) );
 		xs.push_back( sin_t * (height-1) + cos_t * (width-1) );
 		xs.push_back( sin_t * (height-1) + cos_t * (1) );
+		xs.push_back( sin_t * (height-1) - cos_t * (width-1) );
+		xs.push_back( sin_t * (height-1) - cos_t * (1) );
+		xs.push_back( cos_t * (width-1) -  sin_t * (height-1) );
+		xs.push_back( cos_t * (1) - sin_t * (height-1) );
 
 		for(unsigned int i = 0; i < xs.size(); i++) {
 			printf("Theta: %d, Y val: %d\n", (int)deg, xs[i]);
@@ -241,9 +245,9 @@ void rotateAxis(float theta)
 
 	t = resizeImages[0];
 
-	img = new Cv::Image(750, 500);
+	img = new Cv::Image(750, 400);
 	img->getPtr()->origin = 1;
-	warpMat = rotateY2(theta, t->getWidth(), t->getHeight()); // TODO: MEMLEAK
+	warpMat = rotateY2(theta, t->getWidth(), t->getHeight()); // XXX XXX XXX XXX XXX XXX
 	cvWarpPerspective(t->getPtr(), img->getPtr(), warpMat);
 	gtkImages[2]->setPixbuf(img->toPixbuf()); // TODO: MEMLEAK	
 
@@ -386,8 +390,8 @@ int main(int argc, char *argv[])
 	// Construct GUI
 	gui->setChild(vbox);
 	vbox->packStart(hbox1, false, false, 0);
-	hbox1->packStart(imgPanes[0]->getImage(), true, true, 0);
-	hbox1->packStart(imgPanes[1]->getImage(), true, true, 0);
+	//hbox1->packStart(imgPanes[0]->getImage(), true, true, 0);
+	//hbox1->packStart(imgPanes[1]->getImage(), true, true, 0);
 	vbox->packStart(hbox2, false, false, 0);
 	hbox2->packStart(imgPanes[2]->getImage(), true, true, 0);
 	vbox->packStart(hbox4, false, false, 0);
