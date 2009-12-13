@@ -243,20 +243,21 @@ class Perspective
 			sp.push_back(Point(0, height-1));
 			sp.push_back(Point(width-1, height-1));
 
+			dp.push_back(Point(0, 0));
+			dp.push_back(Point(width-1, 0));
 			dp.push_back(Point());
 			dp.push_back(Point());
-			dp.push_back(Point(0, height-1));
-			dp.push_back(Point(width-1, height-1));
 
-			float xp0 = 0;
-			float yp0 = sin_t * (height - 1); // irrelevant: - (cos_t* 0);
-			float xp1 = width -1;
-			float yp1 = yp0;
+			// XXX: Hack: 0.3 "pseudo-FOV" is necessary so points don't converge
+			float xp2 = sin_t * (width - 1) * 0.3;
+			float yp2 = cos_t * (height - 1);
+			float xp3 = width - 1 - xp2;
+			float yp3 = yp2;
 
-			dp[0].x = xp0;
-			dp[0].y = yp0;
-			dp[1].x = xp1;
-			dp[1].y = yp1;
+			dp[2].x = xp2;
+			dp[2].y = yp2;
+			dp[3].x = xp3;
+			dp[3].y = yp3;
 
 			for(unsigned int i = 0; i < 4; i++) {
 				setSrc(i, sp[i].x, sp[i].y);
@@ -266,7 +267,12 @@ class Perspective
 			}
 
 
+			printf("==== POINTS ====\n");
+			printf("(%f, %f)\t\t(%f, %f)\n\n", dp[0].x, dp[0].y, dp[1].x, dp[1].y);
+			printf("(%f, %f)\t\t(%f, %f)\n\n\n\n", dp[2].x, dp[2].y, dp[3].x, dp[3].y);
 		};
+
+		void setRotationZ(float deg) {};
 
 
 		// print the matrix
@@ -306,168 +312,53 @@ class Perspective
 // ===========================================================================================
 
 
-CvMat* rotateY2(float deg, int width, int height)
+	// See http://en.wikipedia.org/wiki/Rotation_matrix#Dimension_three
+/**
+ * Do panorama stitching.
+ */
+void rotateAxis(float deg, int axis = 1)
 {
-	double theta = 0.0f;
-	float sin_t = 0.0f;
-	float cos_t = 0.0f;
-	CvMat* mat = 0;
-	CvPoint2D32f src[4];
-	CvPoint2D32f dst[4];
+	Cv::Image* img = 0;
+	Cv::Image* t = 0;
+	int width, height;
 
-	theta = deg2rad(deg);
-	sin_t = (float)sin(theta);
-	cos_t = (float)cos(theta);
+	Perspective* p = 0;
 
-	//mat = cvCreateMat(3, 3, CV_32FC1);
-	Perspective* p = new Perspective(height, width);
-	mat = p->getMat();
+	t = resizeImages[0];
+	img = new Cv::Image(700, 400);
+	img->getPtr()->origin = 1;
 
+	width = t->getWidth();
+	height = t->getHeight();
 
-	float xp1 = cos_t * (width - 1); // irrelevant: - (sin_t* 0);
-	float yp1 = sin_t * (width - 1); // irrelevant: - (cos_t* 0);
-	float xp3 = xp1;
-	float yp3 = height - yp1;
-
-	if((int)deg < 180) {
-		yp1 = sin_t * (height - 1) * 0.3; // XXX: Hack: 0.3 is necessary so points don't converge at infinity
-		yp3 = height - yp1;
-	}
-
-	//  x0		x1
-	//	*********
-	//	*		*
-	//	*********
-	//  x2		x3
-
-	/*src[0].x = 0;
-	src[0].y = 0;
-	src[1].x = width - 1;
-	src[1].y = 0;
-	src[2].x = 0;
-	src[2].y = height - 1;
-	src[3].x = width - 1;
-	src[3].y = height - 1;
-
-	int xshift = 350;
-	int yshift = 50;
-
-	dst[0].x = 0 + xshift;
-	dst[0].y = 0 + yshift;
-
-	dst[1].x = xp1 + xshift;
-	dst[1].y = yp1 + yshift;
-
-	dst[2].x = 0 + xshift;
-	dst[2].y = height - 1 + yshift;
-
-	dst[3].x = xp3 + xshift;
-	dst[3].y = yp3 + yshift; //height - 1;*/
+	p = new Perspective(width, height);
 
 	p->setSrc(0, 0, 0);
 	p->setSrc(1, width - 1, 0);
 	p->setSrc(2, 0, height - 1);
 	p->setSrc(3, width -1, height - 1);
 
-	//p->setDst(0, 0, 0);
-	//p->setDst(1, xp1, yp1);
-	//p->setDst(2, 0, height - 1);
-	//p->setDst(3, xp3, yp3);
-
 	p->setTranslation(350, 75);
 
-	p->setRotationY(deg);
+	switch(axis) {
+		case 1:
+			p->setRotationX(deg);
+			break;
+		case 2:
+			p->setRotationY(deg);
+			break;
+		case 3:
+			p->setRotationZ(deg);
+	}
+
 	p->updateMat();
 
-	//p->setRotation(deg);
-
-	mat = p->getMat();
-	
-
-	//cvGetPerspectiveTransform(src, dst, mat);
-
-
-	//p->printMat();
-	return mat;
-}
-
-	// See http://en.wikipedia.org/wiki/Rotation_matrix#Dimension_three
-/**
- * Do panorama stitching.
- */
-void rotateAxis(float theta)
-{
-	Cv::Image* img = 0;
-	Cv::Image* t = 0;
-	CvMat* warpMat = 0;
-
-	t = resizeImages[0];
-
-	img = new Cv::Image(700, 400);
-	img->getPtr()->origin = 1;
-	warpMat = rotateY2(theta, t->getWidth(), t->getHeight()); // XXX XXX XXX XXX XXX XXX
-	cvWarpPerspective(t->getPtr(), img->getPtr(), warpMat);
-	gtkImages[2]->setPixbuf(img->toPixbuf()); // TODO: MEMLEAK	
+	cvWarpPerspective(t->getPtr(), img->getPtr(), p->getMat());
+	gtkImages[2]->setPixbuf(img->toPixbuf()); // TODO: MEMLEAK
 
 	delete img;
 }
 
-/**
- * Callbacks
- */
-
-void entryCb(GtkButton* gtkbutton, gpointer data)
-{
-	float theta = 0.0f;
-	float val = 0.0f;
-	try {
-		theta = boost::lexical_cast<float>(entries[0]->getText());
-	}
-	catch(boost::bad_lexical_cast&) {
-		fprintf(stderr, "Bad lexical cast\n");
-		return;
-	}
-
-	//rotateAxis(theta); // XXX: The hscale callback does this for us. 
-	val = (float)hscale->getValue();
-	if(abs(val - theta) > 0.005) {
-		hscale->setValue(theta);
-	}
-}
-
-bool isDoGtkIdleRotate = false;
-
-void autoRotateToggleCb(GtkButton* gtkbutton, gpointer data)
-{
-	isDoGtkIdleRotate = !isDoGtkIdleRotate;
-	if(isDoGtkIdleRotate) {
-		buttonAuto->setLabel("auto rotate [turn off]");
-	}
-	else {
-		buttonAuto->setLabel("auto rotate [turn on]");
-	}
-}
-
-gboolean gtkIdleRotateFn(gpointer data)
-{
-	static float theta = 0.0f;
-	float val = 0.0f;
-
-	if(isDoGtkIdleRotate) {
-		theta += 1.0f;
-		if(theta >= 360.0f) {
-			theta = 0.0f;
-		}
-		entries[0]->setText(boost::lexical_cast<std::string>(theta));
-
-		// XXX: hscale callback calls rotate!!
-		val = (float)hscale->getValue();
-		if(abs(val - theta) > 0.005) {
-			hscale->setValue(theta);
-		}
-	}
-	return true;
-}
 
 /**
  * HScale callback
@@ -496,13 +387,13 @@ void scaleCb(int s)
 			break;
 		case 3:
 			scale = (Gtk::HScale*)zscale;
-			break;
+			return; // TODO TEMP
 		
 	}
 
 	theta = scale->getValue();
 	entries[0]->setText(boost::lexical_cast<std::string>(theta));
-	rotateAxis(theta);
+	rotateAxis(theta, s);
 }
 
 void xscaleCb(GtkRange* a, gpointer data) { scaleCb(1); }
@@ -591,12 +482,9 @@ int main(int argc, char *argv[])
 	hbox4->packStart(buttonAuto, false, false, 0);
 
 	// CALLBACKS & IDLE
-	button2->addClickedCb(entryCb, gui);
-	buttonAuto->addClickedCb(autoRotateToggleCb, gui);
 	xscale->addValueChangedCb(xscaleCb);
 	yscale->addValueChangedCb(yscaleCb);
 	zscale->addValueChangedCb(zscaleCb);
-	gtk_idle_add(gtkIdleRotateFn, NULL); // TODO: Add to Gtk class
 
 	vbox->packStart(xscale, true, true, 0);
 	vbox->packStart(yscale, true, true, 0);
