@@ -42,88 +42,269 @@ double deg2rad(double deg)
 	return deg * pi / 180;
 }
 
-CvMat* rotateX(double deg, int width, int height)
+
+/**
+ * Represents an HScale that returns degree values.
+ */
+class DegScale : public Gtk::HScale
 {
-	double theta = 0.0f;
-	float sin_t = 0.0f;
-	float cos_t = 0.0f;
-	CvMat* mat = 0;
+	public:
+		DegScale(): 
+			HScale(0.0, 360.0) 
+		{
+			addMark(0.0, Gtk::POS_BOTTOM, "");
+			addMark(90.0, Gtk::POS_BOTTOM, "");
+			addMark(180.0, Gtk::POS_BOTTOM, "");
+			addMark(270.0, Gtk::POS_BOTTOM, "");
+			addMark(360.0, Gtk::POS_BOTTOM, "");
+			setValuePos(Gtk::POS_RIGHT);
+		};
 
-	theta = deg2rad(deg);
-	sin_t = (float)sin(theta);
-	cos_t = (float)cos(theta);
+		float getRadians() { return 0.0f; };
+};
 
-	mat = cvCreateMat(3, 3, CV_32FC1);
+DegScale* xscale = 0;
+DegScale* yscale = 0;
+DegScale* zscale = 0;
 
-	CV_MAT_ELEM(*mat, float, 0, 0) = 1.0f;
-	CV_MAT_ELEM(*mat, float, 0, 1) = 0.0f;
-	CV_MAT_ELEM(*mat, float, 0, 2) = 0.0f;
-	CV_MAT_ELEM(*mat, float, 1, 0) = 0.0f;
-	//CV_MAT_ELEM(*mat, float, 1, 1) = cos_t;
-	//CV_MAT_ELEM(*mat, float, 1, 2) = sin_t * -1.0f;
-	//CV_MAT_ELEM(*mat, float, 2, 0) = 0.0f;
-	//CV_MAT_ELEM(*mat, float, 2, 1) = sin_t;
-	//CV_MAT_ELEM(*mat, float, 2, 2) = cos_t;
-	CV_MAT_ELEM(*mat, float, 1, 1) = cos_t;
-	CV_MAT_ELEM(*mat, float, 1, 2) = sin_t;
-	CV_MAT_ELEM(*mat, float, 2, 0) = 0.0f;
-	CV_MAT_ELEM(*mat, float, 2, 1) = sin_t * -1.0f;
-	CV_MAT_ELEM(*mat, float, 2, 2) = cos_t;
 
-	return mat;
-}
+// ===========================================================================================
 
-CvMat* rotateY(double deg, int width, int height)
+struct Point {
+	float x;
+	float y;
+	Point(): x(0.0f), y(0.0f) {};
+	Point(float xPos, float yPos): x(xPos), y(yPos) {};
+};
+
+class Perspective
 {
-	double theta = 0.0f;
-	float sin_t = 0.0f;
-	float cos_t = 0.0f;
-	CvMat* mat = 0;
+	public:
+		Perspective(int w, int h):
+			width(w),
+			height(h),
+			xTranslation(0),
+			yTranslation(0),
+			outWidthConstr(-1),
+			outHeightConstr(-1)
+		{
+			mat = cvCreateMat(3, 3, CV_32FC1);
+			cvZero(mat);
+		};
 
-	theta = deg2rad(deg);
-	sin_t = (float)sin(theta);
-	cos_t = (float)cos(theta);
 
-	mat = cvCreateMat(3, 3, CV_32FC1);
+		void setSrc(int i, float x, float y) { 
+			src[i].x = x;
+			src[i].y = y;
+		};
+		void setDst(int i, float x, float y) { 
+			dst[i].x = x;
+			dst[i].y = y;
+		};
 
-	CV_MAT_ELEM(*mat, float, 0, 0) = cos_t;
-	CV_MAT_ELEM(*mat, float, 0, 1) = 0.0f;
-	CV_MAT_ELEM(*mat, float, 0, 2) = sin_t;
-	CV_MAT_ELEM(*mat, float, 1, 0) = 0.0f;
-	CV_MAT_ELEM(*mat, float, 1, 1) = 1.0f;
-	CV_MAT_ELEM(*mat, float, 1, 2) = 0.0f;
-	CV_MAT_ELEM(*mat, float, 2, 0) = sin_t * -1.0f;
-	CV_MAT_ELEM(*mat, float, 2, 1) = 0.0f;
-	CV_MAT_ELEM(*mat, float, 2, 2) = cos_t;
+		void setTranslation(int x, int y) {
+			xTranslation = x;
+			yTranslation = y;
+		};
 
-	return mat;
-}
+		void updateMat() {
+			CvPoint2D32f out[4];
 
-CvMat* rotateZ(double deg, int width, int height)
-{
-	double theta = 0.0f;
-	float sin_t = 0.0f;
-	float cos_t = 0.0f;
-	CvMat* mat = 0;
+			// Work only with temp values
+			for(unsigned int i = 0; i < 4; i++) {
+				out[i].x = dst[i].x;
+				out[i].y = dst[i].y;
+			}
 
-	theta = deg2rad(deg);
-	sin_t = (float)sin(theta);
-	cos_t = (float)cos(theta);
+			// Shift negative values back into frame. // TODO: Interesting idea.
+			/*float maxNegX = 0;
+			float maxNegY = 0;
+			for(unsigned int i = 0; i < 4; i++) {
+				if(out[i].x < maxNegX) {
+					maxNegX = out[i].x;
+				}
+				if(out[i].y < maxNegY) {
+					maxNegY = out[i].y;
+				} 
+			}
+			for(unsigned int i = 0; i < 4; i++) {	// TODO: May need to record that we did this
+				out[i].x += abs(maxNegX);			// Since this shifts for each theta value, we'll
+				out[i].y += abs(maxNegY);			// need these numbers to properly align images
+			}*/
 
-	mat = cvCreateMat(3, 3, CV_32FC1);
+			// Add translation
+			for(unsigned int i = 0; i < 4; i++) {
+				out[i].x = out[i].x + xTranslation;
+				out[i].y = out[i].y + yTranslation;
+			}
 
-	CV_MAT_ELEM(*mat, float, 0, 0) = cos_t;
-	CV_MAT_ELEM(*mat, float, 0, 1) = sin_t * -1.0f;
-	CV_MAT_ELEM(*mat, float, 0, 2) = 0.0f;
-	CV_MAT_ELEM(*mat, float, 1, 0) = sin_t;
-	CV_MAT_ELEM(*mat, float, 1, 1) = cos_t;
-	CV_MAT_ELEM(*mat, float, 1, 2) = 0.0f;
-	CV_MAT_ELEM(*mat, float, 2, 0) = 0.0f;
-	CV_MAT_ELEM(*mat, float, 2, 1) = 0.0f;
-	CV_MAT_ELEM(*mat, float, 2, 2) = 1.0f;
+			cvGetPerspectiveTransform(src, out, mat);
+		};
 
-	return mat;
-}
+
+		// TODO TESTING
+		void setRotation(float yaw, float pitch = 0.0f, float roll = 0.0f) {
+
+			float theta = 0.0f;
+			float sin_t = 0.0f;
+			float cos_t = 0.0f;
+
+			theta = deg2rad(yaw);
+			sin_t = (float)sin(theta);
+			cos_t = (float)cos(theta);
+
+			
+			CvMat* temp = cvCreateMat(3, 3, CV_32FC1);
+
+			//mat2 = cvCreateMat(3, 3, CV_32FC1);
+			CV_MAT_ELEM(*temp, float, 0, 0) = 1;
+			CV_MAT_ELEM(*temp, float, 0, 1) = 0;
+			CV_MAT_ELEM(*temp, float, 0, 2) = 0;
+			CV_MAT_ELEM(*temp, float, 1, 0) = 0;
+			CV_MAT_ELEM(*temp, float, 1, 1) = cos_t;
+			CV_MAT_ELEM(*temp, float, 1, 2) = sin_t;
+			CV_MAT_ELEM(*temp, float, 2, 0) = 0;
+			CV_MAT_ELEM(*temp, float, 2, 1) = sin_t * -1.0f;
+			CV_MAT_ELEM(*temp, float, 2, 2) = cos_t;
+
+			CvMat* temp2 = cvCreateMat(3, 1, CV_32FC1);
+			CV_MAT_ELEM(*temp, float, 0, 0) = 1;
+			CV_MAT_ELEM(*temp, float, 1, 0) = 0;
+			CV_MAT_ELEM(*temp, float, 2, 0) = 0;
+
+
+			//cvGEMM(a, b, NULL, dst);
+
+		};
+
+		void setRotationY(float deg) {
+			float theta = 0.0f;
+			float sin_t = 0.0f;
+			float cos_t = 0.0f;
+
+			theta = deg2rad(deg);
+			sin_t = (float)sin(theta);
+			cos_t = (float)cos(theta);
+
+			// Original points
+			std::vector<Point> sp;
+			std::vector<Point> dp;
+
+			sp.push_back(Point(0, 0));
+			sp.push_back(Point(width-1, 0));
+			sp.push_back(Point(0, height-1));
+			sp.push_back(Point(width-1, height-1));
+
+			dp.push_back(Point(0, 0));
+			dp.push_back(Point());
+			dp.push_back(Point(0, height-1));
+			dp.push_back(Point());
+
+			// XXX: Hack: 0.3 "pseudo-FOV" is necessary so points don't converge
+			float xp1 = cos_t * (width - 1);
+			float yp1 = sin_t * (height - 1) * 0.3; 
+			float xp3 = xp1;
+			float yp3 = height - yp1;
+
+			dp[1].x = xp1;
+			dp[1].y = yp1;
+			dp[3].x = xp3;
+			dp[3].y = yp3;
+
+			for(unsigned int i = 0; i < 4; i++) {
+				setSrc(i, sp[i].x, sp[i].y);
+			}
+			for(unsigned int i = 0; i < 4; i++) {
+				setDst(i, dp[i].x, dp[i].y);
+			}
+
+			printf("==== POINTS ====\n");
+			printf("(%f, %f)\t\t(%f, %f)\n\n", dp[0].x, dp[0].y, dp[1].x, dp[1].y);
+			printf("(%f, %f)\t\t(%f, %f)\n\n\n\n", dp[2].x, dp[2].y, dp[3].x, dp[3].y);
+
+		};
+
+
+		void setRotationX(float deg) {
+			float theta = 0.0f;
+			float sin_t = 0.0f;
+			float cos_t = 0.0f;
+
+			theta = deg2rad(deg);
+			sin_t = (float)sin(theta);
+			cos_t = (float)cos(theta);
+
+			// Original points
+			std::vector<Point> sp;
+			std::vector<Point> dp;
+
+			sp.push_back(Point(0, 0));
+			sp.push_back(Point(width-1, 0));
+			sp.push_back(Point(0, height-1));
+			sp.push_back(Point(width-1, height-1));
+
+			dp.push_back(Point());
+			dp.push_back(Point());
+			dp.push_back(Point(0, height-1));
+			dp.push_back(Point(width-1, height-1));
+
+			float xp0 = 0;
+			float yp0 = sin_t * (height - 1); // irrelevant: - (cos_t* 0);
+			float xp1 = width -1;
+			float yp1 = yp0;
+
+			dp[0].x = xp0;
+			dp[0].y = yp0;
+			dp[1].x = xp1;
+			dp[1].y = yp1;
+
+			for(unsigned int i = 0; i < 4; i++) {
+				setSrc(i, sp[i].x, sp[i].y);
+			}
+			for(unsigned int i = 0; i < 4; i++) {
+				setDst(i, dp[i].x, dp[i].y);
+			}
+
+
+		};
+
+
+		// print the matrix
+		void printMat() {
+			printf("[\n");
+			for(unsigned int i = 0; i < 3; i++) {
+				printf("   [");
+				for(unsigned int j = 0; j < 3; j++) {
+					float val = (float)CV_MAT_ELEM(*mat, float, i, j);
+					printf("\t%f", val);
+				}
+				printf("  ]\n");
+			}
+			printf("]\n");
+		};
+
+		CvMat* getMat() { return mat; };
+
+	protected:
+		int width;
+		int height;
+		int xTranslation;		// Translation, or corner origin. 
+		int yTranslation;
+		int outWidthConstr;		// Output image size constraints, negative if not used
+		int outHeightConstr;
+		CvMat* mat;
+		CvPoint2D32f src[4];
+		CvPoint2D32f dst[4];
+
+};
+
+
+
+
+
+
+// ===========================================================================================
+
 
 CvMat* rotateY2(float deg, int width, int height)
 {
@@ -138,66 +319,20 @@ CvMat* rotateY2(float deg, int width, int height)
 	sin_t = (float)sin(theta);
 	cos_t = (float)cos(theta);
 
-	mat = cvCreateMat(3, 3, CV_32FC1);
+	//mat = cvCreateMat(3, 3, CV_32FC1);
+	Perspective* p = new Perspective(height, width);
+	mat = p->getMat();
+
 
 	float xp1 = cos_t * (width - 1); // irrelevant: - (sin_t* 0);
 	float yp1 = sin_t * (width - 1); // irrelevant: - (cos_t* 0);
 	float xp3 = xp1;
-	float yp3 = height + yp1; // value if NOT rhombus
-	yp3 = height - yp1;
-
-	/*double swap = 0.0f;
-	if(yp1 - yp3 > 0.0f) {
-		//ytest = height - 1;
-		//xtest = width - xp;
-		printf("******* TESTING ******* \n");
-		//printf("\tsin: %f, cos: %f\n\typ1: %f, yp2: %f\n\n\txp1: %f xp2: %f",  sin_t, cos_t, yp1, yp2, xp1, xp2);
-		//yp3 = abs(height - (sin_t * (width - 1)));
-
-		swap = yp3;
-		yp3 = yp1;
-		yp1 = swap;
-	}*/
+	float yp3 = height - yp1;
 
 	if((int)deg < 180) {
 		yp1 = sin_t * (height - 1) * 0.3; // XXX: Hack: 0.3 is necessary so points don't converge at infinity
 		yp3 = height - yp1;
-
-
-		std::vector<int> xs;
-
-		xs.push_back( sin_t * (height - 1) );
-		xs.push_back( sin_t * (width - 1) );
-		xs.push_back( cos_t * (height - 1) );
-		xs.push_back( cos_t * (width - 1) );
-		xs.push_back( sin_t * (height-1) + cos_t * (width-1) );
-		xs.push_back( sin_t * (height-1) + cos_t * (1) );
-		xs.push_back( sin_t * (height-1) - cos_t * (width-1) );
-		xs.push_back( sin_t * (height-1) - cos_t * (1) );
-		xs.push_back( cos_t * (width-1) -  sin_t * (height-1) );
-		xs.push_back( cos_t * (1) - sin_t * (height-1) );
-
-		for(unsigned int i = 0; i < xs.size(); i++) {
-			printf("Theta: %d, Y val: %d\n", (int)deg, xs[i]);
-		}
-
 	}
-	else {
-
-
-
-		printf("== THETA IS %d [   ] ==\n", (int)deg);
-		printf("\tsin: %f cos: %f\n", sin_t, cos_t);
-		printf("\txy0:\t\t\t\t\ty1\n");
-		printf("\t%f, %f\t\t\t%f\n", 0.0f, 0.0f, yp1);
-		printf("\txy2:\t\t\t\t\ty3\n");
-		printf("\t%f, %f    \t\t%f\n",0.0f, (float)(height-1), yp3 );
-
-	}
-
-	//yp1: %f yp2: %f\n\txp1: %f xp2: %f\n",  sin_t, cos_t, yp1, yp2, xp1, xp2);
-	printf("\n");
-
 
 	//  x0		x1
 	//	*********
@@ -205,7 +340,7 @@ CvMat* rotateY2(float deg, int width, int height)
 	//	*********
 	//  x2		x3
 
-	src[0].x = 0;
+	/*src[0].x = 0;
 	src[0].y = 0;
 	src[1].x = width - 1;
 	src[1].y = 0;
@@ -227,9 +362,32 @@ CvMat* rotateY2(float deg, int width, int height)
 	dst[2].y = height - 1 + yshift;
 
 	dst[3].x = xp3 + xshift;
-	dst[3].y = yp3 + yshift; //height - 1;
+	dst[3].y = yp3 + yshift; //height - 1;*/
 
-	cvGetPerspectiveTransform(src, dst, mat);
+	p->setSrc(0, 0, 0);
+	p->setSrc(1, width - 1, 0);
+	p->setSrc(2, 0, height - 1);
+	p->setSrc(3, width -1, height - 1);
+
+	//p->setDst(0, 0, 0);
+	//p->setDst(1, xp1, yp1);
+	//p->setDst(2, 0, height - 1);
+	//p->setDst(3, xp3, yp3);
+
+	p->setTranslation(350, 75);
+
+	p->setRotationY(deg);
+	p->updateMat();
+
+	//p->setRotation(deg);
+
+	mat = p->getMat();
+	
+
+	//cvGetPerspectiveTransform(src, dst, mat);
+
+
+	//p->printMat();
 	return mat;
 }
 
@@ -245,7 +403,7 @@ void rotateAxis(float theta)
 
 	t = resizeImages[0];
 
-	img = new Cv::Image(750, 400);
+	img = new Cv::Image(700, 400);
 	img->getPtr()->origin = 1;
 	warpMat = rotateY2(theta, t->getWidth(), t->getHeight()); // XXX XXX XXX XXX XXX XXX
 	cvWarpPerspective(t->getPtr(), img->getPtr(), warpMat);
@@ -324,6 +482,33 @@ void hscaleCb(GtkRange* a, gpointer data)
 	rotateAxis(theta);
 }
 
+void scaleCb(int s)
+{
+	Gtk::HScale* scale = 0;
+	double theta = 0.0;
+
+	switch(s) {
+		case 1:
+			scale = (Gtk::HScale*)xscale;
+			break;
+		case 2:
+			scale = (Gtk::HScale*)yscale;
+			break;
+		case 3:
+			scale = (Gtk::HScale*)zscale;
+			break;
+		
+	}
+
+	theta = scale->getValue();
+	entries[0]->setText(boost::lexical_cast<std::string>(theta));
+	rotateAxis(theta);
+}
+
+void xscaleCb(GtkRange* a, gpointer data) { scaleCb(1); }
+void yscaleCb(GtkRange* a, gpointer data) { scaleCb(2); }
+void zscaleCb(GtkRange* a, gpointer data) { scaleCb(3); }
+
 
 /**
  * Setup images.
@@ -341,6 +526,7 @@ void setupImages()
 }
 
 
+
 /**
  * Main function
  * Sets up the Gui, attaches any callbacks, then starts Gtk.
@@ -353,7 +539,6 @@ int main(int argc, char *argv[])
 	Gtk::HBox* hbox3 = 0;
 	Gtk::HBox* hbox4 = 0;
 	 
-
 	// Create main application elements
 	gui = new App::Gui("Panorama");
 	//imgPane = new App::ImagePane("./media/example.jpg");
@@ -380,12 +565,9 @@ int main(int argc, char *argv[])
 	button2 = new Gtk::Button("update roll(z)/pitch(x)/yaw(y)");
 	buttonAuto = new Gtk::Button("auto rotate [turn on]");
 
-	hscale = new Gtk::HScale(0.0, 360.0);
-	hscale->addMark(0.0, Gtk::POS_BOTTOM, "0");
-	hscale->addMark(90.0, Gtk::POS_BOTTOM, "90");
-	hscale->addMark(180.0, Gtk::POS_BOTTOM, "180");
-	hscale->addMark(270.0, Gtk::POS_BOTTOM, "270");
-	hscale->addMark(360.0, Gtk::POS_BOTTOM, "360");
+	xscale = new DegScale();
+	yscale = new DegScale();
+	zscale = new DegScale();
 
 	// Construct GUI
 	gui->setChild(vbox);
@@ -411,10 +593,14 @@ int main(int argc, char *argv[])
 	// CALLBACKS & IDLE
 	button2->addClickedCb(entryCb, gui);
 	buttonAuto->addClickedCb(autoRotateToggleCb, gui);
-	hscale->addValueChangedCb(hscaleCb);
+	xscale->addValueChangedCb(xscaleCb);
+	yscale->addValueChangedCb(yscaleCb);
+	zscale->addValueChangedCb(zscaleCb);
 	gtk_idle_add(gtkIdleRotateFn, NULL); // TODO: Add to Gtk class
 
-	vbox->packStart(hscale, true, true, 7);
+	vbox->packStart(xscale, true, true, 0);
+	vbox->packStart(yscale, true, true, 0);
+	vbox->packStart(zscale, true, true, 0);
 
 	setupImages();
 
