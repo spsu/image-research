@@ -89,7 +89,41 @@ class Perspective
 			outHeightConstr(-1)
 		{
 			mat = cvCreateMat(3, 3, CV_32FC1);
-			cvZero(mat);
+			cvZero(mat);			
+			pts.push_back(Point());
+			pts.push_back(Point());
+			pts.push_back(Point());
+			pts.push_back(Point());
+			resetPts();
+		};
+
+		void resetPts() {
+			pts[0].x = 0;
+			pts[0].y = 0;
+			pts[1].x = width - 1;
+			pts[1].y = 0;
+			pts[2].x = 0;
+			pts[2].y = height - 1;
+			pts[3].x = width - 1;
+			pts[3].y = height - 1;
+
+			src[0].x = 0;
+			src[0].y = 0;
+			src[1].x = width - 1;
+			src[1].y = 0;
+			src[2].x = 0;
+			src[2].y = height - 1;
+			src[3].x = width - 1;
+			src[3].y = height - 1;
+
+			dst[0].x = 0;
+			dst[0].y = 0;
+			dst[1].x = width - 1;
+			dst[1].y = 0;
+			dst[2].x = 0;
+			dst[2].y = height - 1;
+			dst[3].x = width - 1;
+			dst[3].y = height - 1;
 		};
 
 
@@ -143,7 +177,7 @@ class Perspective
 
 
 		// TODO TESTING
-		void setRotation(float yaw, float pitch = 0.0f, float roll = 0.0f) {
+		/*void setRotation(float yaw, float pitch = 0.0f, float roll = 0.0f) {
 
 			float theta = 0.0f;
 			float sin_t = 0.0f;
@@ -175,7 +209,7 @@ class Perspective
 
 			//cvGEMM(a, b, NULL, dst);
 
-		};
+		};*/
 
 		void setRotationY(float deg) {
 			float theta = 0.0f;
@@ -186,41 +220,16 @@ class Perspective
 			sin_t = (float)sin(theta);
 			cos_t = (float)cos(theta);
 
-			// Original points
-			std::vector<Point> sp;
-			std::vector<Point> dp;
-
-			sp.push_back(Point(0, 0));
-			sp.push_back(Point(width-1, 0));
-			sp.push_back(Point(0, height-1));
-			sp.push_back(Point(width-1, height-1));
-
-			dp.push_back(Point(0, 0));
-			dp.push_back(Point());
-			dp.push_back(Point(0, height-1));
-			dp.push_back(Point());
-
 			// XXX: Hack: 0.3 "pseudo-FOV" is necessary so points don't converge
-			float xp1 = cos_t * (width - 1);
-			float yp1 = sin_t * (height - 1) * 0.3; 
-			float xp3 = xp1;
-			float yp3 = height - yp1;
+			dst[1].x = cos_t * dst[1].x; // replaces (width - 1)
+			dst[1].y = dst[1].y - sin_t * (height - 1) * 0.1;
+			dst[3].x = cos_t * dst[3].x;
+			dst[3].y = dst[3].y + sin_t * (height - 1) * 0.1; // OLD: height - yp1;
 
-			dp[1].x = xp1;
-			dp[1].y = yp1;
-			dp[3].x = xp3;
-			dp[3].y = yp3;
 
-			for(unsigned int i = 0; i < 4; i++) {
-				setSrc(i, sp[i].x, sp[i].y);
-			}
-			for(unsigned int i = 0; i < 4; i++) {
-				setDst(i, dp[i].x, dp[i].y);
-			}
-
-			printf("==== POINTS ====\n");
-			printf("(%f, %f)\t\t(%f, %f)\n\n", dp[0].x, dp[0].y, dp[1].x, dp[1].y);
-			printf("(%f, %f)\t\t(%f, %f)\n\n\n\n", dp[2].x, dp[2].y, dp[3].x, dp[3].y);
+			printf("==== POINTS AFTER Y ====\n");
+			printf("(%f, %f)\t\t(%f, %f)\n\n", dst[0].x, dst[0].y, dst[1].x, dst[1].y);
+			printf("(%f, %f)\t\t(%f, %f)\n\n\n\n", dst[2].x, dst[2].y, dst[3].x, dst[3].y);
 
 		};
 
@@ -234,42 +243,21 @@ class Perspective
 			sin_t = (float)sin(theta);
 			cos_t = (float)cos(theta);
 
-			// Original points
-			std::vector<Point> sp;
-			std::vector<Point> dp;
 
-			sp.push_back(Point(0, 0));
-			sp.push_back(Point(width-1, 0));
-			sp.push_back(Point(0, height-1));
-			sp.push_back(Point(width-1, height-1));
-
-			dp.push_back(Point(0, 0));
-			dp.push_back(Point(width-1, 0));
-			dp.push_back(Point());
-			dp.push_back(Point());
+			printf("==== POINTS BEFORE X ====\n");
+			printf("(%f, %f)\t\t(%f, %f)\n\n", dst[0].x, dst[0].y, dst[1].x, dst[1].y);
+			printf("(%f, %f)\t\t(%f, %f)\n\n\n\n", dst[2].x, dst[2].y, dst[3].x, dst[3].y);
 
 			// XXX: Hack: 0.3 "pseudo-FOV" is necessary so points don't converge
-			float xp2 = sin_t * (width - 1) * 0.3;
-			float yp2 = cos_t * (height - 1);
-			float xp3 = width - 1 - xp2;
-			float yp3 = yp2;
 
-			dp[2].x = xp2;
-			dp[2].y = yp2;
-			dp[3].x = xp3;
-			dp[3].y = yp3;
+			dst[2].x = dst[2].x + (sin_t * (width - 1) * 0.1);
+			dst[2].y = cos_t * dst[2].y;
+			dst[3].x = dst[3].x - (sin_t * (width - 1) * 0.1);
+			dst[3].y = cos_t * dst[3].y;
 
-			for(unsigned int i = 0; i < 4; i++) {
-				setSrc(i, sp[i].x, sp[i].y);
-			}
-			for(unsigned int i = 0; i < 4; i++) {
-				setDst(i, dp[i].x, dp[i].y);
-			}
-
-
-			printf("==== POINTS ====\n");
-			printf("(%f, %f)\t\t(%f, %f)\n\n", dp[0].x, dp[0].y, dp[1].x, dp[1].y);
-			printf("(%f, %f)\t\t(%f, %f)\n\n\n\n", dp[2].x, dp[2].y, dp[3].x, dp[3].y);
+			printf("==== POINTS AFTER X ====\n");
+			printf("(%f, %f)\t\t(%f, %f)\n\n", dst[0].x, dst[0].y, dst[1].x, dst[1].y);
+			printf("(%f, %f)\t\t(%f, %f)\n\n\n\n", dst[2].x, dst[2].y, dst[3].x, dst[3].y);
 		};
 
 		void setRotationZ(float deg) {};
@@ -301,6 +289,7 @@ class Perspective
 		CvMat* mat;
 		CvPoint2D32f src[4];
 		CvPoint2D32f dst[4];
+		std::vector<Point> pts;	// Temporary points for applying multiple rotations
 
 };
 
@@ -332,24 +321,13 @@ void rotateAxis(float deg, int axis = 1)
 	height = t->getHeight();
 
 	p = new Perspective(width, height);
-
-	p->setSrc(0, 0, 0);
-	p->setSrc(1, width - 1, 0);
-	p->setSrc(2, 0, height - 1);
-	p->setSrc(3, width -1, height - 1);
+	//p->resetPts();
 
 	p->setTranslation(350, 75);
 
-	switch(axis) {
-		case 1:
-			p->setRotationX(deg);
-			break;
-		case 2:
-			p->setRotationY(deg);
-			break;
-		case 3:
-			p->setRotationZ(deg);
-	}
+	p->setRotationX(xscale->getValue());
+	p->setRotationY(yscale->getValue());
+	//p->setRotationZ(deg);
 
 	p->updateMat();
 
@@ -363,16 +341,6 @@ void rotateAxis(float deg, int axis = 1)
 /**
  * HScale callback
  */
-void hscaleCb(GtkRange* a, gpointer data)
-{
-	Gtk::HScale* hscale = (Gtk::HScale*)data;
-	double theta = 0.0;
-
-	theta = hscale->getValue();
-	entries[0]->setText(boost::lexical_cast<std::string>(theta));
-	rotateAxis(theta);
-}
-
 void scaleCb(int s)
 {
 	Gtk::HScale* scale = 0;
