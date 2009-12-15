@@ -51,7 +51,7 @@ class PerspectiveTransform
 		void unsetTranslation();
 
 		/**
-		 * Set the rotation in degrees along each axis. 
+		 * Set the rotation in *degrees* along each axis. 
 		 * If there is a point set, that is the rotation point. 
 		 */
 		void setRotationX(float deg);
@@ -63,6 +63,7 @@ class PerspectiveTransform
 
 		/**
 		 * Print the matrix.
+		 * For debugging purposes. 
 		 */
 		void printMat();
 
@@ -74,14 +75,10 @@ class PerspectiveTransform
 
 		/**
 		 * Update transformation matrix. 
-		 * Needs to be called every time rotation is changed. 
+		 * Needs to be called every time rotation is changed, although it is 
+		 * automatically called (if needed) by warpPerspective(). 
 		 */
 		void updateMat();
-
-		/**
-		 * XXX: TEMPORARY.
-		 */
-		void updateMat2();
 
 		/**
 		 * Warp image perspective. 

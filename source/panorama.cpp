@@ -95,8 +95,8 @@ void rotateAxis(float deg, int axis = 1)
 	Cv::PerspectiveTransform* p = 0;
 
 	t = resizeImages[0];
-	//img = new Cv::Image(700, 400);
-	img = new Cv::Image(300, 300);
+	img = new Cv::Image(700, 400);
+	//img = new Cv::Image(300, 300);
 	img->getPtr()->origin = 1;
 
 	width = t->getWidth();
@@ -156,9 +156,10 @@ void setupImages()
 	resizeImages.push_back(origImages[0]->copy());
 	resizeImages.push_back(origImages[1]->copy());
 
-	resizeImages[0]->resize(100, 100);
+	//resizeImages[0]->resize(100, 100);
+	resizeImages[0]->resize(0.5);
 	resizeImages[1]->resize(0.5);
-
+	
 	gtkImages[0]->setPixbuf(resizeImages[0]->toPixbuf());
 	gtkImages[1]->setPixbuf(resizeImages[1]->toPixbuf());
 }

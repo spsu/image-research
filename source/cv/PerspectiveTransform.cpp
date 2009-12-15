@@ -22,7 +22,7 @@ PerspectiveTransform::PerspectiveTransform(int w, int h):
 
 PerspectiveTransform::~PerspectiveTransform()
 {
-	
+	cvReleaseMat(&mat);
 }
 
 void PerspectiveTransform::reset()
@@ -90,21 +90,11 @@ void PerspectiveTransform::setRotationX(float deg)
 	sin_t = (float)sin(theta);
 	cos_t = (float)cos(theta);
 
-
-	printf("==== POINTS BEFORE X ====\n");
-	printf("(%f, %f)\t\t(%f, %f)\n\n", dst[0].x, dst[0].y, dst[1].x, dst[1].y);
-	printf("(%f, %f)\t\t(%f, %f)\n\n\n\n", dst[2].x, dst[2].y, dst[3].x, dst[3].y);
-
-	// XXX: Hack: 0.3 "pseudo-FOV" is necessary so points don't converge
-
+	// XXX: Hack: 0.1 "pseudo-FOV" is necessary so points don't converge
 	dst[2].x = dst[2].x + (sin_t * (width - 1) * 0.1);
 	dst[2].y = cos_t * dst[2].y;
 	dst[3].x = dst[3].x - (sin_t * (width - 1) * 0.1);
 	dst[3].y = cos_t * dst[3].y;
-
-	printf("==== POINTS AFTER X ====\n");
-	printf("(%f, %f)\t\t(%f, %f)\n\n", dst[0].x, dst[0].y, dst[1].x, dst[1].y);
-	printf("(%f, %f)\t\t(%f, %f)\n\n\n\n", dst[2].x, dst[2].y, dst[3].x, dst[3].y);
 
 	isMatStale = true; 
 }
@@ -119,58 +109,13 @@ void PerspectiveTransform::setRotationY(float deg)
 	sin_t = (float)sin(theta);
 	cos_t = (float)cos(theta);
 
-	// XXX: Hack: 0.3 "pseudo-FOV" is necessary so points don't converge
+	// XXX: Hack: 0.1 "pseudo-FOV" is necessary so points don't converge
 	dst[1].x = cos_t * dst[1].x;
 	dst[1].y = dst[1].y - sin_t * (height - 1) * 0.1;
 	dst[3].x = cos_t * dst[3].x;
 	dst[3].y = dst[3].y + sin_t * (height - 1) * 0.1;
 
-	//printf("==== POINTS AFTER Y ====\n");
-	//printf("(%f, %f)\t\t(%f, %f)\n\n", dst[0].x, dst[0].y, dst[1].x, dst[1].y);
-	//printf("(%f, %f)\t\t(%f, %f)\n\n\n\n", dst[2].x, dst[2].y, dst[3].x, dst[3].y);
-
-	printf("==== NORMAL CALCULATION ====\n");
-	updateMat();
-	printMat();
-
-	printf("==== LINEAR ALGEBRA CALCULATION ====\n");
-	//reset();
-
-	/* ORIGINAL WIKIPEDIA VALUES
-	CV_MAT_ELEM(*mat, float, 0, 0) = cos_t;
-	CV_MAT_ELEM(*mat, float, 0, 1) = 0.0f;
-	CV_MAT_ELEM(*mat, float, 0, 2) = sin_t;
-	CV_MAT_ELEM(*mat, float, 1, 0) = 0.0f;
-	CV_MAT_ELEM(*mat, float, 1, 1) = 1.0f;
-	CV_MAT_ELEM(*mat, float, 1, 2) = 0.0f;
-	CV_MAT_ELEM(*mat, float, 2, 0) = sin_t * -1.0f;
-	CV_MAT_ELEM(*mat, float, 2, 1) = 0.0f;
-	CV_MAT_ELEM(*mat, float, 2, 2) = cos_t; */
-
-
-	/*CV_MAT_ELEM(*mat, float, 0, 0) = cos_t;	// Main rotation point
-	CV_MAT_ELEM(*mat, float, 0, 1) = 0.0f;
-	CV_MAT_ELEM(*mat, float, 0, 2) = 0.0f;
-	CV_MAT_ELEM(*mat, float, 1, 0) = 0.0f;
-	CV_MAT_ELEM(*mat, float, 1, 1) = 1.0f;
-	CV_MAT_ELEM(*mat, float, 1, 2) = 0.0f;
-	CV_MAT_ELEM(*mat, float, 2, 0) = sin_t * -1.0f * 0.01f;
-	CV_MAT_ELEM(*mat, float, 2, 1) = 0.0f;
-	CV_MAT_ELEM(*mat, float, 2, 2) = 1.0f;
-
-	updateMat2();
-
-	printMat();*/
-
 	isMatStale = true;
-	//isMatStale = false;
-}
-
-void PerspectiveTransform::updateMat2()
-{
-	// Add translation. 
-	CV_MAT_ELEM(*mat, float, 0, 2) += xTranslation;
-	CV_MAT_ELEM(*mat, float, 1, 2) += yTranslation;
 }
 
 void PerspectiveTransform::setRotationZ(float deg, int x, int y)
