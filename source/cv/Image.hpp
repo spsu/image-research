@@ -8,6 +8,7 @@
  * <echelon@gmail.com>
  */
 
+#include "types.hpp"
 #include <cv.h>
 #include <highgui.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
@@ -39,6 +40,7 @@ typedef Canvas<RgbPixel> RgbPix;
 
 namespace V4L2 {
 	class Frame;
+	typedef CvSize Size;
 }
 
 /**
@@ -77,6 +79,13 @@ class Image
 		 * Created with 8-bits per channel, unsigned.
 		 */
 		Image(int width, int height, int numChannels = 3);
+
+		/**
+		 * Blank image CTOR #2
+		 * Creates an image with the width, height, channels, etc. specified.
+		 * Created with 8-bits per channel, unsigned.
+		 */
+		Image(Size sz, int numChannels = 3);
 
 		/**
 		 * File load CTOR.
@@ -133,7 +142,7 @@ class Image
 		/**
 		 * Get size of the image.
 		 */
-		CvSize getSize();
+		Size getSize();
 		int getWidth();
 		int getHeight();
 
@@ -154,6 +163,16 @@ class Image
 		 * Creating a copy of the image first might be a good idea.
 		 */
 		void resize(double factor);
+
+		/**
+		 * Set ROI (Region of Interest)
+		 */
+		void setRoi(int x, int y, int width, int height);
+
+		/**
+		 * Reset ROI
+		 */
+		void resetRoi();
 
 	protected:
 		/**

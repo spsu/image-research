@@ -9,6 +9,7 @@
 #include "app/ImagePane.hpp"
 #include "cv/Image.hpp"
 #include "cv/PerspectiveTransform.hpp"
+#include "cv/types.hpp"
 #include "gtk/all.hpp"
 #include <stdio.h>
 #include <cv.h>
@@ -91,24 +92,33 @@ void rotateAxis(float deg, int axis = 1)
 	Cv::Image* img = 0;
 	Cv::Image* t = 0;
 	int width, height;
+	Cv::Size outSize;
 
 	Cv::PerspectiveTransform* p = 0;
 
 	t = resizeImages[0];
-	img = new Cv::Image(700, 400);
 	//img = new Cv::Image(300, 300);
-	img->getPtr()->origin = 1;
 
 	width = t->getWidth();
 	height = t->getHeight();
 
 	p = new Cv::PerspectiveTransform(width, height);
 
+	p->setNoClipping();
+
 	//p->setTranslation(350, 75);
-	p->setTranslation(125, 125);
+	//p->setTranslation(125, 125);
 	p->setRotationX(xscale->getValue());
 	p->setRotationY(yscale->getValue());
 	p->setRotationZ(zscale->getValue(), 50, 50);
+
+	outSize = p->getClippedSize();
+
+	printf("W: %d H: %d\n", outSize.width, outSize.height);
+
+	//img = new Cv::Image(700, 400);
+	img = new Cv::Image(outSize);
+	img->getPtr()->origin = 1;
 
 	p->warpPerspective(t, img);
 
@@ -148,6 +158,188 @@ void yscaleCb(GtkRange* a, gpointer data) { scaleCb(2); }
 void zscaleCb(GtkRange* a, gpointer data) { scaleCb(3); }
 
 
+int avg(int a, int b) 
+{
+	return (a + b)/2;
+}
+
+enum StitchState {
+	IN_NONE,
+	IN_A,
+	IN_B,
+	IN_BOTH
+};
+
+void stitchImages(Cv::Image* src, Cv::Image* dst, int x, int y)
+{
+	int srcWidth = src->getWidth();
+	int srcHeight = src->getHeight();
+	int dstWidth = dst->getWidth();
+	int dstHeight = dst->getHeight();
+
+	RgbImage srcPix = RgbImage(src->getPtr());
+	RgbImage dstPix = RgbImage(dst->getPtr());
+
+	int k = 0;
+	int l = 0;
+
+	/*for(int i = 0; i < dstHeight; i++) {
+
+		if(i < y || i > y + srcHeight) {
+			continue;
+		}
+
+
+		for(int j = 0; j < dstWidth; j++) {
+
+			if(j < x || j > x + srcWidth) {
+				continue;
+			}
+
+			int dr = dstPix[i][j].r;
+			int dg = dstPix[i][j].g;
+			int db = dstPix[i][j].b;
+
+
+			int sr = srcPix[l][k].r;
+			int sg = srcPix[l][k].g;
+			int sb = srcPix[l][k].b;
+
+			if(dr == 0 && dg == 0 && db == 0) {
+				dstPix[i][j].r = sr;
+				dstPix[i][j].g = sg;
+				dstPix[i][j].b = sb;
+			}
+			else {
+				dstPix[i][j].r = avg(sr, dr);
+				dstPix[i][j].g = avg(sg, dg);
+				dstPix[i][j].b = avg(sb, db);
+			}
+
+			l++;
+			if(l >= srcWidth) {
+				l = 0;
+				k++;
+			}
+
+		}
+	}*/
+
+	for(int i = 0; i < srcHeight; i++) {
+		for(int j = 0; j < srcWidth; j++) {
+
+			int sr = srcPix[i][j].r;
+			int sg = srcPix[i][j].g;
+			int sb = srcPix[i][j].b;
+
+			int dr = dstPix[i+y][j+x].r;
+			int dg = dstPix[i+y][j+x].g;
+			int db = dstPix[i+y][j+x].b;
+
+			if(sr == 0 || sg == 0 || sb == 0) {
+				continue;
+			}
+
+			if(dr != 0 || dg != 0 || db != 0) {
+				sr = avg(sr, dr);
+				sg = avg(sg, dg);
+				sb = avg(sb, db);
+			}
+			
+			dstPix[i+y][j+x].r = sr;
+			dstPix[i+y][j+x].g = sg;
+			dstPix[i+y][j+x].b = sb;
+
+		}
+	}
+
+}
+
+
+/**
+ * Main alignment.
+ */
+void final()
+{
+	Cv::Image* t1 = 0;
+	Cv::Image* t2 = 0;
+	Cv::Image* tmp1 = 0;
+	Cv::Image* tmp2 = 0;
+	Cv::Image* fin = 0;
+
+	Cv::PerspectiveTransform* p1 = 0;
+	Cv::PerspectiveTransform* p2 = 0;
+
+	double alpha = 0.0;
+	double beta = 0.0;
+	double gamma = 0.0;
+
+	t1 = resizeImages[0];
+	t2 = resizeImages[1];
+
+	p1 = new Cv::PerspectiveTransform(t1->getSize());
+	p2 = new Cv::PerspectiveTransform(t2->getSize());
+
+	p1->setNoClipping();
+	p2->setNoClipping();
+
+	p1->setRotationX(-4);
+	p1->setRotationY(-4);
+	p1->setRotationZ(-2.7);
+
+	p2->setRotationX(-2);
+	p2->setRotationY(2.5);
+	p2->setRotationZ(2.0);
+
+	tmp1 = new Cv::Image(p1->getClippedSize());
+	tmp1->getPtr()->origin = 1;
+
+	tmp2 = new Cv::Image(p2->getClippedSize());
+	tmp2->getPtr()->origin = 1;
+
+	p1->warpPerspective(t1, tmp1);
+	p2->warpPerspective(t2, tmp2);
+
+	fin = new Cv::Image(800, 600);
+
+	int xoff = 0;
+	int yoff = 0;
+
+	printf("Width: %d, Height: %d\n", fin->getWidth(), fin->getHeight());
+
+	/*tmp1->setRoi(0, 0, tmp1->getWidth(), tmp1->getHeight());
+	fin->setRoi(xoff + 75, yoff + 32, tmp1->getWidth(), tmp1->getHeight());
+
+	alpha = 0.0;
+	beta = 1.0;
+
+	cvAddWeighted(fin->getPtr(), alpha, tmp1->getPtr(), beta, gamma, fin->getPtr());
+
+	tmp2->setRoi(0, 0, tmp2->getWidth(), tmp2->getHeight());
+	fin->resetRoi();
+	fin->setRoi(xoff + 250, yoff + 0, tmp2->getWidth(), tmp2->getHeight());
+
+	alpha = 0.5;
+	beta = 1.0;
+	gamma = 0.5;
+
+	//cvAddWeighted(fin->getPtr(), alpha, tmp2->getPtr(), beta, gamma, fin->getPtr());
+	cvOr(fin->getPtr(), tmp2->getPtr(), fin->getPtr());
+
+	fin->resetRoi();*/
+
+	stitchImages(tmp1, fin, 75, 42);
+	stitchImages(tmp2, fin, 238, 0);
+
+
+	gtkImages[2]->setPixbuf(fin->toPixbuf()); // TODO: PIXBUF MEMLEAK (Or does the closure kill it?)
+
+
+	delete tmp1;
+	delete tmp2;
+}
+
+
 /**
  * Setup images.
  */
@@ -162,6 +354,7 @@ void setupImages()
 	
 	gtkImages[0]->setPixbuf(resizeImages[0]->toPixbuf());
 	gtkImages[1]->setPixbuf(resizeImages[1]->toPixbuf());
+
 }
 
 
@@ -239,6 +432,7 @@ int main(int argc, char *argv[])
 	vbox->packStart(zscale, true, true, 0);
 
 	setupImages();
+	final();
 
 	gui->start();
 

@@ -1,6 +1,7 @@
 #ifndef BT_Cv_PerspectiveTransform
 #define BT_Cv_PerspectiveTransform
 
+#include "types.hpp"
 #include <cv.h>
 
 namespace Cv {
@@ -9,7 +10,8 @@ namespace Cv {
 
 /**
  * Make Perspective Transforms slightly easier. 
- * XXX: THIS IS A WORK IN PROGRESS! CALCULATIONS ARE BAD XXX.
+ * XXX: THIS IS A WORK IN PROGRESS! CALCULATIONS CANNOT BE TRUSTED XXX.
+ * TODO: Clipping needs work. 
  */
 namespace Cv {
 class PerspectiveTransform
@@ -21,6 +23,12 @@ class PerspectiveTransform
 		 * Supply the size of the image. 
 		 */
 		PerspectiveTransform(int width, int height);
+
+		/**
+		 * CTOR #2.
+		 * Supply the size of the image. 
+		 */
+		PerspectiveTransform(Size sz);
 
 		/**
 		 * DTOR.
@@ -49,6 +57,29 @@ class PerspectiveTransform
 		 */
 		void setTranslation(float x, float y);
 		void unsetTranslation();
+
+		/**
+		 * Set the "no clipping" boolean. 
+		 * If asserted, negative image coordinates are shifted back inside 
+		 * positive-only ranges. This helps ensure that a warped image can be 
+		 * kept entirely within the output image.
+		 * XXX: Doesn't take into account negative translation. 
+		 */
+		void setNoClipping(bool set = true) { isNoClipping = set; };
+		bool isClipping() { return !isNoClipping; };
+
+		/**
+		 * Set field of view / depth of view.
+		 * XXX: Not sure if this is what it should be called. Only used in 
+		 * rotation about X or Y axis.
+		 */
+		void setFov(float f) { fov = f; };
+
+		/**
+		 * Get the minimum size of the destination image that would entirely 
+		 * contain the warped source image.
+		 */
+		Size getClippedSize();
 
 		/**
 		 * Set the rotation in *degrees* along each axis. 
@@ -115,6 +146,17 @@ class PerspectiveTransform
  		 */
 		CvPoint2D32f src[4];
 		CvPoint2D32f dst[4];
+
+		/**
+		 * Field of view.
+		 */
+		float fov;
+
+		/**
+		 * Whether or not to prevent clipping.
+		 * If asserted, shifts negative values back into frame. 
+		 */
+		bool isNoClipping;
 
 		/**
 		 * PI = 3.14159265358979323846

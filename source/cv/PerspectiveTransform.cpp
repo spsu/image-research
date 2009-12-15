@@ -11,7 +11,26 @@ PerspectiveTransform::PerspectiveTransform(int w, int h):
 	xTranslation(0),
 	yTranslation(0),
 	mat(0),
-	isMatStale(false)
+	isMatStale(false),
+	fov(0.1),
+	isNoClipping(false)
+{
+	mat = cvCreateMat(3, 3, CV_32FC1);
+	cvZero(mat);
+
+	// Does a good job initializing, too.
+	reset();
+}
+
+PerspectiveTransform::PerspectiveTransform(Size sz):
+	width(sz.width),
+	height(sz.height),
+	xTranslation(0),
+	yTranslation(0),
+	mat(0),
+	isMatStale(false),
+	fov(0.1),
+	isNoClipping(false)
 {
 	mat = cvCreateMat(3, 3, CV_32FC1);
 	cvZero(mat);
@@ -80,6 +99,53 @@ void PerspectiveTransform::unsetTranslation()
 	isMatStale = true; 
 }
 
+Size PerspectiveTransform::getClippedSize()
+{
+	Size sz;
+	int minWidth = 0;
+	int minHeight = 0;
+	int maxWidth = 1;
+	int maxHeight = 1;
+
+	if(isMatStale) {
+		updateMat();
+	}
+
+	//maxWidth = dst[0].x;
+	//maxHeight = dst[0].y;
+	
+	for(unsigned int i = 0; i < 4; i++) {
+		printf("Size[%d] w: %d, h: %d\n", i, (int)dst[i].x, (int)dst[i].y);
+		if(maxWidth < dst[i].x) {
+			maxWidth = (int)ceil(dst[i].x);
+		}
+		if(maxHeight < dst[i].y) {
+			maxHeight = (int)ceil(dst[i].y);
+		}
+		if(minWidth > dst[i].x) {
+			minWidth = (int)floor(dst[i].x);
+		}
+		if(minHeight > dst[i].y) {
+			minHeight = (int)floor(dst[i].y);
+		}
+	}
+
+	sz.width = maxWidth;
+	sz.height = maxHeight;
+
+	printf("Max: w %d, h %d\n", maxWidth, maxHeight);
+	printf("Min: w %d, h %d\n", minWidth, minHeight);
+
+	if(minWidth < 0) {
+		sz.width += abs(minWidth);
+	}
+	if(minHeight < 0) {
+		sz.height += abs(minHeight);
+	}
+
+	return sz; // TODO: Return (-1, -1) on failure
+}
+
 void PerspectiveTransform::setRotationX(float deg) 
 {
 	float theta = 0.0f;
@@ -91,9 +157,9 @@ void PerspectiveTransform::setRotationX(float deg)
 	cos_t = (float)cos(theta);
 
 	// XXX: Hack: 0.1 "pseudo-FOV" is necessary so points don't converge
-	dst[2].x = dst[2].x + (sin_t * (width - 1) * 0.1);
+	dst[2].x = dst[2].x + (sin_t * (width - 1) * fov);
 	dst[2].y = cos_t * dst[2].y;
-	dst[3].x = dst[3].x - (sin_t * (width - 1) * 0.1);
+	dst[3].x = dst[3].x - (sin_t * (width - 1) * fov);
 	dst[3].y = cos_t * dst[3].y;
 
 	isMatStale = true; 
@@ -111,9 +177,9 @@ void PerspectiveTransform::setRotationY(float deg)
 
 	// XXX: Hack: 0.1 "pseudo-FOV" is necessary so points don't converge
 	dst[1].x = cos_t * dst[1].x;
-	dst[1].y = dst[1].y - sin_t * (height - 1) * 0.1;
+	dst[1].y = dst[1].y - sin_t * (height - 1) * fov;
 	dst[3].x = cos_t * dst[3].x;
-	dst[3].y = dst[3].y + sin_t * (height - 1) * 0.1;
+	dst[3].y = dst[3].y + sin_t * (height - 1) * fov;
 
 	isMatStale = true;
 }
@@ -178,6 +244,8 @@ void PerspectiveTransform::printMat()
 void PerspectiveTransform::updateMat()
 {
 	CvPoint2D32f out[4];
+	float maxNegX = 0; // To prevent clipping, catches smallest val < 0
+	float maxNegY = 0;
 
 	// Work only with temp values
 	for(unsigned int i = 0; i < 4; i++) {
@@ -185,21 +253,24 @@ void PerspectiveTransform::updateMat()
 		out[i].y = dst[i].y;
 	}
 
-	// Shift negative values back into frame. // TODO: Interesting idea.
-	/*float maxNegX = 0;
-	float maxNegY = 0;
-	for(unsigned int i = 0; i < 4; i++) {
-		if(out[i].x < maxNegX) {
-			maxNegX = out[i].x;
+	// Shift negative values back into frame.
+	if(isNoClipping) {
+		for(unsigned int i = 0; i < 4; i++) {
+			if(out[i].x < maxNegX) {
+				maxNegX = out[i].x;
+			}
+			if(out[i].y < maxNegY) {
+				maxNegY = out[i].y;
+			} 
 		}
-		if(out[i].y < maxNegY) {
-			maxNegY = out[i].y;
-		} 
+
+		printf("MaxNegX: %f, MaxNegY: %f\n", maxNegX, maxNegY);
+
+		for(unsigned int i = 0; i < 4; i++) {
+			out[i].x += abs(maxNegX);
+			out[i].y += abs(maxNegY);
+		}
 	}
-	for(unsigned int i = 0; i < 4; i++) {	// TODO: May need to record that we did this
-		out[i].x += abs(maxNegX);			// Since this shifts for each theta value, we'll
-		out[i].y += abs(maxNegY);			// need these numbers to properly align images
-	}*/
 
 	// Add translation
 	for(unsigned int i = 0; i < 4; i++) {

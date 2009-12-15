@@ -38,6 +38,14 @@ Image::Image(int width, int height, int numChannels):
 	image = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, numChannels);
 }
 
+Image::Image(Size sz, int numChannels):
+	image(0),
+	isOwner(true)
+{
+	image = cvCreateImage(cvSize(sz.width, sz.height), 
+								IPL_DEPTH_8U, numChannels);
+}
+
 Image::Image(std::string filename):
 	image(0),
 	isOwner(true)
@@ -246,9 +254,9 @@ GdkPixbuf* Image::toPixbuf()
 	return pb;
 }
 
-CvSize Image::getSize()
+Size Image::getSize()
 {
-	return cvSize(image->width, image->height);
+	return (Size)cvSize(image->width, image->height);
 }
 
 int Image::getWidth()
@@ -297,6 +305,17 @@ void Image::resize(double factor)
 {
 	resize((int)(image->width*factor), (int)(image->height*factor));
 }
+
+void Image::setRoi(int x, int y, int width, int height)
+{
+	cvSetImageROI(image, cvRect(x, y, width, height));
+}
+
+void Image::resetRoi()
+{
+	cvResetImageROI(image);
+}
+
 
 // Closure for destroying copy IplImages used in creating pixbufs
 void Image::destroyPixbufCb(guchar* pixels, gpointer data)
