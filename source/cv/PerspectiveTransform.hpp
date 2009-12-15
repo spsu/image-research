@@ -52,10 +52,11 @@ class PerspectiveTransform
 
 		/**
 		 * Set the rotation in degrees along each axis. 
+		 * If there is a point set, that is the rotation point. 
 		 */
 		void setRotationX(float deg);
 		void setRotationY(float deg);
-		void setRotationZ(float deg); // TODO
+		void setRotationZ(float deg, int x = 0, int y = 0);
 
 		// TODO: setRotationLine(EQUATION_OF_LINE, float deg);
 		// TODO: setRotationAroundPoint(int x, int y, float deg);

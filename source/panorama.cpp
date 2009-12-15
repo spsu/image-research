@@ -108,7 +108,7 @@ void rotateAxis(float deg, int axis = 1)
 	p->setTranslation(125, 125);
 	p->setRotationX(xscale->getValue());
 	p->setRotationY(yscale->getValue());
-	p->setRotationZ(zscale->getValue());
+	p->setRotationZ(zscale->getValue(), 50, 50);
 
 	p->warpPerspective(t, img);
 
