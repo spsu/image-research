@@ -3,6 +3,10 @@
 
 #include <cv.h>
 
+namespace Cv {
+	class Image;
+}
+
 /**
  * Make Perspective Transforms slightly easier. 
  * XXX: THIS IS A WORK IN PROGRESS! CALCULATIONS ARE BAD XXX.
@@ -51,7 +55,7 @@ class PerspectiveTransform
 		 */
 		void setRotationX(float deg);
 		void setRotationY(float deg);
-		void setRotationZ(float deg) {}; // TODO
+		void setRotationZ(float deg); // TODO
 
 		// TODO: setRotationLine(EQUATION_OF_LINE, float deg);
 		// TODO: setRotationAroundPoint(int x, int y, float deg);
@@ -73,6 +77,17 @@ class PerspectiveTransform
 		 */
 		void updateMat();
 
+		/**
+		 * XXX: TEMPORARY.
+		 */
+		void updateMat2();
+
+		/**
+		 * Warp image perspective. 
+		 * Automatically updates matrix before performing.
+		 */
+		void warpPerspective(Image* src, Image* dst);
+
 	private:
 		/**
 		 * Dimensions of the image.
@@ -91,6 +106,11 @@ class PerspectiveTransform
 		 * Matrix
 		 */
 		CvMat* mat;
+
+		/**
+		 * Whether matrix is up to date with transforms. 
+		 */
+		bool isMatStale;
 
 		/**
  		 * Source and destination points

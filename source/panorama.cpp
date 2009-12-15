@@ -95,26 +95,24 @@ void rotateAxis(float deg, int axis = 1)
 	Cv::PerspectiveTransform* p = 0;
 
 	t = resizeImages[0];
-	img = new Cv::Image(700, 400);
+	//img = new Cv::Image(700, 400);
+	img = new Cv::Image(300, 300);
 	img->getPtr()->origin = 1;
 
 	width = t->getWidth();
 	height = t->getHeight();
 
 	p = new Cv::PerspectiveTransform(width, height);
-	//p->resetPts();
 
-	p->setTranslation(350, 75);
-
+	//p->setTranslation(350, 75);
+	p->setTranslation(125, 125);
 	p->setRotationX(xscale->getValue());
 	p->setRotationY(yscale->getValue());
-	//p->setRotationZ(deg);
+	p->setRotationZ(zscale->getValue());
 
-	p->updateMat();
+	p->warpPerspective(t, img);
 
-	cvWarpPerspective(t->getPtr(), img->getPtr(), p->getMat());
-	gtkImages[2]->setPixbuf(img->toPixbuf()); // TODO: MEMLEAK
-
+	gtkImages[2]->setPixbuf(img->toPixbuf()); // TODO: PIXBUF MEMLEAK (Or does the closure kill it?)
 	delete img;
 }
 
@@ -136,12 +134,12 @@ void scaleCb(int s)
 			break;
 		case 3:
 			scale = (Gtk::HScale*)zscale;
-			return; // TODO TEMP
+			break;
 		
 	}
 
 	theta = scale->getValue();
-	entries[0]->setText(boost::lexical_cast<std::string>(theta));
+	//entries[0]->setText(boost::lexical_cast<std::string>(theta));
 	rotateAxis(theta, s);
 }
 
@@ -158,7 +156,7 @@ void setupImages()
 	resizeImages.push_back(origImages[0]->copy());
 	resizeImages.push_back(origImages[1]->copy());
 
-	resizeImages[0]->resize(0.5);
+	resizeImages[0]->resize(100, 100);
 	resizeImages[1]->resize(0.5);
 
 	gtkImages[0]->setPixbuf(resizeImages[0]->toPixbuf());
@@ -202,8 +200,8 @@ int main(int argc, char *argv[])
 	hbox2 = new Gtk::HBox(true, 0);
 	hbox3 = new Gtk::HBox(false, 0);
 	hbox4 = new Gtk::HBox(false, 0);
-	button2 = new Gtk::Button("update roll(z)/pitch(x)/yaw(y)");
-	buttonAuto = new Gtk::Button("auto rotate [turn on]");
+	//button2 = new Gtk::Button("update roll(z)/pitch(x)/yaw(y)");
+	//buttonAuto = new Gtk::Button("auto rotate [turn on]");
 
 	xscale = new DegScale();
 	yscale = new DegScale();
@@ -219,7 +217,7 @@ int main(int argc, char *argv[])
 	vbox->packStart(hbox4, false, false, 0);
 
 	// Entries.
-	for(unsigned int i = 0; i < 1; i++) {
+	/*for(unsigned int i = 0; i < 1; i++) {
 		entries.push_back(new Gtk::Entry());
 		entries[i]->setText("0");
 		entries[i]->setMaxLength(4);
@@ -228,7 +226,7 @@ int main(int argc, char *argv[])
 	}
 
 	hbox4->packStart(button2, false, false, 0);
-	hbox4->packStart(buttonAuto, false, false, 0);
+	hbox4->packStart(buttonAuto, false, false, 0);*/
 
 	// CALLBACKS & IDLE
 	xscale->addValueChangedCb(xscaleCb);
