@@ -2,10 +2,14 @@
 #define APP_IMAGECACHE
 
 /**
- * Copyright Brandon Thomas Suit 2009
- * Available under the LGPL 2.
- * <http://possibilistic.org> 
- * <echelon@gmail.com>
+ * Copyright (c) 2009 - 2010 Brandon Thomas Suit
+ * http://possibilistic.org | echelon@gmail.com
+ * Code available for use under the LGPL 2.
+ * 
+ * ImageCache
+ *   Managed a named (std::string) map of Cv::Image*.
+ *   Assumes ownership and automatically deletes added images when the
+ *   ImageCache itself is destroyed. 
  */
 
 #include <string>
@@ -15,11 +19,6 @@ namespace Cv {
 	class Image;
 }
 
-/**
- * Managed a named (std::string) map of Cv::Image*.
- * Assumes ownership and automatically deletes added images when the ImageCache 
- * itself is destroyed. 
- */
 namespace App {
 class ImageCache
 {

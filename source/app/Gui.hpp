@@ -2,10 +2,11 @@
 #define APP_GUI
 
 /**
- * Copyright Brandon Thomas Suit 2009
- * Available under the LGPL 2.
- * <http://possibilistic.org> 
- * <echelon@gmail.com>
+ * Copyright (c) 2009 - 2010 Brandon Thomas Suit
+ * http://possibilistic.org | echelon@gmail.com
+ * Code available for use under the LGPL 2.
+ * 
+ * I think this is a mess, if I recall correctly... (3/24/10)
  */
 
 #include <gtk/gtk.h>
