@@ -44,13 +44,6 @@ stereo: source/stereo.cpp libs
 	@$(LN) $(LIB) $(LOCALLIB) build/out/stereo.o -o stereo
 	@chmod +x stereo
 
-### PANORAMA ########################
-panorama: source/panorama.cpp libs
-	@echo "[compile] panorama"
-	@$(CD) ./build/out && $(C) $(INC) -c ../../source/panorama.cpp
-	@$(LN) $(LIB) $(LOCALLIB) build/out/panorama.o -o panorama
-	@chmod +x panorama
-
 ### NEGATIVE #########################
 negative: source/negative.cpp libs
 	@echo "[compile] negative"

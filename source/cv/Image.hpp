@@ -54,29 +54,23 @@ class Image
 	public:
 		/**
 		 * Default CTOR does nothing.
+		 * Seriously. 
+		 * Doesn't even create an image. 
 		 */
 		Image();
 
 		/**
-		 * IplImage wrapper CTOR.
-		 * Becomes the owner of the IplImage unless isOwner is false.
-		 * TODO: Enforce non-writability of shared copies.
-		 * TODO: Copy parameter, or enum CV_IMAGE_COPY, CV_IMAGE_SHARED, etc...
-		 */
-		Image(IplImage* img, bool shared = false);
-
-		/**
-		 * Copy CTOR.
-		 * Copy the image supplied.
-		 */
-		Image(const Image& c);
-
-		/**
-		 * Blank image CTOR.
+		 * Normal (Blank image) CTORs.
 		 * Creates an image with the width, height, channels, etc. specified.
-		 * Created with 8-bits per channel, unsigned.
+		 * Created as a 3 channel (8-unsigned bits per channel) by default.
+		 * (Common channel numbers are 1 and 3, common depths are 8 and 16.)
 		 */
-		Image(int width, int height, int numChannels = 3);
+		Image(int width, int height,
+			  int numChannels = 3, int depth = IPL_DEPTH_8U, 
+			  bool isSigned = false);
+
+		Image(CvSize size, int numChannels = 3, int depth = IPL_DEPTH_8U,
+			  bool isSigned = false);
 
 		/**
 		 * File load CTOR.
@@ -85,10 +79,16 @@ class Image
 		Image(std::string filename);
 
 		/**
+		 * IplImage wrapper CTOR.
+		 * Becomes the owner of the IplImage unless isOwner is false.
+		 * TODO: Enforce non-writability of shared copies.
+		 */
+		Image(IplImage* img, bool shared = false);
+
+		/**
 		 * Pixbuf load CTOR.
 		 * Converts a GDK pixbuf into an IplImage.
 		 * Does not assume ownership of the pixbuf.
-		 * TODO XXX: THIS SHOULD NOT BE HERE! Have in an app-specific library. 
 		 */
 		Image(GdkPixbuf* pixbuf);
 
@@ -96,8 +96,7 @@ class Image
 		 * V4L2 Frame CTOR.
 		 * Converts a V4L2 Frame (my own abstraction) into an IplImage.
 		 * Conversion is immediate, and we do not assume ownership of the frame.
-		 * TODO XXX: This should not be here! (V4L2::Frame is an abstraction of 
-		 * only YUYV images only at present, nevertheless it needs removal.)
+		 * XXX: V4L2::Frame is an abstraction of YUYV images only at present.
 		 */
 		Image(V4L2::Frame* frame);
 
@@ -107,53 +106,33 @@ class Image
 		~Image();
 
 		/**
-		 * Return a new copy of the image. (Alternate method to copy CTOR.)
-		 * Newly returned copy must be freed by the caller. 
-		 */
-		Image* copy();
-
-		/**
 		 * Get a pointer to the underlying IplImage.
 		 */
 		IplImage* getPtr();
 
 		/**
 		 * Determines if image is valid (imgPtr != 0).
-		 * TODO: Is this needed?
 		 */
 		bool isValid();
 
 		/**
 		 * Get the pixbuf representation of the IplImage.
 		 * Caller must deallocate pixbuf.
-		 * XXX TODO: This should not be here! Have in app-specific library. 
 		 */
 		GdkPixbuf* toPixbuf();
 
 		/**
 		 * Get size of the image.
 		 */
-		CvSize getSize();
 		int getWidth();
 		int getHeight();
+		CvSize getSize() { return cvGetSize(image); };
 
 		/**
 		 * Easy pixel access.
 		 * TODO: Not as easy as img[y][x].r/g/b though!
 		 */
 		RgbPix getPix();
-
-		/**
-		 * Resize the current image.
-		 * Creating a copy of the image first might be a good idea.
-		 */
-		void resize(int width, int height);
-
-		/**
-		 * Resize both dimensions by a floating point scale factor.
-		 * Creating a copy of the image first might be a good idea.
-		 */
-		void resize(double factor);
 
 	protected:
 		/**
@@ -168,7 +147,6 @@ class Image
 
 		/**
 		 * Closure for destroying copied IplImage created in getPixbuf()
-		 * TODO: Remove when toPixbuf() is removed. 
 		 */
 		static void destroyPixbufCb(guchar* pixels, gpointer data);
 };

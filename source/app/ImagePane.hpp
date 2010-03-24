@@ -2,10 +2,14 @@
 #define APP_IMAGEPANE
 
 /**
- * Copyright Brandon Thomas Suit 2009
- * Available under the LGPL 2.
- * <http://possibilistic.org> 
- * <echelon@gmail.com>
+ * Copyright (c) 2009 - 2010 Brandon Thomas Suit
+ * http://possibilistic.org | echelon@gmail.com
+ * Code available for use under the LGPL 2.
+ *
+ * ImagePane
+ *   Application-specific functionality for "image panes", eg. GtkImage
+ *   widgets. This class supports drag/drop, restore-to-original, caching,
+ *   etc. for assistance.
  */
 
 #include <string>
@@ -21,11 +25,6 @@ namespace Gtk {
 	class Image;
 }
 
-/**
- * Application-specific functionality for "image panes", eg. GtkImage widgets.
- * This class supports drag/drop, restore-to-original, caching, etc. for 
- * assistance.
- */
 namespace App {
 class ImagePane
 {

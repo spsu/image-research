@@ -11,31 +11,48 @@ Image::Image():
 	// TODO
 }
 
-Image::Image(IplImage* img, bool shared):
-	image(0),
-	isOwner(!shared)
-{
-	image = img;
-}
-
-// Copy CTOR
-Image::Image(const Image& c):
+Image::Image(int width, int height, int numChannels, int depth, bool isSigned):
 	image(0),
 	isOwner(true)
 {
-	image = cvCreateImage(
-				cvSize(c.image->width, c.image->height), 
-				c.image->depth, 
-				c.image->nChannels
-	);
-	cvCopy(c.image, image);
+	switch(depth) {
+		case 8:
+			depth = isSigned? IPL_DEPTH_8S : IPL_DEPTH_8U;
+			break;
+		case 16:
+			depth = IPL_DEPTH_16S;
+			break;
+		case 32:
+			depth = isSigned? IPL_DEPTH_32S : IPL_DEPTH_32F;
+			break;
+		case 64:
+			depth = IPL_DEPTH_64F;
+			break;
+	}
+
+	image = cvCreateImage(cvSize(width, height), depth, numChannels);
 }
 
-Image::Image(int width, int height, int numChannels):
+Image::Image(CvSize size, int numChannels, int depth, bool isSigned):
 	image(0),
 	isOwner(true)
 {
-	image = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, numChannels);
+	switch(depth) {
+		case 8:
+			depth = isSigned? IPL_DEPTH_8S : IPL_DEPTH_8U;
+			break;
+		case 16:
+			depth = IPL_DEPTH_16S;
+			break;
+		case 32:
+			depth = isSigned? IPL_DEPTH_32S : IPL_DEPTH_32F;
+			break;
+		case 64:
+			depth = IPL_DEPTH_64F;
+			break;
+	}
+
+	image = cvCreateImage(size, depth, numChannels);
 }
 
 Image::Image(std::string filename):
@@ -43,6 +60,13 @@ Image::Image(std::string filename):
 	isOwner(true)
 {
 	image = cvLoadImage(filename.c_str(), CV_LOAD_IMAGE_COLOR);
+}
+
+Image::Image(IplImage* img, bool shared):
+	image(0),
+	isOwner(!shared)
+{
+	image = img;
 }
 
 Image::Image(GdkPixbuf* pixbuf):
@@ -208,11 +232,6 @@ Image::~Image()
 	}
 }
 
-Image* Image::copy()
-{
-	return new Image(*this);
-}
-
 IplImage* Image::getPtr()
 {
 	return image;
@@ -226,11 +245,39 @@ bool Image::isValid()
 GdkPixbuf* Image::toPixbuf()
 {
 	IplImage* rgb = 0;
+	IplImage* tmp = 0;
 	GdkPixbuf* pb = 0;
 
 	rgb = cvCreateImage(cvGetSize(image), 8, 3);
-	cvCopyImage(image, rgb);
-	cvCvtColor(rgb, rgb, CV_BGR2RGB);
+
+	switch(image->nChannels) {
+		case 3:
+			if(image->depth != rgb->depth) {
+				cvCvtScale(image, rgb, 1, 0);
+				cvCvtColor(rgb, rgb, CV_BGR2RGB);
+			}
+			else {
+				cvCvtColor(image, rgb, CV_BGR2RGB);
+			}
+			break;
+
+		case 1:
+			if(image->depth != rgb->depth) {
+				tmp = cvCreateImage(cvGetSize(image), 8, 1);
+				cvCvtScale(image, tmp, 1, 0);
+				cvCvtColor(tmp, rgb, CV_GRAY2RGB);
+				cvReleaseImage(&tmp);
+			}
+			else {
+				cvCvtColor(image, rgb, CV_GRAY2RGB);
+			}
+			break;
+
+		default:
+			fprintf(stderr, 
+				"IplImage toPixbuf Not yet supported for image type.\n");
+			return 0;
+	}
 
 	pb = gdk_pixbuf_new_from_data((guchar*)rgb->imageData,
 				GDK_COLORSPACE_RGB,
@@ -244,11 +291,6 @@ GdkPixbuf* Image::toPixbuf()
 	);
 
 	return pb;
-}
-
-CvSize Image::getSize()
-{
-	return cvSize(image->width, image->height);
 }
 
 int Image::getWidth()
@@ -270,32 +312,6 @@ int Image::getHeight()
 RgbPix Image::getPix()
 {
 	return RgbPix(image);
-}
-
-void Image::resize(int width, int height)
-{
-	IplImage* dst = 0;
-
-	if(width < 1 || height < 1) {
-		fprintf(stderr, "Cannot resize image to smaller than 1x1\n");
-		return;
-	}
-
-	dst = cvCreateImage(
-				cvSize(width, height), 
-				image->depth, 
-				image->nChannels
-	);
-
-	cvResize(image, dst);
-
-	cvReleaseImage(&image);
-	image = dst;
-}
-
-void Image::resize(double factor)
-{
-	resize((int)(image->width*factor), (int)(image->height*factor));
 }
 
 // Closure for destroying copy IplImages used in creating pixbufs
