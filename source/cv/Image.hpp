@@ -54,8 +54,29 @@ class Image
 	public:
 		/**
 		 * Default CTOR does nothing.
+		 * Seriously. 
+		 * Doesn't even create an image. 
 		 */
 		Image();
+
+		/**
+		 * Normal (Blank image) CTORs.
+		 * Creates an image with the width, height, channels, etc. specified.
+		 * Created as a 3 channel (8-unsigned bits per channel) by default.
+		 * (Common channel numbers are 1 and 3, common depths are 8 and 16.)
+		 */
+		Image(int width, int height,
+			  int numChannels = 3, int depth = IPL_DEPTH_8U, 
+			  bool isSigned = false);
+
+		Image(CvSize size, int numChannels = 3, int depth = IPL_DEPTH_8U,
+			  bool isSigned = false);
+
+		/**
+		 * File load CTOR.
+		 * Import file from filename.
+		 */
+		Image(std::string filename);
 
 		/**
 		 * IplImage wrapper CTOR.
@@ -63,19 +84,6 @@ class Image
 		 * TODO: Enforce non-writability of shared copies.
 		 */
 		Image(IplImage* img, bool shared = false);
-
-		/**
-		 * Blank image CTOR.
-		 * Creates an image with the width, height, channels, etc. specified.
-		 * Created with 8-bits per channel, unsigned.
-		 */
-		Image(int width, int height, int numChannels = 3);
-
-		/**
-		 * File load CTOR.
-		 * Import file from filename.
-		 */
-		Image(std::string filename);
 
 		/**
 		 * Pixbuf load CTOR.
@@ -118,6 +126,7 @@ class Image
 		 */
 		int getWidth();
 		int getHeight();
+		CvSize getSize() { return cvGetSize(image); };
 
 		/**
 		 * Easy pixel access.
