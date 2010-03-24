@@ -245,19 +245,32 @@ bool Image::isValid()
 GdkPixbuf* Image::toPixbuf()
 {
 	IplImage* rgb = 0;
+	IplImage* tmp = 0;
 	GdkPixbuf* pb = 0;
 
 	rgb = cvCreateImage(cvGetSize(image), 8, 3);
 
 	switch(image->nChannels) {
 		case 3:
-			//cvCopyImage(image, rgb);
-			//cvCvtColor(rgb, rgb, CV_BGR2RGB);
-			cvCvtColor(image, rgb, CV_BGR2RGB);
+			if(image->depth != rgb->depth) {
+				cvCvtScale(image, rgb, 1, 0);
+				cvCvtColor(rgb, rgb, CV_BGR2RGB);
+			}
+			else {
+				cvCvtColor(image, rgb, CV_BGR2RGB);
+			}
 			break;
 
 		case 1:
-			cvCvtColor(image, rgb, CV_GRAY2RGB);
+			if(image->depth != rgb->depth) {
+				tmp = cvCreateImage(cvGetSize(image), 8, 1);
+				cvCvtScale(image, tmp, 1, 0);
+				cvCvtColor(tmp, rgb, CV_GRAY2RGB);
+				cvReleaseImage(&tmp);
+			}
+			else {
+				cvCvtColor(image, rgb, CV_GRAY2RGB);
+			}
 			break;
 
 		default:
