@@ -85,6 +85,8 @@ void doCamera()
 	static Cv::Image* gray2 = 0;
 	static Cv::Image* disparity = 0;
 	static Cv::Image* disparityNorm = 0;
+	static Cv::Image* reprojected = 0;
+	static Cv::Image* reprojectedNorm = 0;
 
 	cam1->dequeue();
 	cam2->dequeue(); 
@@ -111,6 +113,9 @@ void doCamera()
 
 		disparity = new Cv::Image(size, 1, 16);
 		disparityNorm = new Cv::Image(size, 1, 8);
+
+		reprojected = new Cv::Image(size, 3, 16);
+		reprojectedNorm = new Cv::Image(size, 3, 8);		
 	}
 
 	cvCvtColor(frame1->getPtr(), gray1->getPtr(), CV_BGR2GRAY);
@@ -118,12 +123,26 @@ void doCamera()
 
 	bmState->findCorrespondence(gray1, gray1, disparity);
 
-	cvNormalize(disparity->getPtr(), disparityNorm->getPtr(), 
-				0, 256, CV_MINMAX);
-
 	gtkImages[0]->setPixbuf(frame1->toPixbuf());
 	gtkImages[1]->setPixbuf(frame2->toPixbuf());
-	gtkImages[2]->setPixbuf(disparityNorm->toPixbuf());
+
+	//cvNormalize(disparity->getPtr(), disparityNorm->getPtr(), 
+	//			0, 255, CV_MINMAX);
+	//gtkImages[2]->setPixbuf(disparityNorm->toPixbuf());
+	gtkImages[2]->setPixbuf(disparity->toPixbuf());
+
+	/*CvMat* q = cvCreateMat(4, 4, CV_64F);
+
+	CV_MAT_ELEM(*q, float, 0, 0) = 1.0f;
+	CV_MAT_ELEM(*q, float, 1, 1) = 1.0f;
+	//CV_MAT_ELEM(*q, float, 2, 2) = 1.0f;
+
+	cvReprojectImageTo3D(disparity->getPtr(), reprojected->getPtr(), q);
+	//cvNormalize(reprojected->getPtr(), reprojectedNorm->getPtr(), 
+	//			0, 255, CV_MINMAX);
+	//gtkImages[2]->setPixbuf(reprojected->toPixbuf());*/
+
+
 
 	delete frame1;
 	delete frame2;
