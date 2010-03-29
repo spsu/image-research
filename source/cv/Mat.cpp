@@ -1,3 +1,14 @@
+/**
+ * Copyright (c) 2010 Brandon Thomas Suit
+ * http://possibilistic.org | echelon@gmail.com
+ * Code available for use under the LGPL 2.
+ * 
+ * Cv::Mat
+ *   Wrapper for CvMat and part of the OpenCV Arr->Mat->Img OO Hierarchy.
+ *    TODO: Not much matrix support yet...
+ *    TODO: Sparse mats, etc.
+ */
+
 #include "Mat.hpp"
 #include <stdio.h>
 

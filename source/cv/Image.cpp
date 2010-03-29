@@ -1,3 +1,19 @@
+/**
+ * Copyright (c) 2009 - 2010 Brandon Thomas Suit
+ * http://possibilistic.org | echelon@gmail.com
+ * Code available for use under the LGPL 2.
+ * 
+ * Cv::Image
+ *   Wrapper for IplImage and part of the OpenCV Arr->Mat->Img OO Hierarchy.
+ *   A class to represent and operate on OpenCV images, as well as a method of 
+ *   loading files and converting between GdkPixbufs, etc.
+ *    TODO: Work with non-8-bit images uniformly. 
+ *    TODO: Move image conversion code elsewhere, specifically:
+ *			* V4L2::Frame -> Cv::Image   [Image(V4L2::Frame*)]	
+ *			* GdkPixbuf -> Cv::Image   [Image(GdkPixbuf*)]
+ * 			* Cv::Image -> GdkPixbuf   [toPixbuf(), destroyPixbufCb()]
+ */
+
 #include "Image.hpp"
 #include "../v4l2/easyapi/Frame.hpp" // TODO: Allow compilation without this...
 #include <stdio.h>

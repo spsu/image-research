@@ -1,11 +1,20 @@
-#ifndef CV_IMAGE
-#define CV_IMAGE
+#ifndef BT_Cv_Image
+#define BT_Cv_Image
 
 /**
- * Copyright Brandon Thomas Suit 2009
- * Available under the LGPL 2.
- * <http://possibilistic.org> 
- * <echelon@gmail.com>
+ * Copyright (c) 2009 - 2010 Brandon Thomas Suit
+ * http://possibilistic.org | echelon@gmail.com
+ * Code available for use under the LGPL 2.
+ * 
+ * Cv::Image
+ *   Wrapper for IplImage and part of the OpenCV Arr->Mat->Img OO Hierarchy.
+ *   A class to represent and operate on OpenCV images, as well as a method of 
+ *   loading files and converting between GdkPixbufs, etc.
+ *    TODO: Work with non-8-bit images uniformly. 
+ *    TODO: Move image conversion code elsewhere, specifically:
+ *			* V4L2::Frame -> Cv::Image   [Image(V4L2::Frame*)]	
+ *			* GdkPixbuf -> Cv::Image   [Image(GdkPixbuf*)]
+ * 			* Cv::Image -> GdkPixbuf   [toPixbuf(), destroyPixbufCb()]
  */
 
 #include <cv.h>
@@ -43,13 +52,6 @@ namespace V4L2 {
 	class Frame;
 }
 
-/**
- * Cv::Image
- * A class to represent and operate on OpenCV images, as well as a method of 
- * loading files and converting between GdkPixbufs, etc.
- * Only represents 8-channel BGR images for now. I'll have to generalize this in
- * order to use it with other OpenCV-related code. 
- */
 namespace Cv {
 class Image : public Mat
 {
