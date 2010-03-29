@@ -4,16 +4,8 @@
 
 namespace Cv {
 
-Image::Image():
-	image(0),
-	isOwner(true)
-{
-	// TODO
-}
-
 Image::Image(int width, int height, int numChannels, int depth, bool isSigned):
-	image(0),
-	isOwner(true)
+	Mat()
 {
 	switch(depth) {
 		case 8:
@@ -34,8 +26,7 @@ Image::Image(int width, int height, int numChannels, int depth, bool isSigned):
 }
 
 Image::Image(CvSize size, int numChannels, int depth, bool isSigned):
-	image(0),
-	isOwner(true)
+	Mat()
 {
 	switch(depth) {
 		case 8:
@@ -56,22 +47,20 @@ Image::Image(CvSize size, int numChannels, int depth, bool isSigned):
 }
 
 Image::Image(std::string filename):
-	image(0),
-	isOwner(true)
+	Mat()
 {
 	image = cvLoadImage(filename.c_str(), CV_LOAD_IMAGE_COLOR);
 }
 
 Image::Image(IplImage* img, bool shared):
-	image(0),
-	isOwner(!shared)
+	Mat()
 {
 	image = img;
+	isOwner = !shared;
 }
 
 Image::Image(GdkPixbuf* pixbuf):
-	image(0),
-	isOwner(true)
+	Mat()
 {
 	//CvSize sz;
 	int width = 0;
@@ -109,8 +98,7 @@ Image::Image(GdkPixbuf* pixbuf):
 }
 
 Image::Image(V4L2::Frame* frame):
-	image(0),
-	isOwner(true)
+	Mat()
 {
 	const unsigned char* p = 0;	// src
 	int len = 0;
@@ -229,6 +217,7 @@ Image::~Image()
 {
 	if(image != NULL && isOwner) {
 		cvReleaseImage(&image);
+		image = 0;
 	}
 }
 
@@ -291,22 +280,6 @@ GdkPixbuf* Image::toPixbuf()
 	);
 
 	return pb;
-}
-
-int Image::getWidth()
-{
-	if(image == NULL) {
-		return 0;
-	}
-	return image->width;
-}
-
-int Image::getHeight()
-{
-	if(image == NULL) {
-		return 0;
-	}
-	return image->height;
 }
 
 RgbPix Image::getPix()
