@@ -12,6 +12,8 @@
 #include <highgui.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <string>
+#include "Mat.hpp"
+#include "Arr.hpp"
 
 /** 
  * Following canvas code adapted from "Introduction to programming with OpenCV"
@@ -49,15 +51,9 @@ namespace V4L2 {
  * order to use it with other OpenCV-related code. 
  */
 namespace Cv {
-class Image
+class Image : public Mat
 {
 	public:
-		/**
-		 * Default CTOR does nothing.
-		 * Seriously. 
-		 * Doesn't even create an image. 
-		 */
-		Image();
 
 		/**
 		 * Normal (Blank image) CTORs.
@@ -122,28 +118,12 @@ class Image
 		GdkPixbuf* toPixbuf();
 
 		/**
-		 * Get size of the image.
-		 */
-		int getWidth();
-		int getHeight();
-		CvSize getSize() { return cvGetSize(image); };
-
-		/**
 		 * Easy pixel access.
 		 * TODO: Not as easy as img[y][x].r/g/b though!
 		 */
 		RgbPix getPix();
 
 	protected:
-		/**
-		 * OpenCV IplImage.
-		 */
-		IplImage* image;
-
-		/**
-		 * Whether the Image class owns the IplImage.
-		 */
-		bool isOwner;
 
 		/**
 		 * Closure for destroying copied IplImage created in getPixbuf()
