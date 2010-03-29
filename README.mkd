@@ -1,0 +1,22 @@
+**This is a work in progress!**
+
+Image Research
+==============
+
+This is my C++ image research platform. It is a work in progress, and will be 
+closely integrated with my robotics code (which is itself in serious need of an 
+overhaul). 
+
+Features
+--------
+
+* Reads images from V4L2 API.
+* Utilizes Gtk+ gui instead of OpenCV's highgui.  
+
+License
+-------
+
+Copyright &copy; 2009 - 2010 Brandon Thomas Suit
+
+The code herein is licensed under the LGPL 2. I shoud add a COPYING file.
+
