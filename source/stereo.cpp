@@ -129,18 +129,72 @@ void doCamera()
 	//cvNormalize(disparity->getPtr(), disparityNorm->getPtr(), 
 	//			0, 255, CV_MINMAX);
 	//gtkImages[2]->setPixbuf(disparityNorm->toPixbuf());
-	gtkImages[2]->setPixbuf(disparity->toPixbuf());
+	//gtkImages[2]->setPixbuf(disparity->toPixbuf());
 
-	/*CvMat* q = cvCreateMat(4, 4, CV_64F);
+
+	/*CvMat* camMat1 = cvCreateMat(3, 3, CV_64F);
+	CvMat* camMat2 = cvCreateMat(3, 3, CV_64F);
+	CvMat* distCoeff1 = cvCreateMat(1, 5, CV_64F);
+	CvMat* distCoeff2 = cvCreateMat(1, 5, CV_64F);
+	CvMat* rotation = cvCreateMat(3, 3 CV_64F);
+	CvMat* translation = cvCreateMat(3, 1, CV_64F);
+	CvMat* essential = cvCreateMat(3, 3, CV_64F);
+	CvMat* fundamental = cvCreateMat(3, 3, CV_64F);
+
+
+	cvStereoCalibrate(
+			objectPts,
+			imgPts1, imgPts2,
+			camMat1, distCoeff1, camMat2, distCoeff2,
+			frame1->getSize(),
+			rotation,
+			translation,
+			essential,
+			fundamental,
+			cvTermCriteria(
+				CV_TERMCRIT_ITER+CV_TERMCRIT_EPS,
+				100,
+				1e-5),
+			CV_CALIB_FIX_ASPECT_RATIO + CV_CALIB_ZERO_TANGENT_DIST + 
+				CV_CALIB_SAME_FOCAL_LENGTH
+	);
+			
+	);
+
+
+
+	CvMat* rotL = cvCreateMat(3, 3, CV_64F);
+	CvMat* rotR = cvCreateMat(3, 3, CV_64F);
+	CvMat* projL = cvCreateMat(3, 4, CV_64F);
+	CvMat* projR = cvCreateMat(3, 4, CV_64F);
+	CvMat* reproj = cvCreateMat(4, 4, CV_64F); // Reprojection into 3D
+
+	cvStereoRectify(
+			camMat1, camMat2, distCoeff1, distCoeff2, // m1,m2,d1,d2
+			frame1->getSize(), 
+			rotation, //r, t
+			translation,
+			rotL,
+			rotR,
+			projL,
+			projR,
+			reproj
+	);*/
+
+	CvMat* q = cvCreateMat(4, 4, CV_64F); // Reprojection into 3D
 
 	CV_MAT_ELEM(*q, float, 0, 0) = 1.0f;
 	CV_MAT_ELEM(*q, float, 1, 1) = 1.0f;
-	//CV_MAT_ELEM(*q, float, 2, 2) = 1.0f;
+	CV_MAT_ELEM(*q, float, 0, 3) = 1.0f; // -c[x]
+	CV_MAT_ELEM(*q, float, 1, 3) = 1.0f; // -c[y]
+	CV_MAT_ELEM(*q, float, 2, 3) = 1.0f; // f
+	CV_MAT_ELEM(*q, float, 3, 2) = -1.0f; // -1/T[x]
+	CV_MAT_ELEM(*q, float, 3, 3) = 0.0f; // (c[x] - c'[x])/T[x])
 
 	cvReprojectImageTo3D(disparity->getPtr(), reprojected->getPtr(), q);
 	//cvNormalize(reprojected->getPtr(), reprojectedNorm->getPtr(), 
 	//			0, 255, CV_MINMAX);
-	//gtkImages[2]->setPixbuf(reprojected->toPixbuf());*/
+	gtkImages[2]->setPixbuf(reprojected->toPixbuf());
 
 
 
