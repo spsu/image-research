@@ -46,6 +46,16 @@ class Entry : public Widget
 		int getLength();
 
 		/**
+		 * Set the max text length of the entry.
+		 */
+		void setMaxLength(int len);
+
+		/**
+		 * Set the length of the entry (a resize request) based on char size.
+		 */
+		void setWidthChars(int len);
+
+		/**
 		 * Attach a signal handler callback to the "toggled" signal.
 		 */
 		void addToggleCb(void(*userFunc)(GtkToggleButton*, gpointer), 
