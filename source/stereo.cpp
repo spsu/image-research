@@ -10,6 +10,7 @@
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtkmain.h>
+#include <boost/lexical_cast.hpp>
 #include <vector>
 #include <cv.h>
 
@@ -29,6 +30,12 @@ int camNum2 = 0;
 Cv::StereoBMState* bmState = 0;
 CvStereoBMState* cvBmState = 0; // TODO TEMP
 
+std::vector<Gtk::Entry*> entries;
+
+/*TODO float getEntry(int offset)
+{
+	boost::lexical_cast<float>(entries[4]->getText());
+}*/
 
 // Set the formats and stream the camera
 void startStream(V4L2::Camera* cam)
@@ -181,15 +188,29 @@ void doCamera()
 			reproj
 	);*/
 
+
+	float cx, cy, cpx, f, t;
+
+	cx = boost::lexical_cast<float>(entries[0]->getText());
+	cy = boost::lexical_cast<float>(entries[1]->getText());
+	cpx = boost::lexical_cast<float>(entries[2]->getText());
+	f = boost::lexical_cast<float>(entries[3]->getText());
+	t = boost::lexical_cast<float>(entries[4]->getText());
+
+	if(t == 0.0f) {
+		t = 1.0f;
+	}
+
+
 	CvMat* q = cvCreateMat(4, 4, CV_64F); // Reprojection into 3D
 
 	CV_MAT_ELEM(*q, float, 0, 0) = 1.0f;
 	CV_MAT_ELEM(*q, float, 1, 1) = 1.0f;
-	CV_MAT_ELEM(*q, float, 0, 3) = 1.0f; // -c[x]
-	CV_MAT_ELEM(*q, float, 1, 3) = 1.0f; // -c[y]
-	CV_MAT_ELEM(*q, float, 2, 3) = 1.0f; // f
-	CV_MAT_ELEM(*q, float, 3, 2) = -1.0f; // -1/T[x]
-	CV_MAT_ELEM(*q, float, 3, 3) = 0.0f; // (c[x] - c'[x])/T[x])
+	CV_MAT_ELEM(*q, float, 0, 3) = -1.0f * cx; // -c[x]
+	CV_MAT_ELEM(*q, float, 1, 3) = -1.0f * cy; // -c[y]
+	CV_MAT_ELEM(*q, float, 2, 3) = f; // f
+	CV_MAT_ELEM(*q, float, 3, 2) = -1.0f / t; // -1/T[x]
+	CV_MAT_ELEM(*q, float, 3, 3) = (cx - cpx) / t; // (c[x] - c'[x])/T[x])
 
 	cvReprojectImageTo3D(disparity->getPtr(), reprojected->getPtr(), q);
 	//cvNormalize(reprojected->getPtr(), reprojectedNorm->getPtr(), 
@@ -244,6 +265,19 @@ int main(int argc, char* argv[])
 	gtkImages.push_back(panes[0]->getImage());
 	gtkImages.push_back(panes[1]->getImage());
 	gtkImages.push_back(panes[2]->getImage());
+
+	// TODO TEMP Add gtk entries for Q matrix testing.
+	Gtk::HBox* hbox2 = new Gtk::HBox();
+	vbox->packStart(hbox2, false, false, 0);
+
+	// Entries.
+	for(unsigned int i = 0; i < 5; i++) {
+		entries.push_back(new Gtk::Entry());
+		entries[i]->setText("0");
+		//entries[i]->setMaxLength(4);
+		//entries[i]->setWidthChars(4);
+		hbox2->packStart(entries[i], false, false, 0);
+	}
 
 	prepCams();
 	if(!cam1->isStreaming()) {
