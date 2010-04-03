@@ -1,13 +1,20 @@
-#ifndef BT_Cv_Calibration_StereoData
-#define BT_Cv_Calibration_StereoData
+#ifndef BT_Cv_Stereo_Calibration
+#define BT_Cv_Stereo_Calibration
 
 namespace Cv {
-namespace Calibration {
-class StereoData
+namespace Stereo {
+class Calibration
 {
 	public:
-		StereoData();
-		~StereoData();
+		/**
+		 * CTOR.
+		 */
+		Calibration();
+
+		/**
+		 * DTOR.
+		 */
+		~Calibration();
 
 	protected:
 		// Single rotation & translation vector relating the two cameras
