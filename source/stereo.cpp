@@ -14,9 +14,9 @@
 #include <vector>
 #include <cv.h>
 
-/**
- * Globals.
- */
+/* =============================== *\
+		  GLOBAL VAR DEFS
+\* =============================== */
 
 Gtk::VBox* vbox = 0;
 std::vector<Gtk::Image*> gtkImages;
@@ -32,10 +32,29 @@ CvStereoBMState* cvBmState = 0; // TODO TEMP
 
 std::vector<Gtk::Entry*> entries;
 
-/*TODO float getEntry(int offset)
-{
-	boost::lexical_cast<float>(entries[4]->getText());
-}*/
+bool isCalibrated = false;
+
+
+/* =============================== *\
+   		 Forward Declartions
+\* =============================== */
+
+void startStream(V4L2::Camera* cam);
+
+float getEntry(unsigned int offset);
+
+void prepCams();
+
+void cameraIter();
+void depthProjectionIter(Cv::Image* f1, Cv::Image* f2);
+void cameraCalibrationIter(Cv::Image* f1, Cv::Image* f2);
+
+gboolean cameraIterOnGtkIdle(gpointer data);
+
+
+/* =============================== *\
+		  HELPER FUNCTIONS
+\* =============================== */
 
 // Set the formats and stream the camera
 void startStream(V4L2::Camera* cam)
@@ -51,6 +70,23 @@ void startStream(V4L2::Camera* cam)
 	cam->streamOn();
 }
 
+// get value of an entry
+float getEntry(unsigned int offset)
+{
+	if(offset > entries.size() - 1) {
+		return 0.0f;
+	}
+	if(entries[offset]->getLength() == 0) {
+		return 0.0f;
+	}
+	return boost::lexical_cast<float>(entries[offset]->getText());
+}
+
+
+
+/* =============================== *\
+		  PREP CAMERA
+\* =============================== */
 
 // Prepare the cameras
 void prepCams()
@@ -81,19 +117,18 @@ void prepCams()
 }
 
 
-void doCamera()
+/* =============================== *\
+		  Main Camera Iter
+\* =============================== */
+
+
+void cameraIter()
 {
 	V4L2::DriverFrame* f1 = 0;
 	V4L2::DriverFrame* f2 = 0;
 	Cv::Image* frame1 = 0;
 	Cv::Image* frame2 = 0;
 
-	static Cv::Image* gray1 = 0;
-	static Cv::Image* gray2 = 0;
-	static Cv::Image* disparity = 0;
-	static Cv::Image* disparityNorm = 0;
-	static Cv::Image* reprojected = 0;
-	static Cv::Image* reprojectedNorm = 0;
 
 	cam1->dequeue();
 	cam2->dequeue(); 
@@ -109,29 +144,28 @@ void doCamera()
 	frame1 = new Cv::Image(f1);
 	frame2 = new Cv::Image(f2);
 
-	// ***** PROCESS HERE ***** // 
-
-	// Stereo stuff
-	if(disparity == 0) {
-		CvSize size = frame1->getSize();
-
-		gray1 = new Cv::Image(size, 1);
-		gray2 = new Cv::Image(size, 1);
-
-		disparity = new Cv::Image(size, 1, 16);
-		disparityNorm = new Cv::Image(size, 1, 8);
-
-		reprojected = new Cv::Image(size, 3, 16);
-		reprojectedNorm = new Cv::Image(size, 3, 8);		
+	if(isCalibrated) {
+		depthProjectionIter(frame1, frame2);
+	}
+	else {
+		cameraCalibrationIter(frame1, frame2);
 	}
 
-	cvCvtColor(frame1->getPtr(), gray1->getPtr(), CV_BGR2GRAY);
-	cvCvtColor(frame2->getPtr(), gray2->getPtr(), CV_BGR2GRAY);
+	delete frame1;
+	delete frame2;
+}
 
-	bmState->findCorrespondence(gray1, gray1, disparity);
 
-	gtkImages[0]->setPixbuf(frame1->toPixbuf());
-	gtkImages[1]->setPixbuf(frame2->toPixbuf());
+
+/* =============================== *\
+	  Cam Calibration Iteration
+\* =============================== */
+
+void cameraCalibrationIter(Cv::Image* f1, Cv::Image* f2)
+{
+
+	gtkImages[0]->setPixbuf(f1->toPixbuf());
+	gtkImages[1]->setPixbuf(f2->toPixbuf());
 
 	//cvNormalize(disparity->getPtr(), disparityNorm->getPtr(), 
 	//			0, 255, CV_MINMAX);
@@ -153,7 +187,7 @@ void doCamera()
 			objectPts,
 			imgPts1, imgPts2,
 			camMat1, distCoeff1, camMat2, distCoeff2,
-			frame1->getSize(),
+			f1->getSize(),
 			rotation,
 			translation,
 			essential,
@@ -178,7 +212,7 @@ void doCamera()
 
 	cvStereoRectify(
 			camMat1, camMat2, distCoeff1, distCoeff2, // m1,m2,d1,d2
-			frame1->getSize(), 
+			f1->getSize(), 
 			rotation, //r, t
 			translation,
 			rotL,
@@ -189,13 +223,53 @@ void doCamera()
 	);*/
 
 
+
+}
+
+
+/* =============================== *\
+	 Depth Projection Iteration
+\* =============================== */
+
+void depthProjectionIter(Cv::Image* f1, Cv::Image* f2)
+{
+	static Cv::Image* gray1 = 0;
+	static Cv::Image* gray2 = 0;
+	static Cv::Image* disparity = 0;
+	static Cv::Image* disparityNorm = 0;
+	static Cv::Image* reprojected = 0;
+	static Cv::Image* reprojectedNorm = 0;
+
+	gtkImages[0]->setPixbuf(f1->toPixbuf());
+	gtkImages[1]->setPixbuf(f2->toPixbuf());
+
+	// Stereo stuff
+	if(disparity == 0) {
+		CvSize size = f1->getSize();
+
+		gray1 = new Cv::Image(size, 1);
+		gray2 = new Cv::Image(size, 1);
+
+		disparity = new Cv::Image(size, 1, 16);
+		disparityNorm = new Cv::Image(size, 1, 8);
+
+		reprojected = new Cv::Image(size, 3, 16);
+		reprojectedNorm = new Cv::Image(size, 3, 8);		
+	}
+
+	cvCvtColor(f1->getPtr(), gray1->getPtr(), CV_BGR2GRAY);
+	cvCvtColor(f2->getPtr(), gray2->getPtr(), CV_BGR2GRAY);
+
+	bmState->findCorrespondence(gray1, gray1, disparity);
+
+
 	float cx, cy, cpx, f, t;
 
-	cx = boost::lexical_cast<float>(entries[0]->getText());
-	cy = boost::lexical_cast<float>(entries[1]->getText());
-	cpx = boost::lexical_cast<float>(entries[2]->getText());
-	f = boost::lexical_cast<float>(entries[3]->getText());
-	t = boost::lexical_cast<float>(entries[4]->getText());
+	cx = getEntry(0);
+	cy = getEntry(1);
+	cpx = getEntry(2);
+	f = getEntry(3);
+	t = getEntry(4);
 
 	if(t == 0.0f) {
 		t = 1.0f;
@@ -219,16 +293,16 @@ void doCamera()
 
 
 
-	delete frame1;
-	delete frame2;
 }
 
 
-/* ======================= IGNORE BELOW CODE ================================ */
+/* =============================== *\
+	 Main, etc.
+\* =============================== */
 
-gboolean doCameraGtk(gpointer data)
+gboolean cameraIterOnGtkIdle(gpointer data)
 {
-	doCamera();
+	cameraIter();
 	return true;
 }
 
@@ -289,7 +363,7 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-	gtk_idle_add(doCameraGtk, NULL);
+	gtk_idle_add(cameraIterOnGtkIdle, NULL);
 
 	gui->start();
 
