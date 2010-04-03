@@ -17,6 +17,9 @@
 
 namespace Cv {
 	class Image;
+	namespace Calibration {
+		class CamIntrinsics;
+	}
 }
 
 namespace Cv {

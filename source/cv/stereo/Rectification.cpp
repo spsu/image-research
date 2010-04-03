@@ -1,5 +1,6 @@
 #include "Rectification.hpp"
 #include "Calibration.hpp"
+#include "../Calibration/CamIntrinsics.hpp"
 #include <stdio.h>
 
 namespace Cv {
@@ -12,10 +13,8 @@ Rectification::Rectification():
 {
 	rotationLeft  =  cvCreateMat(3, 3, CV_64F);
 	rotationRight =  cvCreateMat(3, 3, CV_64F);
-
 	projectionLeft  = cvCreateMat(3, 4, CV_64F);
 	projectionRight = cvCreateMat(3, 4, CV_64F);
-
 	reprojection = cvCreateMat(4, 4, CV_64F);
 }
 
@@ -28,7 +27,10 @@ Rectification::~Rectification()
 	cvReleaseMat(&reprojection);
 }
 
-bool Rectification::Rectify(Calibration* calib1, Calibration* calib2, int flags)
+bool Rectification::Rectify(Calibration::CamIntrinsics* cam1,
+							Calibration::CamIntrinsics* cam2, 
+							Stereo::Calibration* calib, 
+							int flags)
 {
 	/* TODO
 	if(!calib1->isCalibrated() or !calib2->isCalibrated()) {
@@ -38,21 +40,25 @@ bool Rectification::Rectify(Calibration* calib1, Calibration* calib2, int flags)
 
 	cvStereoRectify(
 		// Input
-		camMatrix1, camMatrix2, distCoeff1, distCoeff2,
-		cvSize::imgSize,
-		rotation, translation
+		cam1->intrinsics, cam2->intrinsics, 
+		cam1->distortion, cam2->distortion,
+		cam1->imageSize,
+		calib->rotation,
+		calib->translation,
+
 		// Output
 		rotationLeft, rotationRight,
 		projectionLeft, projectionRight,
 		reprojection, // TODO: optional
 		flags
 	);
+
 	// TODO: cf. cvStereoRectifyUncalibrated()
 }
 
-/*bool Rectification::initUndistortMap()
+/*TODO
+bool Rectification::initUndistortMap()
 {
-	// TODO
 	cvInitUndistortRectifyMap(
 		// read docs
 	);

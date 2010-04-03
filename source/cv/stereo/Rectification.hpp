@@ -4,6 +4,9 @@
 #include <cv.h>
 
 namespace Cv {
+	namespace Calibration {
+		class CamIntrinsics;
+	}
 	namespace Stereo {
 		class Calibration;
 	}
@@ -28,7 +31,10 @@ class Rectification
 		 * Perform rectification with two Stereo::Calibration objects.
 		 * TODO: (Check that they are already calibrated.)
 		 */
-		bool rectify(Calibration* calib1, Calibration* calib2, int flags = 0);
+		bool rectify(Calibration::CamIntrinsics* cam1, 
+					 Calibration::CamIntrinsics* cam2, 
+					 Stereo::Calibration* calib,
+					 int flags = 0);
 
 	protected:
 		// (3x3) Rectification rotations

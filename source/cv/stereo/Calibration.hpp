@@ -1,10 +1,21 @@
 #ifndef BT_Cv_Stereo_Calibration
 #define BT_Cv_Stereo_Calibration
 
+#include <cv.h>
+
+namespace Cv {
+	namespace Stereo {
+		class Rectification;
+	}
+}
+
 namespace Cv {
 namespace Stereo {
 class Calibration
 {
+	// Rectification uses Stereo::Calibration data.
+	friend class Rectification;
+
 	public:
 		/**
 		 * CTOR.

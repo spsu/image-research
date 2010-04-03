@@ -1,12 +1,22 @@
-#ifndef BT_Cv_Calibration_CamData
-#define BT_Cv_Calibration_CamData
+#ifndef BT_Cv_Calibration_CamIntrinsics
+#define BT_Cv_Calibration_CamIntrinsics
+
+#include <cv.h>
+
+namespace Cv {
+	namespace Stereo {
+		class Rectification;
+	}
+}
 
 // TODO: Make ChessboardCorners a friend class
-// TODO: Rename this file CamData.hpp.
 namespace Cv {
 namespace Calibration {
-class CamData
+class CamIntrinsics
 {
+	// Utilizes CamIntrinsics to compute
+	friend class Rectification;
+
 	public:
 		/**
 		 * CTORs.
