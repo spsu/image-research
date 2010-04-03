@@ -7,6 +7,7 @@
 #include "app/ImagePane.hpp"
 #include "cv/Image.hpp"
 #include "cv/StereoBMState.hpp"
+#include "cv/ChessboardCorners.hpp"
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtkmain.h>
@@ -33,6 +34,9 @@ CvStereoBMState* cvBmState = 0; // TODO TEMP
 std::vector<Gtk::Entry*> entries;
 
 bool isCalibrated = false;
+Cv::ChessboardCorners* corners1 = 0;
+Cv::ChessboardCorners* corners2 = 0;
+const int NUM_BOARDS = 10;
 
 
 /* =============================== *\
@@ -163,9 +167,40 @@ void cameraIter()
 
 void cameraCalibrationIter(Cv::Image* f1, Cv::Image* f2)
 {
+	bool find1 = false;
+	bool find2 = false;
 
 	gtkImages[0]->setPixbuf(f1->toPixbuf());
 	gtkImages[1]->setPixbuf(f2->toPixbuf());
+
+	if(corners1 == NULL) {
+		corners1 = new Cv::ChessboardCorners(cvSize(7,6));
+		corners2 = new Cv::ChessboardCorners(cvSize(7,6));
+	}
+
+	if(corners1->numFound() < NUM_BOARDS) {
+		find1 = true;
+		find2 = false;
+	}
+	else if(corners2->numFound() < NUM_BOARDS) {
+		find1 = false;
+		find2 = true;
+	}
+
+	// Still in the 'finding' iterations. 
+	// XXX: For now I'm assuming we can find the chessboards in each camera
+	// independantly of one another
+	if(find1) {
+		corners1->findCorners(f1);
+		return;
+	}
+	else if(find2) {
+		corners2->findCorners(f2);
+		return;
+	}
+
+	// Found all the chessboards!
+
 
 	//cvNormalize(disparity->getPtr(), disparityNorm->getPtr(), 
 	//			0, 255, CV_MINMAX);

@@ -74,9 +74,11 @@ build/out/app/*.o: source/app/*.hpp source/app/*.cpp
 build/lib/liblocal_cv.so: build/out/cv/*.o
 	@echo "[linking] OpenCV Wrapper Code"
 	@$(CD) ./build/lib && $(SHARED) ../out/cv/*.o -o liblocal_cv.so
-build/out/cv/*.o: source/cv/*.hpp source/cv/*.cpp
+build/out/cv/*.o: source/cv/*.hpp source/cv/*.cpp source/cv/*/*.hpp \
+				  source/cv/*/*.cpp
 	@echo "[compile] OpenCV Wrapper Code"
 	@$(CD) ./build/out/cv && $(C) $(INC) -c ../../../source/cv/*.cpp
+	@$(CD) ./build/out/cv && $(C) $(INC) -c ../../../source/cv/*/*.cpp
 
 
 ### GTK WRAPPER LIB ###################
