@@ -15,13 +15,15 @@ namespace Cv {
 namespace Calibration {
 
 ChessboardCorners::ChessboardCorners(CvSize sz):
-	patternSize(sz)
+	boardSize(sz),
+	boardArea(sz.width*sz.height)
 {
 	// nothing yet
 }
 
 ChessboardCorners::ChessboardCorners(int width, int height):
-	patternSize(cvSize(width, height))
+	boardSize(cvSize(width, height)),
+	boardArea(width*height)
 {
 	// nothing yet
 }
@@ -41,17 +43,15 @@ bool ChessboardCorners::findCorners(Cv::Image* img, int flags)
 	int f = 0;
 	int count = 0;
 
-	cornerTotal = patternSize.width * patternSize.height;
-
-	corners = new CvPoint2D32f[cornerTotal];
+	corners = new CvPoint2D32f[boardArea];
 
 	f = cvFindChessboardCorners(
-			img->getPtr(), patternSize, 
+			img->getPtr(), boardSize, 
 			corners, &count, 
 			flags	
 	);
 
-	if(f == 0 || count < cornerTotal) {
+	if(f == 0 || count < boardArea) {
 		delete corners;
 		return false;
 	}
@@ -78,6 +78,84 @@ bool ChessboardCorners::findCorners(Cv::Image* img, int flags)
 int ChessboardCorners::numFound()
 {
 	return allCorners.size();
+}
+
+CvMat* ChessboardCorners::getObjectPoints()
+{
+	if(objectPoints == NULL) {
+		genObjectPoints();
+	}
+	return objectPoints;
+}
+
+CvMat* ChessboardCorners::getImagePoints()
+{
+	if(imagePoints == NULL) {
+		genImagePoints();
+	}
+	return imagePoints;
+}
+
+CvMat* ChessboardCorners::getPointCounts()
+{
+	int found = 0;
+
+	found = numFound();
+
+	if(numPoints != NULL) {
+		CvSize sz = cvGetSize(pointCounts);
+		printf("Size of numpoints array: %d, %d\n", sz.width, sz.height);// TEMP
+		if(sz.width == found) {
+			printf("Returning mat, already generated...\n"); // TEMP
+			return pointCounts;
+		}
+		cvReleaseMat(&pointCounts);
+	}
+
+	pointCounts = cvCreateMat(found, 1, CV_64F);
+
+	for(int i = 0; i < found; i++) {
+		CV_MAT_ELEM(*pointCounts, int, i, 0) = boardArea;
+	}
+}
+
+void ChessboardCorners::genObjectPoints()
+{
+	int found = 0;
+	int len = 0;
+
+	if(objectPoints != NULL) {
+		cvReleaseMat(&objectPoints);
+	}
+
+	found = numFound();
+	len = found * boardArea;
+
+	// TODO: This is all wrong...
+	objectPoints = cvCreateMat(found, 3, CV_64F); // CV_32FC1 ?
+
+	for(int i = 0; i < boardSize.width; i++) {
+		for(int i = 0; i < boardSize.height; i++) {
+			CV_MAT_ELEM(*objectPoints, float, i, j) = i;
+		}
+	}
+}
+
+void ChessboardCorners::genImagePoints()
+{
+	int found = 0;
+	int len = 0;
+
+	if(imagePoints != NULL) {
+		cvReleaseMat(&imagePoints);
+	}
+
+	found = numFound();
+
+	imagePoints = cvCreateMat(num*boardArea, 2, CV_64F); // CV_32FC1 ?
+
+	// TODO
+
 }
 
 } // end namespace Calibration

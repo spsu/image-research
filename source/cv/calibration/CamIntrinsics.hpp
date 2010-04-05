@@ -6,6 +6,7 @@
 namespace Cv {
 	namespace Stereo {
 		class Rectification;
+		class Calibration;
 	}
 }
 
@@ -14,20 +15,26 @@ namespace Cv {
 namespace Calibration {
 class CamIntrinsics
 {
-	// Utilizes CamIntrinsics to compute
-	friend class Rectification;
+	// Utilize CamIntrinsics to compute
+	friend class Stereo::Rectification;
+	friend class Stereo::Calibration;
 
 	public:
 		/**
 		 * CTORs.
 		 */
-		Data(int width, int height, int numBoards);
-		Data(CvSize boardSize, int numBoards);
+		CamIntrinsics(int width, int height, int boards);
+		CamIntrinsics(CvSize boardSize, int boards);
 
 		/**
 		 * DTOR.
 		 */
-		~Data();
+		~CamIntrinsics();
+
+		/**
+		 * Calibrate camera based on chessboard points.
+		 */
+		bool calibrateCam(ChessboardFinder* finder);
 
 		/**
 		 * Accessors.
@@ -42,16 +49,6 @@ class CamIntrinsics
 		CvSize imageSize;
 		CvSize boardSize;
 		int numBoards;
-
-		/**
-		 * Harvested image points for a calibrated camera.
-		 */
-		CvMat* imgPts;
-
-		/**
-		 * Harvested object points for a calibrated camera.
-		 */
-		CvMat* objPts; // (Nx3? p429)
 
 		/* ===================== CALIBRATION DATA ========================= */
 

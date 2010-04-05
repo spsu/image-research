@@ -25,6 +25,9 @@ namespace Cv {
 namespace Cv {
 class ChessboardCorners
 {
+	// For calibration
+	friend class CamIntrinsics;
+
 	public:
 		/**
 		 * CTOR.
@@ -49,16 +52,44 @@ class ChessboardCorners
 		 */
 		int numFound();
 
+		/**
+		 * Get the object points.
+		 * TODO: Specify measurements.
+		 */
+		CvMat* getObjectPoints();
+		CvMat* getImagePoints();
+		CvMat* getPointCounts();
+
 	protected:
 		/**
 		 * Size of the board.
 		 */
-		CvSize patternSize;
+		CvSize boardSize;
+		int boardArea;
 
 		/**
 		 * Vector of all corners recorded.
 		 */
 		std::vector<CvPoint2D32f*> allCorners;
+
+		/**
+		 * (Nx3) Harvested object points for a calibrated camera.
+		 */
+		CvMat* objectPoints;
+
+		/**
+		 * (Nx2) Harvested image points mapping to the camera.
+		 */
+		CvMat* imagePoints;
+
+		CvMat* pointCounts;	// (1xN) Number of points in each 
+
+		/**
+		 * Generate the object points.
+		 * TODO: Specify the measurements.
+		 */
+		void genObjectPoints();
+		void genImagePoints();
 };
 }
 
