@@ -53,6 +53,14 @@ class ChessboardCorners
 		int numFound();
 
 		/**
+		 * Generate the object points, point counts, etc. 
+		 * Only compiled if the "dirty" flag is set, which is only if new frames
+		 * have been captured since last calc'd. 
+		 * TODO: Specify the measurements. (see book p. ??)
+		 */
+		void generateMatrices();
+
+		/**
 		 * Get the object points.
 		 * TODO: Specify measurements.
 		 */
@@ -73,23 +81,22 @@ class ChessboardCorners
 		std::vector<CvPoint2D32f*> allCorners;
 
 		/**
-		 * (Nx3) Harvested object points for a calibrated camera.
+		 * Data to be calculated.
 		 */
-		CvMat* objectPoints;
+		CvMat* objectPoints; // (Nx3) Harvested object points (theoretical).
+		CvMat* imagePoints;  // (Nx2) Harvested physical image points.
+		CvMat* pointCounts;	 // (1xN) Number of points in each frame
 
-		/**
-		 * (Nx2) Harvested image points mapping to the camera.
-		 */
-		CvMat* imagePoints;
 
-		CvMat* pointCounts;	// (1xN) Number of points in each 
+	private:
+		// Flag for generated matricies. 
+		// If dirty, must recalculate them. 
+		bool matricesDirty;
 
-		/**
-		 * Generate the object points.
-		 * TODO: Specify the measurements.
-		 */
-		void genObjectPoints();
-		void genImagePoints();
+		// Temporary grayscale image. 
+		// Don't want to waste time alloc/dealloc over and again. 
+		IplImage* tempGray;
+
 };
 }
 
