@@ -23,8 +23,8 @@ class CamIntrinsics
 		/**
 		 * CTORs.
 		 */
-		CamIntrinsics(int width, int height, int boards);
-		CamIntrinsics(CvSize boardSize, int boards);
+		CamIntrinsics(int imWidth, int imHeight);
+		CamIntrinsics(CvSize imgSize);
 
 		/**
 		 * DTOR.
@@ -47,8 +47,8 @@ class CamIntrinsics
 		 * Describes the sizes and number of boards.
 		 */
 		CvSize imageSize;
-		CvSize boardSize;
-		int numBoards;
+		//CvSize boardSize;
+		//int numBoards;
 
 		/* ===================== CALIBRATION DATA ========================= */
 

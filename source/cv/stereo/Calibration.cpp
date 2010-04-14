@@ -1,4 +1,5 @@
 #include "Calibration.hpp"
+#include <stdio.h>
 
 namespace Cv {
 namespace Stereo {

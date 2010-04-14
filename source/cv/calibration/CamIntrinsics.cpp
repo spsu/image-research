@@ -4,10 +4,8 @@
 namespace Cv {
 namespace Calibration {
 
-CamIntrinsics::CamIntrinsics(int bWidth, int bHeight, int boards):
-	imageSize(cvSize()),
-	boardSize(cvSize(bWidth, bHeight)),
-	numBoards(boards),
+CamIntrinsics::CamIntrinsics(int imWidth, int imHeight):
+	imageSize(cvSize(imWidth, imHeight)),
 	imagePoints(0),
 	intrinsics(0),
 	distortion(0),
@@ -17,10 +15,8 @@ CamIntrinsics::CamIntrinsics(int bWidth, int bHeight, int boards):
 	// Nothing yet
 }
 
-CamIntrinsics::CamIntrinsics(CvSize boardSize, int boards):
-	imageSize(cvSize()),
-	boardSize(boardSize),
-	numBoards(boards),
+CamIntrinsics::CamIntrinsics(CvSize imgSize):
+	imageSize(imgSize),
 	imagePoints(0),
 	intrinsics(0),
 	distortion(0),
@@ -47,33 +43,23 @@ CamIntrinsics::~CamIntrinsics()
 	}
 }
 
-
 bool CamIntrinsics::calibrateCam(ChessboardFinder* finder)
 {
-	CvMat* objPts = 0;
-	CvMat* imgPts = 0;
-	CvMat* pointCounts = 0;
 	int numFound = 0;
-
 	int flags = 0;	
-
-	numFound = finder->numFound();
-
-	objPts = finder->getObjectPoints();
-	imgPts = finder->getImagePoints();
 
 	cvCalibrateCamera2(
 		// In
-		objPts,
-		imgPts,
-		pointCounts,
+		finder->getObjectPoints(),
+		finder->getImagePoints(),
+		finder->getPointCounts(),
 		imageSize,
 
 		// Out
 		intrinsics,
 		distortion,
-		rotation,
-		translation,
+		rotation,		// TODO: Optional
+		translation,	// TODO: Optional
 
 		flags
 	);

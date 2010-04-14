@@ -25,7 +25,7 @@ namespace Cv {
 namespace Cv {
 class ChessboardCorners
 {
-	// For calibration
+	// For cvCalibrateCamera2
 	friend class CamIntrinsics;
 
 	public:
