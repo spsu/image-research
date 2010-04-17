@@ -9,6 +9,7 @@
  */
 
 #include "ChessboardFinder.hpp"
+#include "ChessboardCorners.hpp"
 #include "../Image.hpp"
 
 namespace Cv {
@@ -102,6 +103,50 @@ bool ChessboardFinder::findCorners(Cv::Image* img, int flags)
 
 	matricesDirty = true;
 	return true;
+}
+
+ChessboardCorners* ChessboardFinder::getCorners(Cv::Image* img, int flags)
+{
+	//int cornerTotal = 0;
+	ChessboardCorners* corners = 0;
+	int f = 0;
+	int count = 0;
+
+	corners = new ChessboardCorners(boardSize);
+
+	f = cvFindChessboardCorners(
+			img->getPtr(), boardSize, 
+			corners->corners, &corners->numFound, 
+			flags	
+	);
+
+	if(f == 0 || count < boardArea) {
+		//delete corners;
+		//return false;
+		return corners;
+	}
+
+	// Only do once per instance!
+	if(tempGray == NULL) {
+		tempGray = cvCreateImage(img->getSize(), 8, 1); 
+	}
+
+	cvCvtColor(img->getPtr(), tempGray, CV_BGR2GRAY);
+
+	// Subpixel accuracy must be interpolated
+	cvFindCornerSubPix(
+			tempGray, corners->corners, corners->numFound, 
+			cvSize(11, 11), cvSize(-1, -1),
+			cvTermCriteria(
+				CV_TERMCRIT_ITER + CV_TERMCRIT_EPS,	
+				30, 0.01
+			)
+	);
+
+	//allCorners.push_back(corners);
+	//matricesDirty = true;
+
+	return corners;
 }
 
 int ChessboardFinder::numFound()

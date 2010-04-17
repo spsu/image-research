@@ -19,6 +19,7 @@ namespace Cv {
 	class Image;
 	namespace Calibration {
 		class CamIntrinsics;
+		class ChessboardCorners;
 	}
 	namespace Stereo {
 		class Calibration;
@@ -51,6 +52,13 @@ class ChessboardFinder
 		 */
 		bool findCorners(Cv::Image* img, 
 						 int flags = CV_CALIB_CB_ADAPTIVE_THRESH);
+
+		/**
+		 * Find corners in an image and return them. 
+		 * Sets the "all found" flag, too.
+		 */
+		ChessboardCorners* getCorners(Cv::Image* img,
+							int flags = CV_CALIB_CB_ADAPTIVE_THRESH);
 
 		/**
 		 * Return the number of corners found thus far.
