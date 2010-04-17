@@ -1,4 +1,6 @@
 #include "Calibration.hpp"
+#include "../calibration/CamIntrinsics.hpp"
+#include "../calibration/ChessboardFinder.hpp"
 #include <stdio.h>
 
 namespace Cv {
@@ -24,25 +26,35 @@ Calibration::~Calibration()
 	cvReleaseMat(&fundamental);
 }
 
-bool Calibration::calibrate(int flags)
+bool Calibration::calibrate(Cv::Calibration::ChessboardFinder* finder1,
+							Cv::Calibration::ChessboardFinder* finder2,
+							Cv::Calibration::CamIntrinsics* cam1,
+							Cv::Calibration::CamIntrinsics* cam2, 
+							int flags)
 {
+	finder1->generateMatrices();
+	finder2->generateMatrices();
+
 	cvStereoCalibrate(
 		// In
-		&objPts,
-		&imgPts1, &imgPts2,
-		&npts,
+		finder1->objectPoints, // XXX Not &objectPoints !
+		finder1->imagePoints, 
+		finder2->imagePoints,
+		finder1->pointCounts,
 
-		// In/Inout/Out
-		cam1->intrinsics,
+		// In/Inout/Out (Depends upon flag!)
+		cam1->intrinsic,
 		cam1->distortion,
-		cam2->intrinsics,
+		cam2->intrinsic,
 		cam2->distortion,
+
+		cam1->imageSize,
 
 		// Out
 		rotation,
 		translation,
 		essential,		// TODO: Optional
-		fundamental		// TODO: Optional
+		fundamental,	// TODO: Optional
 		cvTermCriteria(
 			CV_TERMCRIT_ITER + CV_TERMCRIT_EPS,
 			100,
@@ -55,6 +67,8 @@ bool Calibration::calibrate(int flags)
 		CV_CALIB_FIX_INTRINSIC
 		CV_CALIB_USE_INTRINSIC_GUESS */
 
+
+	return true; // TODO: TEMP
 }
 
 

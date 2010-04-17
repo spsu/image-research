@@ -4,6 +4,10 @@
 #include <cv.h>
 
 namespace Cv {
+	namespace Calibration {
+		class CamIntrinsics;
+		class ChessboardFinder;
+	}
 	namespace Stereo {
 		class Rectification;
 	}
@@ -27,7 +31,15 @@ class Calibration
 		 */
 		~Calibration();
 
-		bool calibrate();
+		/**
+		 * Stereo Calibration.
+		 * TODO: A work in progress (even the API!) 
+		 */
+		bool calibrate(Cv::Calibration::ChessboardFinder* finder1,
+					   Cv::Calibration::ChessboardFinder* finder2,
+					   Cv::Calibration::CamIntrinsics* cam1,
+					   Cv::Calibration::CamIntrinsics* cam2,
+					   int flags = 0);
 
 	protected:
 		// Rotation & translation relating **the two cameras**

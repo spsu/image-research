@@ -8,6 +8,9 @@ namespace Cv {
 		class Rectification;
 		class Calibration;
 	}
+	namespace Calibration {
+		class ChessboardFinder;
+	}
 }
 
 // TODO: Make ChessboardCorners a friend class
@@ -39,8 +42,8 @@ class CamIntrinsics
 		/**
 		 * Accessors.
 		 */
-		CvMat* getImagePts() { return imgPts; };
-		CvMat* getObjectPts() { return objPts; };
+		//CvMat* getImagePts() { return imgPts; };
+		//CvMat* getObjectPts() { return objPts; };
 
 	protected:
 		/**
@@ -56,7 +59,7 @@ class CamIntrinsics
 		 * Camera Intrinsics.
 		 */
 		CvMat* intrinsic;	// (3x3) Describe the Ideal camera behavior.
-		CvMat* distortions;	// (5x1) Describe the Non-ideal camera behavior.
+		CvMat* distortion;	// (5x1) Describe the Non-ideal camera behavior.
 
 		/**
 		 * Camera Extrinsics.
@@ -68,3 +71,5 @@ class CamIntrinsics
 };
 }
 }
+
+#endif

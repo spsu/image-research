@@ -20,25 +20,30 @@ namespace Cv {
 	namespace Calibration {
 		class CamIntrinsics;
 	}
+	namespace Stereo {
+		class Calibration;
+	}
 }
 
 namespace Cv {
-class ChessboardCorners
+namespace Calibration {
+class ChessboardFinder
 {
 	// For cvCalibrateCamera2
 	friend class CamIntrinsics;
+	friend class Stereo::Calibration; // TODO: Remove this class from API 
 
 	public:
 		/**
 		 * CTOR.
 	 	 */
-		ChessboardCorners(CvSize sz);
-		ChessboardCorners(int width, int height);
+		ChessboardFinder(CvSize sz);
+		ChessboardFinder(int width, int height);
 
 		/**
 		 * DTOR.
 		 */
-		~ChessboardCorners();
+		~ChessboardFinder();
 
 		/**
 		 * Find corners in an image and add them to the points vector.
@@ -53,7 +58,7 @@ class ChessboardCorners
 		int numFound();
 
 		/**
-		 * Generate the object points, point counts, etc. 
+		 * Generate the object points, point counts, etc. from the data we have. 
 		 * Only compiled if the "dirty" flag is set, which is only if new frames
 		 * have been captured since last calc'd. 
 		 * TODO: Specify the measurements. (see book p. ??)
@@ -98,6 +103,7 @@ class ChessboardCorners
 		IplImage* tempGray;
 
 };
+}
 }
 
 #endif

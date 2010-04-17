@@ -1,6 +1,6 @@
 #include "Rectification.hpp"
 #include "Calibration.hpp"
-#include "../Calibration/CamIntrinsics.hpp"
+#include "../calibration/CamIntrinsics.hpp"
 #include <stdio.h>
 
 namespace Cv {
@@ -24,8 +24,8 @@ Rectification::~Rectification()
 	cvReleaseMat(&reprojection);
 }
 
-bool Rectification::rectify(Calibration::CamIntrinsics* cam1,
-							Calibration::CamIntrinsics* cam2, 
+bool Rectification::rectify(Cv::Calibration::CamIntrinsics* cam1,
+							Cv::Calibration::CamIntrinsics* cam2, 
 							Stereo::Calibration* calib, 
 							int flags)
 {
@@ -39,8 +39,8 @@ bool Rectification::rectify(Calibration::CamIntrinsics* cam1,
 
 	cvStereoRectify(
 		// Input
-		cam1->intrinsics, 
-		cam2->intrinsics, 
+		cam1->intrinsic, 
+		cam2->intrinsic, 
 		cam1->distortion, 
 		cam2->distortion,
 		cam1->imageSize,
@@ -56,6 +56,8 @@ bool Rectification::rectify(Calibration::CamIntrinsics* cam1,
 
 		flags
 	);
+
+	return true; // TODO TEMP
 }
 
 /*TODO

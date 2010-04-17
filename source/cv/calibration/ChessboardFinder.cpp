@@ -8,37 +8,37 @@
  *   image.
  */
 
-#include "ChessboardCorners.hpp"
-#include "Image.hpp"
+#include "ChessboardFinder.hpp"
+#include "../Image.hpp"
 
 namespace Cv {
 namespace Calibration {
 
-ChessboardCorners::ChessboardCorners(CvSize sz):
+ChessboardFinder::ChessboardFinder(CvSize sz):
 	boardSize(sz),
 	boardArea(sz.width*sz.height),
 	objectPoints(0),
 	imagePoints(0),
 	pointCounts(0),
-	matriciesDirty(true),
+	matricesDirty(true),
 	tempGray(0)
 {
 	// nothing yet
 }
 
-ChessboardCorners::ChessboardCorners(int width, int height):
+ChessboardFinder::ChessboardFinder(int width, int height):
 	boardSize(cvSize(width, height)),
 	boardArea(width*height),
 	objectPoints(0),
 	imagePoints(0),
 	pointCounts(0),
-	matriciesDirty(true),
+	matricesDirty(true),
 	tempGray(0)
 {
 	// nothing yet
 }
 
-ChessboardCorners::~ChessboardCorners()
+ChessboardFinder::~ChessboardFinder()
 {
 	while(!allCorners.empty()) {
 		delete allCorners.back();
@@ -61,9 +61,9 @@ ChessboardCorners::~ChessboardCorners()
 	}
 }
 
-bool ChessboardCorners::findCorners(Cv::Image* img, int flags)
+bool ChessboardFinder::findCorners(Cv::Image* img, int flags)
 {
-	int cornerTotal = 0;
+	//int cornerTotal = 0;
 	CvPoint2D32f* corners = 0;
 	int f = 0;
 	int count = 0;
@@ -76,7 +76,7 @@ bool ChessboardCorners::findCorners(Cv::Image* img, int flags)
 			flags	
 	);
 
-	if(f == NULL || count < boardArea) {
+	if(f == 0 || count < boardArea) {
 		delete corners;
 		return false;
 	}
@@ -104,12 +104,12 @@ bool ChessboardCorners::findCorners(Cv::Image* img, int flags)
 	return true;
 }
 
-int ChessboardCorners::numFound()
+int ChessboardFinder::numFound()
 {
 	return allCorners.size();
 }
 
-CvMat* ChessboardCorners::getObjectPoints()
+CvMat* ChessboardFinder::getObjectPoints()
 {
 	if(matricesDirty) {
 		generateMatrices();
@@ -117,7 +117,7 @@ CvMat* ChessboardCorners::getObjectPoints()
 	return objectPoints;
 }
 
-CvMat* ChessboardCorners::getImagePoints()
+CvMat* ChessboardFinder::getImagePoints()
 {
 	if(matricesDirty) {
 		generateMatrices();
@@ -125,7 +125,7 @@ CvMat* ChessboardCorners::getImagePoints()
 	return imagePoints;
 }
 
-CvMat* ChessboardCorners::getPointCounts()
+CvMat* ChessboardFinder::getPointCounts()
 {
 	if(matricesDirty) {
 		generateMatrices();
@@ -133,7 +133,7 @@ CvMat* ChessboardCorners::getPointCounts()
 	return pointCounts;
 }
 
-void ChessboardCorners::generateMatrices()
+void ChessboardFinder::generateMatrices()
 {
 	int found = 0;
 	int len = 0;
@@ -143,6 +143,11 @@ void ChessboardCorners::generateMatrices()
 	}
 
 	found = numFound();
+
+	if(found == 0) {
+		fprintf(stderr, "No chessboards found, cannot generate matrices.\n");
+		return;
+	}
 
 	// =============
 	// Object Points
@@ -157,9 +162,16 @@ void ChessboardCorners::generateMatrices()
 	// TODO: This is all wrong...
 	objectPoints = cvCreateMat(found, 3, CV_64F); // TODO: CV_32FC1 ?
 
+	if(imagePoints != NULL) {
+		cvReleaseMat(&imagePoints);
+	}
+
+	imagePoints = cvCreateMat(found*boardArea, 2, CV_64F); // TODO: CV_32FC1 ?
+
+
 	// Code adapted from [Bradski, Kaehler]
-	for(int i = 0; i < allCorners.size(); i++) {
-		for(int j = 0; j < boardArea) {
+	for(unsigned int i = 0; i < allCorners.size(); i++) {
+		for(int j = 0; j < boardArea; j++) {
 			int step = i * boardArea + j;
 			CV_MAT_ELEM(*imagePoints, float, step, 0) = allCorners[i][j].x;
 			CV_MAT_ELEM(*imagePoints, float, step, 1) = allCorners[i][j].y;
@@ -176,16 +188,6 @@ void ChessboardCorners::generateMatrices()
 	//}
 
 
-	// ============
-	// Image Points
-	// ============
-
-	if(imagePoints != NULL) {
-		cvReleaseMat(&imagePoints);
-	}
-
-	imagePoints = cvCreateMat(num*boardArea, 2, CV_64F); // TODO: CV_32FC1 ?
-
 	// TODO... how??
 
 
@@ -193,7 +195,7 @@ void ChessboardCorners::generateMatrices()
 	// Point Counts
 	// ============
 
-	if(numPoints != NULL) {
+	if(pointCounts != NULL) {
 		cvReleaseMat(&pointCounts);
 	}
 

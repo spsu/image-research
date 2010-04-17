@@ -7,7 +7,7 @@
 #include "app/ImagePane.hpp"
 #include "cv/Image.hpp"
 #include "cv/StereoBMState.hpp"
-#include "cv/ChessboardCorners.hpp"
+#include "cv/calibration/ChessboardFinder.hpp"
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtkmain.h>
@@ -34,8 +34,8 @@ CvStereoBMState* cvBmState = 0; // TODO TEMP
 std::vector<Gtk::Entry*> entries;
 
 bool isCalibrated = false;
-Cv::ChessboardCorners* corners1 = 0;
-Cv::ChessboardCorners* corners2 = 0;
+Cv::Calibration::ChessboardFinder* corners1 = 0;
+Cv::Calibration::ChessboardFinder* corners2 = 0;
 const int NUM_BOARDS = 10;
 
 
@@ -174,8 +174,8 @@ void cameraCalibrationIter(Cv::Image* f1, Cv::Image* f2)
 	gtkImages[1]->setPixbuf(f2->toPixbuf());
 
 	if(corners1 == NULL) {
-		corners1 = new Cv::ChessboardCorners(cvSize(7,6));
-		corners2 = new Cv::ChessboardCorners(cvSize(7,6));
+		corners1 = new Cv::Calibration::ChessboardFinder(cvSize(7,6));
+		corners2 = new Cv::Calibration::ChessboardFinder(cvSize(7,6));
 	}
 
 	if(corners1->numFound() < NUM_BOARDS) {

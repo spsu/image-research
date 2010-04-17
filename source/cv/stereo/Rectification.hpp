@@ -31,8 +31,8 @@ class Rectification
 		 * Perform rectification with two Stereo::Calibration objects.
 		 * TODO: (Check that they are already calibrated.)
 		 */
-		bool rectify(Calibration::CamIntrinsics* cam1, 
-					 Calibration::CamIntrinsics* cam2, 
+		bool rectify(Cv::Calibration::CamIntrinsics* cam1, 
+					 Cv::Calibration::CamIntrinsics* cam2, 
 					 Stereo::Calibration* calib,
 					 int flags = 0);
 
@@ -51,3 +51,5 @@ class Rectification
 };
 }
 }
+
+#endif
