@@ -62,7 +62,7 @@ ChessboardFinder::~ChessboardFinder()
 	}
 }
 
-bool ChessboardFinder::findCorners(Cv::Image* img, int flags)
+/*bool ChessboardFinder::findSaveCorners(Cv::Image* img, int flags)
 {
 	//int cornerTotal = 0;
 	CvPoint2D32f* corners = 0;
@@ -103,9 +103,9 @@ bool ChessboardFinder::findCorners(Cv::Image* img, int flags)
 
 	matricesDirty = true;
 	return true;
-}
+}*/
 
-ChessboardCorners* ChessboardFinder::getCorners(Cv::Image* img, int flags)
+ChessboardCorners* ChessboardFinder::findCorners(Cv::Image* img, int flags)
 {
 	//int cornerTotal = 0;
 	ChessboardCorners* corners = 0;
@@ -147,6 +147,11 @@ ChessboardCorners* ChessboardFinder::getCorners(Cv::Image* img, int flags)
 	//matricesDirty = true;
 
 	return corners;
+}
+
+void ChessboardFinder::saveCorners(ChessboardCorners* corners)
+{
+	allCorners.push_back(corners);
 }
 
 int ChessboardFinder::numFound()
@@ -218,8 +223,10 @@ void ChessboardFinder::generateMatrices()
 	for(unsigned int i = 0; i < allCorners.size(); i++) {
 		for(int j = 0; j < boardArea; j++) {
 			int step = i * boardArea + j;
-			CV_MAT_ELEM(*imagePoints, float, step, 0) = allCorners[i][j].x;
-			CV_MAT_ELEM(*imagePoints, float, step, 1) = allCorners[i][j].y;
+			CV_MAT_ELEM(*imagePoints, float, step, 0) = 
+													allCorners[i]->corners[j].x;
+			CV_MAT_ELEM(*imagePoints, float, step, 1) = 
+													allCorners[i]->corners[j].y;
 			CV_MAT_ELEM(*objectPoints, float, step, 0) = j/boardSize.width;
 			CV_MAT_ELEM(*objectPoints, float, step, 1) = j%boardSize.width;
 			CV_MAT_ELEM(*objectPoints, float, step, 2) = 0.0f;

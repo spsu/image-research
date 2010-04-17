@@ -38,7 +38,10 @@ class ChessboardCorners
 		// Accessor. Caller doesn't get ownership!
 		CvPoint2D32f* getCorners() { return corners; };
 
-		// All found?
+		// Accessor.
+		int getNumFound() { return numFound; };
+
+		// Determine if all board corners found. 
 		bool allFound() { 
 			return (numFound == (boardSize.width*boardSize.height)); 
 		};

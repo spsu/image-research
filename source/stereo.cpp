@@ -8,12 +8,19 @@
 #include "cv/Image.hpp"
 #include "cv/StereoBMState.hpp"
 #include "cv/calibration/ChessboardFinder.hpp"
+#include "cv/calibration/ChessboardCorners.hpp"
+#include "cv/calibration/CamIntrinsics.hpp"
+#include "cv/stereo/Calibration.hpp"
+#include "cv/stereo/Rectification.hpp"
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtkmain.h>
 #include <boost/lexical_cast.hpp>
 #include <vector>
 #include <cv.h>
+
+// Number of chessboards to search for
+const int NUM_BOARDS = 10;
 
 /* =============================== *\
 		  GLOBAL VAR DEFS
@@ -34,9 +41,14 @@ CvStereoBMState* cvBmState = 0; // TODO TEMP
 std::vector<Gtk::Entry*> entries;
 
 bool isCalibrated = false;
-Cv::Calibration::ChessboardFinder* corners1 = 0;
-Cv::Calibration::ChessboardFinder* corners2 = 0;
-const int NUM_BOARDS = 10;
+Cv::Calibration::ChessboardFinder* finder1 = 0;
+Cv::Calibration::ChessboardFinder* finder2 = 0;
+
+Cv::Calibration::CamIntrinsics* intrinsics1 = 0;
+Cv::Calibration::CamIntrinsics* intrinsics2 = 0;
+Cv::Stereo::Calibration* stereoCalib = 0;
+Cv::Stereo::Rectification* rectification = 0;
+
 
 
 /* =============================== *\
@@ -133,7 +145,6 @@ void cameraIter()
 	Cv::Image* frame1 = 0;
 	Cv::Image* frame2 = 0;
 
-
 	cam1->dequeue();
 	cam2->dequeue(); 
 
@@ -159,6 +170,34 @@ void cameraIter()
 	delete frame2;
 }
 
+void processCorners(Cv::Image* f1, Cv::Image* f2)
+{
+	printf("Generate point matrices...\n");
+	finder1->generateMatrices();
+	finder2->generateMatrices();
+
+	printf("Point matrices generated.\n");
+
+	intrinsics1 = new Cv::Calibration::CamIntrinsics(f1->getSize());
+	intrinsics2 = new Cv::Calibration::CamIntrinsics(f2->getSize());
+	stereoCalib = new Cv::Stereo::Calibration();
+
+	rectification = new Cv::Stereo::Rectification();
+
+	printf("Calibrate cameras...\n");
+	intrinsics1->calibrateCam(finder1);
+	intrinsics2->calibrateCam(finder2);
+
+	printf("Cameras calibrated.\n");
+
+	printf("Stereo calibrate...\n");
+	stereoCalib->calibrate(finder1, finder2, intrinsics1, intrinsics2);
+
+	printf("Stereo calibrated...\n");
+	rectification->rectify(intrinsics1, intrinsics2, stereoCalib);
+
+	printf("Stereo calibrated.\n");
+}
 
 
 /* =============================== *\
@@ -167,98 +206,38 @@ void cameraIter()
 
 void cameraCalibrationIter(Cv::Image* f1, Cv::Image* f2)
 {
-	bool find1 = false;
-	bool find2 = false;
+	Cv::Calibration::ChessboardCorners* c1 = 0;
+	Cv::Calibration::ChessboardCorners* c2 = 0;
 
 	gtkImages[0]->setPixbuf(f1->toPixbuf());
 	gtkImages[1]->setPixbuf(f2->toPixbuf());
 
-	if(corners1 == NULL) {
-		corners1 = new Cv::Calibration::ChessboardFinder(cvSize(7,6));
-		corners2 = new Cv::Calibration::ChessboardFinder(cvSize(7,6));
+	if(finder1 == NULL) {
+		finder1 = new Cv::Calibration::ChessboardFinder(cvSize(7,6));
+		finder2 = new Cv::Calibration::ChessboardFinder(cvSize(7,6));
 	}
 
-	if(corners1->numFound() < NUM_BOARDS) {
-		find1 = true;
-		find2 = false;
-	}
-	else if(corners2->numFound() < NUM_BOARDS) {
-		find1 = false;
-		find2 = true;
-	}
-
-	// Still in the 'finding' iterations. 
-	// XXX: For now I'm assuming we can find the chessboards in each camera
-	// independantly of one another
-	if(find1) {
-		corners1->findCorners(f1);
-		return;
-	}
-	else if(find2) {
-		corners2->findCorners(f2);
+	// When they're all found, process, and switch the iteration type
+	if(finder1->numFound() >= NUM_BOARDS) {
+		printf("All found!!!\n");
+		processCorners(f1, f2);
+		isCalibrated = true;
 		return;
 	}
 
-	// Found all the chessboards!
+	c1 = finder1->findCorners(f1);
+	c2 = finder2->findCorners(f2);
 
+	if(!c1->allFound() || !c2->allFound()) {
+		delete c1;
+		delete c2;
+		return;
+	}
 
-	//cvNormalize(disparity->getPtr(), disparityNorm->getPtr(), 
-	//			0, 255, CV_MINMAX);
-	//gtkImages[2]->setPixbuf(disparityNorm->toPixbuf());
-	//gtkImages[2]->setPixbuf(disparity->toPixbuf());
+	printf("Saving corners...\n");
 
-
-	/*CvMat* camMat1 = cvCreateMat(3, 3, CV_64F);
-	CvMat* camMat2 = cvCreateMat(3, 3, CV_64F);
-	CvMat* distCoeff1 = cvCreateMat(1, 5, CV_64F);
-	CvMat* distCoeff2 = cvCreateMat(1, 5, CV_64F);
-	CvMat* rotation = cvCreateMat(3, 3 CV_64F);
-	CvMat* translation = cvCreateMat(3, 1, CV_64F);
-	CvMat* essential = cvCreateMat(3, 3, CV_64F);
-	CvMat* fundamental = cvCreateMat(3, 3, CV_64F);
-
-
-	cvStereoCalibrate(
-			objectPts,
-			imgPts1, imgPts2,
-			camMat1, distCoeff1, camMat2, distCoeff2,
-			f1->getSize(),
-			rotation,
-			translation,
-			essential,
-			fundamental,
-			cvTermCriteria(
-				CV_TERMCRIT_ITER+CV_TERMCRIT_EPS,
-				100,
-				1e-5),
-			CV_CALIB_FIX_ASPECT_RATIO + CV_CALIB_ZERO_TANGENT_DIST + 
-				CV_CALIB_SAME_FOCAL_LENGTH
-	);
-			
-	);
-
-
-
-	CvMat* rotL = cvCreateMat(3, 3, CV_64F);
-	CvMat* rotR = cvCreateMat(3, 3, CV_64F);
-	CvMat* projL = cvCreateMat(3, 4, CV_64F);
-	CvMat* projR = cvCreateMat(3, 4, CV_64F);
-	CvMat* reproj = cvCreateMat(4, 4, CV_64F); // Reprojection into 3D
-
-	cvStereoRectify(
-			camMat1, camMat2, distCoeff1, distCoeff2, // m1,m2,d1,d2
-			f1->getSize(), 
-			rotation, //r, t
-			translation,
-			rotL,
-			rotR,
-			projL,
-			projR,
-			reproj
-	);*/
-
-
-
+	finder1->saveCorners(c1);
+	finder2->saveCorners(c2);
 }
 
 

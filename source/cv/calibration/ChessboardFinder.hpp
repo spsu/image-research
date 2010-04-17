@@ -50,15 +50,19 @@ class ChessboardFinder
 		 * Find corners in an image and add them to the points vector.
 		 * Returns true if corners were found, false if not. 
 		 */
-		bool findCorners(Cv::Image* img, 
-						 int flags = CV_CALIB_CB_ADAPTIVE_THRESH);
+		//bool findSaveCorners(Cv::Image* img, 
+		//				 int flags = CV_CALIB_CB_ADAPTIVE_THRESH);
 
 		/**
-		 * Find corners in an image and return them. 
-		 * Sets the "all found" flag, too.
+		 * Find corners in an image and return them.
 		 */
-		ChessboardCorners* getCorners(Cv::Image* img,
+		ChessboardCorners* findCorners(Cv::Image* img,
 							int flags = CV_CALIB_CB_ADAPTIVE_THRESH);
+
+		/**
+		 * Save chessboards previously returned.
+		 */
+		void saveCorners(ChessboardCorners* corners);
 
 		/**
 		 * Return the number of corners found thus far.
@@ -91,7 +95,7 @@ class ChessboardFinder
 		/**
 		 * Vector of all corners recorded.
 		 */
-		std::vector<CvPoint2D32f*> allCorners;
+		std::vector<ChessboardCorners*> allCorners;
 
 		/**
 		 * Data to be calculated.
