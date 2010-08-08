@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include <string>
 
+// For RgbPix
+#include "../cv/Image.hpp"
+
+
 namespace Img {
 
 using namespace std;
@@ -29,8 +33,6 @@ struct Color
 	 * Hexidecimal CTOR.
 	 */
 	Color(std::string hex): r(0), g(0), b(0) {
-		string tmp;
-		
 		if(hex.length() != 3 && hex.length() != 6 && hex.length() != 7 && 
 		   hex.length() != 4) {
 				fprintf(stderr,	"Color(string) must be hex color code.\n");
@@ -57,6 +59,17 @@ struct Color
 		g = (int)strtol(hex.substr(2, 2).c_str(), 0, 16);
 		b = (int)strtol(hex.substr(4, 2).c_str(), 0, 16);
 	};
+
+	/**
+	 * Get OpenCV RgbPixel.
+	 */
+	RgbPixel getPix() {
+		RgbPixel p;
+		p.r = r;
+		p.g = g;
+		p.b = b;
+		return p;
+	}
 };
 
 } // end namespace Img

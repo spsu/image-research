@@ -1,6 +1,9 @@
 #ifndef BT_IMG_THRESHOLD
 #define BT_IMG_THRESHOLD
 
+#include <vector>
+#include "Color.hpp"
+
 namespace Cv {
 	class Image;
 }
@@ -11,7 +14,7 @@ namespace Img {
  * TODO
  * Perform iterative thresholding on the image.
  **/
-void threshold(Cv::Image* img, int numRegions=2);
+void threshold(Cv::Image* img, int numRegions=2); //, std::vector<Color> colors = std::vector<Color>() );
 
 /**
  * Perform a binary threshold on the image.

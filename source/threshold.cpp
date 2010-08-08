@@ -33,7 +33,7 @@ void conversionCb(GtkButton* gtkbutton, gpointer data)
 	gtkImg = imgPane->getImage();
 	img = new Cv::Image(gtkImg->getPixbuf());
 
-	Img::binaryThreshold(img);
+	Img::threshold(img);
 
 	gtkImg->setPixbuf(img->toPixbuf());
 	delete img;
