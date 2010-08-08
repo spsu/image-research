@@ -18,7 +18,7 @@ all:
 
 .PHONY: clean
 clean:
-	$(RM) $(GEN) fourier wavelet test testv4l grayscale
+	$(RM) $(GEN) fourier wavelet test testv4l grayscale threshold
 	cd ./build && $(RM) */*.o */*.so */*/*.o */*/*.so 
 
 .PHONY: stats
@@ -37,14 +37,21 @@ grayscale: source/grayscale.cpp libs
 	@$(LN) $(LIB) $(LOCALLIB) build/out/grayscale.o -o grayscale
 	@chmod +x grayscale
 
-### STEREOSCOPIC ####################
+### THRESHOLD #########################
+threshold: source/threshold.cpp libs
+	@echo "[compile] threshold"
+	@$(CD) ./build/out && $(C) $(INC) -c ../../source/threshold.cpp
+	@$(LN) $(LIB) $(LOCALLIB) build/out/threshold.o -o threshold 
+	@chmod +x threshold 
+
+### STEREOSCOPIC ######################
 stereo: source/stereo.cpp libs
 	@echo "[compile] stereo"
 	@$(CD) ./build/out && $(C) $(INC) -c ../../source/stereo.cpp
 	@$(LN) $(LIB) $(LOCALLIB) build/out/stereo.o -o stereo
 	@chmod +x stereo
 
-### NEGATIVE #########################
+### NEGATIVE ##########################
 negative: source/negative.cpp libs
 	@echo "[compile] negative"
 	@$(CD) ./build/out && $(C) $(INC) -c ../../source/negative.cpp

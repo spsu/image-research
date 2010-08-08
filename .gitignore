@@ -9,6 +9,7 @@ testv4l
 negative
 stereo
 panorama
+threshold
 
 # Images (Don't add to repo: unnecessary!)
 *png
