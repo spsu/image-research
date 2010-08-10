@@ -55,9 +55,9 @@ class Mat : public Arr
 		/**
 		 * Get size of the matrix.
 		 */
-		int getWidth();
-		int getHeight();
-		CvSize getSize();
+		int getWidth() const;
+		int getHeight() const;
+		CvSize getSize() const;
 
 	protected:
 		/**

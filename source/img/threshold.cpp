@@ -131,10 +131,13 @@ void threshold(Cv::Image* img, int numRegions)
 	}
 }
 
-// XXX TODO
-Cv::Image* thresholdCopy(Cv::Image* img, int numRegions)
+Cv::Image* thresholdCopy(Cv::Image* o, int numRegions)
 {
-	return 0;
+	Cv::Image* img = 0;
+	
+	img = new Cv::Image(*o);
+	threshold(img, numRegions);
+	return img;
 }
 
 } // end namespace Img

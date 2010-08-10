@@ -59,7 +59,7 @@ Mat::~Mat()
 	}
 }
 
-int Mat::getWidth()
+int Mat::getWidth() const
 {
 	if(image != NULL) {
 		return image->width;
@@ -70,7 +70,7 @@ int Mat::getWidth()
 	return 0;
 }
 
-int Mat::getHeight()
+int Mat::getHeight() const
 {
 	if(image != NULL) {
 		return image->height;
@@ -81,12 +81,15 @@ int Mat::getHeight()
 	return 0;
 }
 
-CvSize Mat::getSize() 
+CvSize Mat::getSize() const
 { 
 	if(image != NULL) {
 		return cvGetSize(image); 
 	}
-	return cvGetSize(mat);
+	else if(mat != NULL) {
+		return cvGetSize(mat);
+	}
+	return cvSize(0, 0);
 }
 
 } // end namespace Cv

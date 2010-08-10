@@ -62,6 +62,16 @@ Image::Image(CvSize size, int numChannels, int depth, bool isSigned):
 	image = cvCreateImage(size, depth, numChannels);
 }
 
+Image::Image(const Image& img):
+	Mat()
+{
+	image = cvCreateImage(img.getSize(), 
+							img.getDepth(), 
+							img.getNumChannels()); 
+
+	cvCopy(img.image, image, NULL);
+}
+
 Image::Image(std::string filename):
 	Mat()
 {
@@ -242,7 +252,17 @@ IplImage* Image::getPtr()
 	return image;
 }
 
-bool Image::isValid()
+int Image::getNumChannels() const
+{
+	return image->nChannels;
+}
+
+int Image::getDepth() const
+{
+	return image->depth;
+}
+
+bool Image::isValid() const
 {
 	return bool(image != 0);
 }

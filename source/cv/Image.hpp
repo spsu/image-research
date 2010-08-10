@@ -71,6 +71,11 @@ class Image : public Mat
 			  bool isSigned = false);
 
 		/**
+		 * Copy CTOR.
+		 */
+		Image(const Image& img);
+
+		/**
 		 * File load CTOR.
 		 * Import file from filename.
 		 */
@@ -109,9 +114,15 @@ class Image : public Mat
 		IplImage* getPtr();
 
 		/**
+		 * Get various IplImage properties.
+		 */
+		int getNumChannels() const;
+		int getDepth() const;
+
+		/**
 		 * Determines if image is valid (imgPtr != 0).
 		 */
-		bool isValid();
+		bool isValid() const;
 
 		/**
 		 * Get the pixbuf representation of the IplImage.
