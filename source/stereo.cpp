@@ -6,49 +6,71 @@
 #include "app/Gui.hpp"
 #include "app/ImagePane.hpp"
 #include "cv/Image.hpp"
-#include "cv/Calibration.hpp"
+#include "cv/StereoBMState.hpp"
+#include "cv/calibration/ChessboardFinder.hpp"
+#include "cv/calibration/ChessboardCorners.hpp"
+#include "cv/calibration/CamIntrinsics.hpp"
+#include "cv/stereo/Calibration.hpp"
+#include "cv/stereo/Rectification.hpp"
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtkmain.h>
+#include <boost/lexical_cast.hpp>
 #include <vector>
+#include <cv.h>
 
-/**
- * Globals.
- * TODO: Globals are bad. Make a lookup system/dictionary in App::Gui.
- */
+// Number of chessboards to search for
+const int NUM_BOARDS = 10;
 
+/* =============================== *\
+		  GLOBAL VAR DEFS
+\* =============================== */
+
+Gtk::VBox* vbox = 0;
 std::vector<Gtk::Image*> gtkImages;
-std::vector<App::ImagePane*> imgPanes;
+std::vector<App::ImagePane*> panes;
 
 V4L2::Camera* cam1 = 0;
 V4L2::Camera* cam2 = 0;
 int camNum1 = 0;
 int camNum2 = 0;
 
-Cv::Calibration* calib1 = 0;
-Cv::Calibration* calib2 = 0;
+Cv::StereoBMState* bmState = 0;
+CvStereoBMState* cvBmState = 0; // TODO TEMP
 
-int frameDt = 0;
+std::vector<Gtk::Entry*> entries;
 
-Gtk::VBox* vbox = 0;
+bool isCalibrated = false;
+Cv::Calibration::ChessboardFinder* finder1 = 0;
+Cv::Calibration::ChessboardFinder* finder2 = 0;
 
-/////////////////////////////////////
+Cv::Calibration::CamIntrinsics* intrinsics1 = 0;
+Cv::Calibration::CamIntrinsics* intrinsics2 = 0;
+Cv::Stereo::Calibration* stereoCalib = 0;
+Cv::Stereo::Rectification* rectification = 0;
 
-/**
- * Config files for each camera.
- */
-struct ConfigFiles
-{
-	std::string intrinsics;
-	std::string distortion;
-	std::string intrinsicsStereo;
-	std::string distortionStereo;
-	ConfigFiles(): intrinsics(""), distortion(""), intrinsicsStereo(""),
-		distortionStereo("") {};
-};
 
-ConfigFiles* config1;
-ConfigFiles* config2;
+
+/* =============================== *\
+   		 Forward Declartions
+\* =============================== */
+
+void startStream(V4L2::Camera* cam);
+
+float getEntry(unsigned int offset);
+
+void prepCams();
+
+void cameraIter();
+void depthProjectionIter(Cv::Image* f1, Cv::Image* f2);
+void cameraCalibrationIter(Cv::Image* f1, Cv::Image* f2);
+
+gboolean cameraIterOnGtkIdle(gpointer data);
+
+
+/* =============================== *\
+		  HELPER FUNCTIONS
+\* =============================== */
 
 // Set the formats and stream the camera
 void startStream(V4L2::Camera* cam)
@@ -64,45 +86,29 @@ void startStream(V4L2::Camera* cam)
 	cam->streamOn();
 }
 
-// Load the calibration files
-void loadCalibrationFiles(Cv::Calibration* calib, ConfigFiles* cf, int camNum)
+// get value of an entry
+float getEntry(unsigned int offset)
 {
-	calib->setCameraFrameSize(320, 240);
-
-	if(calib->isCalibrated()) {
-		printf("Already calibrated (camera %d).\n", camNum);
-		return;
+	if(offset > entries.size() - 1) {
+		return 0.0f;
 	}
-	if(!calib->loadIntrinsics(cf->intrinsics)) {
-		printf("Could not load %s.\n", cf->intrinsics.c_str());
-		return;
+	if(entries[offset]->getLength() == 0) {
+		return 0.0f;
 	}
-	if(!calib->loadDistortion(cf->distortion)) {
-		printf("Could not load %s.\n", cf->distortion.c_str());
-		return;
-	}
-	
-	if(!calib->doGenerateMap()) {
-		printf("Calibration map couldn't be generated for cam %d...\n", camNum);
-		return;
-	}
-	printf("Calibration successfully loaded for camera %d\n", camNum);
+	return boost::lexical_cast<float>(entries[offset]->getText());
 }
 
+
+
+/* =============================== *\
+		  PREP CAMERA
+\* =============================== */
+
 // Prepare the cameras
-int prepCams()
+void prepCams()
 {
 	std::string c1 = "/dev/video0";
 	std::string c2 = "/dev/video1";
-
-	// Camera configuration files
-	config1 = new ConfigFiles();
-	config2 = new ConfigFiles();
-
-	config1->intrinsics = "./media/intrinsics1.xml";
-	config1->distortion = "./media/distortion1.xml";
-	config2->intrinsics = "./media/intrinsics2.xml";
-	config2->distortion = "./media/distortion2.xml";
 
 	// Choose devices 
 	if(camNum1 != 0) {
@@ -121,43 +127,18 @@ int prepCams()
 	startStream(cam1);
 	startStream(cam2);
 
-	calib1 = new Cv::Calibration(7, 6, 30); 
-	calib2 = new Cv::Calibration(7, 6, 30); 
-
-	// Try to load calibrations (from file) for both cameras.
-	loadCalibrationFiles(calib1, config1, 1);
-	loadCalibrationFiles(calib2, config2, 2);
-
-	return 0;
+	// Configure Stereo capture stuff
+	bmState = new Cv::StereoBMState();
+	cvBmState = bmState->getPtr();
 }
 
-void doCalibration(Cv::Image* frame, Cv::Calibration* calib, int camNum)
-{
-	std::string intrinsicsFile = "";
-	std::string distortionFile = "";
 
-	// Calibrate camera
-	if(!calib->isCalibrated()) {
-		if(frameDt % 20 == 0) {
-			if(calib->findAndDrawBoardIter(frame)) {
-				printf("Found board on cam %d! %d\n", 
-						camNum, calib->getNumFound());
-			}
-		}
-		frameDt++;
-		if(calib->isCalibrated()) {
-			printf("Done calibrating cam %d!!\n", camNum);
-			calib->saveIntrinsics(intrinsicsFile);
-			calib->saveDistortion(distortionFile);
-		}
-	}
+/* =============================== *\
+		  Main Camera Iter
+\* =============================== */
 
-	if(calib->isCalibrated()) {
-		calib->undistort(frame);
-	}
-}
 
-void doCamera()
+void cameraIter()
 {
 	V4L2::DriverFrame* f1 = 0;
 	V4L2::DriverFrame* f2 = 0;
@@ -178,24 +159,164 @@ void doCamera()
 	frame1 = new Cv::Image(f1);
 	frame2 = new Cv::Image(f2);
 
-	// ***** PROCESS HERE ***** // 
-
-	doCalibration(frame1, calib1, 1);
-	doCalibration(frame2, calib2, 2);
-
-	gtkImages[0]->setPixbuf(frame1->toPixbuf());
-	gtkImages[1]->setPixbuf(frame2->toPixbuf());
+	if(isCalibrated) {
+		depthProjectionIter(frame1, frame2);
+	}
+	else {
+		cameraCalibrationIter(frame1, frame2);
+	}
 
 	delete frame1;
 	delete frame2;
 }
 
-
-/* ======================= IGNORE BELOW CODE ================================ */
-
-gboolean doCameraGtk(gpointer data)
+void processCorners(Cv::Image* f1, Cv::Image* f2)
 {
-	doCamera();
+	printf("Generate point matrices...\n");
+	finder1->generateMatrices();
+	finder2->generateMatrices();
+
+	printf("Point matrices generated.\n");
+
+	intrinsics1 = new Cv::Calibration::CamIntrinsics(f1->getSize());
+	intrinsics2 = new Cv::Calibration::CamIntrinsics(f2->getSize());
+	stereoCalib = new Cv::Stereo::Calibration();
+
+	rectification = new Cv::Stereo::Rectification();
+
+	printf("Calibrate cameras...\n");
+	intrinsics1->calibrateCam(finder1);
+	intrinsics2->calibrateCam(finder2);
+
+	printf("Cameras calibrated.\n");
+
+	printf("Stereo calibrate...\n");
+	stereoCalib->calibrate(finder1, finder2, intrinsics1, intrinsics2);
+
+	printf("Stereo calibrated...\n");
+	rectification->rectify(intrinsics1, intrinsics2, stereoCalib);
+
+	printf("Stereo calibrated.\n");
+}
+
+
+/* =============================== *\
+	  Cam Calibration Iteration
+\* =============================== */
+
+void cameraCalibrationIter(Cv::Image* f1, Cv::Image* f2)
+{
+	Cv::Calibration::ChessboardCorners* c1 = 0;
+	Cv::Calibration::ChessboardCorners* c2 = 0;
+
+	gtkImages[0]->setPixbuf(f1->toPixbuf());
+	gtkImages[1]->setPixbuf(f2->toPixbuf());
+
+	if(finder1 == NULL) {
+		finder1 = new Cv::Calibration::ChessboardFinder(cvSize(7,6));
+		finder2 = new Cv::Calibration::ChessboardFinder(cvSize(7,6));
+	}
+
+	// When they're all found, process, and switch the iteration type
+	if(finder1->numFound() >= NUM_BOARDS) {
+		printf("All found!!!\n");
+		processCorners(f1, f2);
+		isCalibrated = true;
+		return;
+	}
+
+	c1 = finder1->findCorners(f1);
+	c2 = finder2->findCorners(f2);
+
+	if(!c1->allFound() || !c2->allFound()) {
+		delete c1;
+		delete c2;
+		return;
+	}
+
+	printf("Saving corners...\n");
+
+	finder1->saveCorners(c1);
+	finder2->saveCorners(c2);
+}
+
+
+/* =============================== *\
+	 Depth Projection Iteration
+\* =============================== */
+
+void depthProjectionIter(Cv::Image* f1, Cv::Image* f2)
+{
+	static Cv::Image* gray1 = 0;
+	static Cv::Image* gray2 = 0;
+	static Cv::Image* disparity = 0;
+	static Cv::Image* disparityNorm = 0;
+	static Cv::Image* reprojected = 0;
+	static Cv::Image* reprojectedNorm = 0;
+
+	gtkImages[0]->setPixbuf(f1->toPixbuf());
+	gtkImages[1]->setPixbuf(f2->toPixbuf());
+
+	// Stereo stuff
+	if(disparity == 0) {
+		CvSize size = f1->getSize();
+
+		gray1 = new Cv::Image(size, 1);
+		gray2 = new Cv::Image(size, 1);
+
+		disparity = new Cv::Image(size, 1, 16);
+		disparityNorm = new Cv::Image(size, 1, 8);
+
+		reprojected = new Cv::Image(size, 3, 16);
+		reprojectedNorm = new Cv::Image(size, 3, 8);		
+	}
+
+	cvCvtColor(f1->getPtr(), gray1->getPtr(), CV_BGR2GRAY);
+	cvCvtColor(f2->getPtr(), gray2->getPtr(), CV_BGR2GRAY);
+
+	bmState->findCorrespondence(gray1, gray1, disparity);
+
+
+	float cx, cy, cpx, f, t;
+
+	cx = getEntry(0);
+	cy = getEntry(1);
+	cpx = getEntry(2);
+	f = getEntry(3);
+	t = getEntry(4);
+
+	if(t == 0.0f) {
+		t = 1.0f;
+	}
+
+
+	CvMat* q = cvCreateMat(4, 4, CV_64F); // Reprojection into 3D
+
+	CV_MAT_ELEM(*q, float, 0, 0) = 1.0f;
+	CV_MAT_ELEM(*q, float, 1, 1) = 1.0f;
+	CV_MAT_ELEM(*q, float, 0, 3) = -1.0f * cx; // -c[x]
+	CV_MAT_ELEM(*q, float, 1, 3) = -1.0f * cy; // -c[y]
+	CV_MAT_ELEM(*q, float, 2, 3) = f; // f
+	CV_MAT_ELEM(*q, float, 3, 2) = -1.0f / t; // -1/T[x]
+	CV_MAT_ELEM(*q, float, 3, 3) = (cx - cpx) / t; // (c[x] - c'[x])/T[x])
+
+	cvReprojectImageTo3D(disparity->getPtr(), reprojected->getPtr(), q);
+	//cvNormalize(reprojected->getPtr(), reprojectedNorm->getPtr(), 
+	//			0, 255, CV_MINMAX);
+	gtkImages[2]->setPixbuf(reprojected->toPixbuf());
+
+
+
+}
+
+
+/* =============================== *\
+	 Main, etc.
+\* =============================== */
+
+gboolean cameraIterOnGtkIdle(gpointer data)
+{
+	cameraIter();
 	return true;
 }
 
@@ -214,8 +335,9 @@ int main(int argc, char* argv[])
 	// Create main application elements
 	gui = new App::Gui("Stereoscopic Demo");
 
-	imgPanes.push_back(new App::ImagePane(""));
-	imgPanes.push_back(new App::ImagePane(""));
+	panes.push_back(new App::ImagePane(""));
+	panes.push_back(new App::ImagePane(""));
+	panes.push_back(new App::ImagePane(""));
 
 	// Create other Gtk widgets
 	vbox = new Gtk::VBox(false, 0);
@@ -224,11 +346,26 @@ int main(int argc, char* argv[])
 	// Construct GUI
 	gui->setChild(vbox);
 	vbox->packStart(hbox, false, false, 0);
-	hbox->packStart(imgPanes[0]->getImage(), true, true, 0);
-	hbox->packStart(imgPanes[1]->getImage(), true, true, 0);
+	hbox->packStart(panes[0]->getImage(), true, true, 0);
+	hbox->packStart(panes[1]->getImage(), true, true, 0);
+	hbox->packStart(panes[2]->getImage(), true, true, 0);
 
-	gtkImages.push_back(imgPanes[0]->getImage());
-	gtkImages.push_back(imgPanes[1]->getImage());
+	gtkImages.push_back(panes[0]->getImage());
+	gtkImages.push_back(panes[1]->getImage());
+	gtkImages.push_back(panes[2]->getImage());
+
+	// TODO TEMP Add gtk entries for Q matrix testing.
+	Gtk::HBox* hbox2 = new Gtk::HBox();
+	vbox->packStart(hbox2, false, false, 0);
+
+	// Entries.
+	for(unsigned int i = 0; i < 5; i++) {
+		entries.push_back(new Gtk::Entry());
+		entries[i]->setText("0");
+		//entries[i]->setMaxLength(4);
+		//entries[i]->setWidthChars(4);
+		hbox2->packStart(entries[i], false, false, 0);
+	}
 
 	prepCams();
 	if(!cam1->isStreaming()) {
@@ -240,7 +377,7 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-	gtk_idle_add(doCameraGtk, NULL);
+	gtk_idle_add(cameraIterOnGtkIdle, NULL);
 
 	gui->start();
 

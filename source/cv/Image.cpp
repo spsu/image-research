@@ -1,3 +1,19 @@
+/**
+ * Copyright (c) 2009 - 2010 Brandon Thomas Suit
+ * http://possibilistic.org | echelon@gmail.com
+ * Code available for use under the LGPL 2.
+ * 
+ * Cv::Image
+ *   Wrapper for IplImage and part of the OpenCV Arr->Mat->Img OO Hierarchy.
+ *   A class to represent and operate on OpenCV images, as well as a method of 
+ *   loading files and converting between GdkPixbufs, etc.
+ *    TODO: Work with non-8-bit images uniformly. 
+ *    TODO: Move image conversion code elsewhere, specifically:
+ *			* V4L2::Frame -> Cv::Image   [Image(V4L2::Frame*)]	
+ *			* GdkPixbuf -> Cv::Image   [Image(GdkPixbuf*)]
+ * 			* Cv::Image -> GdkPixbuf   [toPixbuf(), destroyPixbufCb()]
+ */
+
 #include "Image.hpp"
 #include "../v4l2/easyapi/Frame.hpp" // TODO: Allow compilation without this...
 #include <stdio.h>
@@ -44,6 +60,16 @@ Image::Image(CvSize size, int numChannels, int depth, bool isSigned):
 	}
 
 	image = cvCreateImage(size, depth, numChannels);
+}
+
+Image::Image(const Image& img):
+	Mat()
+{
+	image = cvCreateImage(img.getSize(), 
+							img.getDepth(), 
+							img.getNumChannels()); 
+
+	cvCopy(img.image, image, NULL);
 }
 
 Image::Image(std::string filename):
@@ -226,7 +252,17 @@ IplImage* Image::getPtr()
 	return image;
 }
 
-bool Image::isValid()
+int Image::getNumChannels() const
+{
+	return image->nChannels;
+}
+
+int Image::getDepth() const
+{
+	return image->depth;
+}
+
+bool Image::isValid() const
 {
 	return bool(image != 0);
 }

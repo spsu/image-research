@@ -18,7 +18,7 @@ all:
 
 .PHONY: clean
 clean:
-	$(RM) $(GEN) fourier wavelet test testv4l grayscale
+	$(RM) $(GEN) fourier wavelet test testv4l grayscale threshold
 	cd ./build && $(RM) */*.o */*.so */*/*.o */*/*.so 
 
 .PHONY: stats
@@ -37,14 +37,21 @@ grayscale: source/grayscale.cpp libs
 	@$(LN) $(LIB) $(LOCALLIB) build/out/grayscale.o -o grayscale
 	@chmod +x grayscale
 
-### STEREOSCOPIC ####################
+### THRESHOLD #########################
+threshold: source/threshold.cpp libs
+	@echo "[compile] threshold"
+	@$(CD) ./build/out && $(C) $(INC) -c ../../source/threshold.cpp
+	@$(LN) $(LIB) $(LOCALLIB) build/out/threshold.o -o threshold 
+	@chmod +x threshold 
+
+### STEREOSCOPIC ######################
 stereo: source/stereo.cpp libs
 	@echo "[compile] stereo"
 	@$(CD) ./build/out && $(C) $(INC) -c ../../source/stereo.cpp
 	@$(LN) $(LIB) $(LOCALLIB) build/out/stereo.o -o stereo
 	@chmod +x stereo
 
-### NEGATIVE #########################
+### NEGATIVE ##########################
 negative: source/negative.cpp libs
 	@echo "[compile] negative"
 	@$(CD) ./build/out && $(C) $(INC) -c ../../source/negative.cpp
@@ -74,9 +81,11 @@ build/out/app/*.o: source/app/*.hpp source/app/*.cpp
 build/lib/liblocal_cv.so: build/out/cv/*.o
 	@echo "[linking] OpenCV Wrapper Code"
 	@$(CD) ./build/lib && $(SHARED) ../out/cv/*.o -o liblocal_cv.so
-build/out/cv/*.o: source/cv/*.hpp source/cv/*.cpp
+build/out/cv/*.o: source/cv/*.hpp source/cv/*.cpp source/cv/*/*.hpp \
+				  source/cv/*/*.cpp
 	@echo "[compile] OpenCV Wrapper Code"
 	@$(CD) ./build/out/cv && $(C) $(INC) -c ../../../source/cv/*.cpp
+	@$(CD) ./build/out/cv && $(C) $(INC) -c ../../../source/cv/*/*.cpp
 
 
 ### GTK WRAPPER LIB ###################

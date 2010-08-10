@@ -6,5 +6,6 @@
  */
 #include "grayscale.hpp"
 #include "negative.hpp"
+#include "threshold.hpp"
 
 #endif
