@@ -1,22 +1,20 @@
-**This is a work in progress!**
-
 Image Research
 ==============
 
-This is my C++ image research platform. It is a work in progress, and will be 
-closely integrated with my robotics code (which is itself in serious need of an 
-overhaul). 
+This is my sandbox for learning image processing techniques. OpenCV is used to make some functions easier. 
+
+I plan to integrate some of this code (ie. stereoscopic depth mapping) with my robotics library when I get the chance.
 
 Features
 --------
 
-* Reads images from V4L2 API.
-* Utilizes Gtk+ gui instead of OpenCV's highgui.  
+* Capable of reading frames from V4L2 API.
+* Utilizes Gtk+ gui instead of OpenCV's highgui.
 
 License
 -------
 
-Copyright &copy; 2009 - 2010 Brandon Thomas Suit
+Copyright &copy; 2009, 2010 Brandon Thomas
 
-The code herein is licensed under the LGPL 2. I shoud add a COPYING file.
+This code is licensed under the BSD license. (Nobody would really want this anyway.)
 

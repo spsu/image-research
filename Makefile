@@ -18,7 +18,8 @@ all:
 
 .PHONY: clean
 clean:
-	$(RM) $(GEN) fourier wavelet test testv4l grayscale threshold
+	$(RM) $(GEN) panorama stereo fourier wavelet test testv4l grayscale \
+				 threshold negative
 	cd ./build && $(RM) */*.o */*.so */*/*.o */*/*.so 
 
 .PHONY: stats
