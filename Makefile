@@ -59,6 +59,19 @@ negative: source/negative.cpp libs
 	@$(LN) $(LIB) $(LOCALLIB) build/out/negative.o -o negative
 	@chmod +x negative
 
+### SWIG ##############################
+swig: source/cv/cv.i build/lib/liblocal_cv.so
+	@echo "Generating SWIG wrapper"
+	$(CD) ./build/wrap && swig -python -c++ -outdir . -o ./cv_wrap.cpp  \
+			../../source/cv/cv.i
+	@echo "Compiling generated wrapper"
+	$(CD) ./build/out && $(C) $(INC) -c ../wrap/cv_wrap.cpp -I/usr/include/python2.6 \
+			-I../../source/cv
+	@echo "Linking generated wrapper"
+	$(CD) ./build/lib && $(SHARED) $(LIB) liblocal_cv.so ../out/cv_wrap.o \
+			-Xlinker -rpath . \
+			-o _cv.so
+	
 
 # ============================================================================ #
 # 					Libraries:
