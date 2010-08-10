@@ -3,13 +3,11 @@
 #include "../cv/Image.hpp"
 #include <cv.h>
 #include <stdlib.h>
-
 #include <vector>
 
 using namespace std;
 
 namespace Img {
-
 
 /**
  * Threshold the image into the number of regions supplied.
@@ -70,7 +68,7 @@ void threshold(Cv::Image* img, int numRegions)
 							continue;
 					}
 					else {
-						if(p <= threshPts[k]) // && p > threshPts[k-1])
+						if(p <= threshPts[k])
 							assigned = true;
 					}
 
