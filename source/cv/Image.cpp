@@ -262,9 +262,66 @@ int Image::getDepth() const
 	return image->depth;
 }
 
+int Image::getWidthStep() const
+{
+	return image->widthStep;
+}
+
 bool Image::isValid() const
 {
 	return bool(image != 0);
+}
+
+// XXX: Be careful!!
+std::string Image::getImageData()
+{
+	IplImage* rgb = 0;
+	IplImage* tmp = 0;
+	std::string ret;
+
+	if(!isValid()) {
+		fprintf(stderr, "Image::getImageData() : no image!\n");
+		return "";
+	}
+
+	rgb = cvCreateImage(cvGetSize(image), 8, 3);
+
+	// We need to use RGB colorspace as that's what Pixbuf expects. 
+	switch(image->nChannels) {
+		case 3:
+			if(image->depth != rgb->depth) {
+				cvCvtScale(image, rgb, 1, 0);
+				cvCvtColor(rgb, rgb, CV_BGR2RGB);
+			}
+			else {
+				cvCvtColor(image, rgb, CV_BGR2RGB);
+			}
+			break;
+
+		case 1:
+			if(image->depth != rgb->depth) {
+				tmp = cvCreateImage(cvGetSize(image), 8, 1);
+				cvCvtScale(image, tmp, 1, 0);
+				cvCvtColor(tmp, rgb, CV_GRAY2RGB);
+				cvReleaseImage(&tmp);
+			}
+			else {
+				cvCvtColor(image, rgb, CV_GRAY2RGB);
+			}
+			break;
+
+		default:
+			fprintf(stderr, 
+				"IplImage toPixbuf Not yet supported for image type.\n");
+			return "";
+	}
+
+	ret = std::string(rgb->imageData, 
+				rgb->width * rgb->height * rgb->nChannels);
+
+	cvReleaseImage(&rgb);
+	
+	return ret;
 }
 
 GdkPixbuf* Image::toPixbuf()
@@ -311,8 +368,8 @@ GdkPixbuf* Image::toPixbuf()
 				rgb->width,
 				rgb->height,
 				rgb->widthStep, 
-				destroyPixbufCb, // Closure to destroy IplImage*
-				rgb				 // Closure data (the IplImage*)
+				destroyPixbufCb, // Callback to destroy IplImage*
+				rgb				 // Callback param (the IplImage*)
 	);
 
 	return pb;

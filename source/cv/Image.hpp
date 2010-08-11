@@ -118,6 +118,15 @@ class Image : public Mat
 		 */
 		int getNumChannels() const;
 		int getDepth() const;
+		int getWidthStep() const;
+
+		/**
+		 * Get image data so we can use it in Python via SWIG. 
+		 * We couldn't use a char* since SWIG assumes that is null-terminated. 
+		 * XXX: Be very careful with this.
+		 * TODO: Does this leak memory?
+		 */
+		std::string getImageData();
 
 		/**
 		 * Determines if image is valid (imgPtr != 0).
@@ -127,6 +136,7 @@ class Image : public Mat
 		/**
 		 * Get the pixbuf representation of the IplImage.
 		 * Caller must deallocate pixbuf.
+		 * XXX: Doesn't work with PyGtk, regardless of SWIG wrappers.
 		 */
 		GdkPixbuf* toPixbuf();
 

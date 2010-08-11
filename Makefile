@@ -68,7 +68,7 @@ negative: source/negative.cpp libs
 ### CV WRAPPERS ########################
 swig_cv: source/cv/cv.i build/lib/liblocal_cv.so
 	@echo "Generating SWIG wrapper: CV"
-	@$(CD) ./build/wrap && swig -python -c++ -outdir . -o ./cv_wrap.cpp  \
+	@$(CD) ./build/wrap && swig -python -c++ -outdir ../lib -o ./cv_wrap.cpp  \
 			../../source/cv/cv.i
 	@echo "Compiling generated wrapper: CV"
 	@$(CD) ./build/out && $(C) $(INC) -c ../wrap/cv_wrap.cpp -I/usr/include/python2.6 \
@@ -89,7 +89,7 @@ swig_gtk: source/gtk/gtk.i build/lib/liblocal_gtk.so
 	@echo "Linking generated wrapper: GTK"
 	$(CD) ./build/lib && $(SHARED) $(LIB) liblocal_gtk.so ../out/gtk_wrap.o \
 			-Xlinker -rpath . \
-			-o _gtk.so
+			-o _gtkw.so
 	
 
 
