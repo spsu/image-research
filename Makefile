@@ -17,10 +17,12 @@ all:
 	@echo "make [fourier, wavelet, seamcarve, (etc)]"
 
 .PHONY: clean
-clean:
-	$(RM) $(GEN) panorama stereo fourier wavelet test testv4l grayscale \
-				 threshold negative
+clean: 
+	$(RM) $(GEN) 
+	$(RM) panorama stereo fourier wavelet test testv4l grayscale \
+		  threshold negative 
 	cd ./build && $(RM) */*.o */*.so */*/*.o */*/*.so 
+	cd ./build && $(RM) */*.py */*.pyc */*_wrap.cpp */*_wrap.h
 
 .PHONY: stats
 stats:
@@ -59,19 +61,40 @@ negative: source/negative.cpp libs
 	@$(LN) $(LIB) $(LOCALLIB) build/out/negative.o -o negative
 	@chmod +x negative
 
-### SWIG ##############################
-swig: source/cv/cv.i build/lib/liblocal_cv.so
-	@echo "Generating SWIG wrapper"
-	$(CD) ./build/wrap && swig -python -c++ -outdir . -o ./cv_wrap.cpp  \
+
+# ============================================================================ #
+# 					SWIG Wrappers:
+
+### CV WRAPPERS ########################
+swig_cv: source/cv/cv.i build/lib/liblocal_cv.so
+	@echo "Generating SWIG wrapper: CV"
+	@$(CD) ./build/wrap && swig -python -c++ -outdir . -o ./cv_wrap.cpp  \
 			../../source/cv/cv.i
-	@echo "Compiling generated wrapper"
-	$(CD) ./build/out && $(C) $(INC) -c ../wrap/cv_wrap.cpp -I/usr/include/python2.6 \
+	@echo "Compiling generated wrapper: CV"
+	@$(CD) ./build/out && $(C) $(INC) -c ../wrap/cv_wrap.cpp -I/usr/include/python2.6 \
 			-I../../source/cv
-	@echo "Linking generated wrapper"
-	$(CD) ./build/lib && $(SHARED) $(LIB) liblocal_cv.so ../out/cv_wrap.o \
+	@echo "Linking generated wrapper: CV"
+	@$(CD) ./build/lib && $(SHARED) $(LIB) liblocal_cv.so ../out/cv_wrap.o \
 			-Xlinker -rpath . \
 			-o _cv.so
 	
+### GTK WRAPPERS #######################
+swig_gtk: source/gtk/gtk.i build/lib/liblocal_gtk.so
+	@echo "Generating SWIG wrapper: GTK"
+	$(CD) ./build/wrap && swig -python -c++ -outdir . -o ./gtk_wrap.cpp  \
+			../../source/gtk/gtk.i
+	@echo "Compiling generated wrapper: GTK"
+	$(CD) ./build/out && $(C) $(INC) -c ../wrap/gtk_wrap.cpp -I/usr/include/python2.6 \
+			-I../../source/gtk
+	@echo "Linking generated wrapper: GTK"
+	$(CD) ./build/lib && $(SHARED) $(LIB) liblocal_gtk.so ../out/gtk_wrap.o \
+			-Xlinker -rpath . \
+			-o _gtk.so
+	
+
+
+
+
 
 # ============================================================================ #
 # 					Libraries:
