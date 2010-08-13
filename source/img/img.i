@@ -6,6 +6,7 @@
 #include "grayscale.hpp"
 #include "negative.hpp"
 #include "threshold.hpp"
+#include "histogram.hpp"
 %}
 
 %include "std_string.i"
@@ -14,4 +15,5 @@
 %include "grayscale.hpp"
 %include "negative.hpp"
 %include "threshold.hpp"
+%include "histogram.hpp"
 
