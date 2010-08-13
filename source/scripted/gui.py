@@ -98,24 +98,17 @@ class Window(gtk.Window):
 
 	def _key_press_cb(self, window, event):
 		"""Handle a key press"""
-		def ctrl():
-			return bool(gtk.gdk.CONTROL_MASK & event.state)
-
-		def alt():
-			return bool(gtk.gdk.MOD1_MASK & event.state)
-
-		def shift():
-			return bool(gtk.gdk.SHIFT_MASK & event.state)
-
-		def super():
-			return bool(gtk.gdk.MOD4_Mask & event.state)
+		ctrl = lambda: bool(gtk.gdk.CONTROL_MASK & event.state)
+		alt = lambda: bool(gtk.gdk.MOD1_MASK & event.state)
+		shift = lambda: bool(gtk.gdk.SHIFT_MASK & event.state)
+		logo = lambda: bool(gtk.gdk.MOD4_Mask & event.state)
 
 		key = get_key(event.keyval)
 		if not key:
 			key = event.string # XXX: May not always contain a value
 
-		# Exit the application
-		if key.upper() in ['Q', 'W', 'C'] and ctrl():
+		# Exit the application: mimics common desktop and terminal shortcuts
+		if ctrl() and key.upper() in ['Q', 'W', 'C']:
 			print "Quitting."
 			self.gtk_quit()
 			sys.exit()
@@ -165,6 +158,10 @@ class ImageWindow(Window):
 		self.gtk_image = gtk.Image()
 		self.cv_image = None
 		self.pixbuf = None
+
+		self.histogram_gtk = gtk.Image()
+		self.histogram_cv = None
+		self.histogram_pb = None
 	
 		self.vbox = gtk.VBox()
 		vbox = self.vbox
@@ -198,6 +195,7 @@ class ImageWindow(Window):
 	
 		self.fixed.put(self.gtk_image, 0, 0)
 		self.fixed.put(button, 100, 100)
+		self.fixed.put(self.histogram_gtk, 200, 200)
 
 		#self.fixed.set_size_request(100, 100)
 		#self.fixed.size_allocate(gtk.gdk.Rectangle(0, 0, 100, 100))
@@ -217,12 +215,20 @@ class ImageWindow(Window):
 		self.set_image_file(filename)
 
 		self.gtk_image.show()
-
+		self.histogram_gtk.show()
 
 	def set_image_file(self, filename):
 		self.cv_image = cv.Image(filename)
 		self.pixbuf = cv_to_pixbuf(self.cv_image)
 		self.gtk_image.set_from_pixbuf(self.pixbuf)
+
+		self.update_histogram()
+
+	def update_histogram(self):
+		self.histogram_cv = img.histogram(self.cv_image, 256, 300, 10)
+		self.histogram_pb = cv_to_pixbuf(self.histogram_cv)
+		self.histogram_gtk.set_from_pixbuf(self.histogram_pb)
+
 
 	# =========== Callbacks =====================
 
@@ -250,6 +256,7 @@ class ImageWindow(Window):
 		self.pixbuf = cv_to_pixbuf(self.cv_image)
 		self.gtk_image.set_from_pixbuf(self.pixbuf)
 
+		self.update_histogram()
 
 	def _data_received_cb(self, widget, context, x, y, selection, target_type, time):
 		"""This completes the drag by receiving the data."""
