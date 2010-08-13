@@ -155,14 +155,17 @@ class ImageWindow(Window):
 		super(ImageWindow, self).__init__(title, width, height)
 
 		# Define Image
-		self.gtk_image = gtk.Image()
-		self.cv_image = None
-		self.pixbuf = None
+		#self.gtk_image = gtk.Image()
+		#self.cv_image = None
+		#self.pixbuf = None
 
-		self.histogram_gtk = gtk.Image()
-		self.histogram_cv = None
-		self.histogram_pb = None
-	
+		#self.histogram_gtk = gtk.Image()
+		#self.histogram_cv = None
+		#self.histogram_pb = None
+
+		self.image = MainImageWidget()
+
+
 		self.vbox = gtk.VBox()
 		vbox = self.vbox
 		self.add(vbox)
@@ -193,11 +196,10 @@ class ImageWindow(Window):
 		self.fixed = gtk.Fixed()
 		self.fixed.show()
 	
-		self.fixed.put(self.gtk_image, 0, 0)
-		self.fixed.put(button, 100, 100)
-		self.fixed.put(self.histogram_gtk, 200, 200)
-
-		#self.fixed.set_size_request(100, 100)
+		###self.fixed.put(self.gtk_image, 0, 0)
+		###self.fixed.put(button, 100, 100)
+		###self.fixed.put(self.histogram_gtk, 200, 200)
+			#self.fixed.set_size_request(100, 100)
 		#self.fixed.size_allocate(gtk.gdk.Rectangle(0, 0, 100, 100))
 		
 		self.alignment = gtk.Alignment(0.5, 0.5)
@@ -212,23 +214,33 @@ class ImageWindow(Window):
 
 		# Image
 	
-		self.set_image_file(filename)
+		#self.set_image_file(filename)
 
-		self.gtk_image.show()
-		self.histogram_gtk.show()
+		self.image.load_file(filename, True)
+
+		self.fixed.put(self.image, 0, 0)
+		self.fixed.put(button, 100, 100)
+		self.fixed.put(self.image.histogram, 200, 200)
+
+
+		###self.gtk_image.show()
+		###self.histogram_gtk.show()
+
+		
 
 	def set_image_file(self, filename):
-		self.cv_image = cv.Image(filename)
-		self.pixbuf = cv_to_pixbuf(self.cv_image)
-		self.gtk_image.set_from_pixbuf(self.pixbuf)
+		###self.cv_image = cv.Image(filename)
+		###self.pixbuf = cv_to_pixbuf(self.cv_image)
+		###self.gtk_image.set_from_pixbuf(self.pixbuf)
 
-		self.update_histogram()
+		self.image.load_file(filename, True)
+		#self.update_histogram()
 
 	def update_histogram(self):
-		self.histogram_cv = img.histogram(self.cv_image, 256, 300, 10)
-		self.histogram_pb = cv_to_pixbuf(self.histogram_cv)
-		self.histogram_gtk.set_from_pixbuf(self.histogram_pb)
-
+		###self.histogram_cv = img.histogram(self.cv_image, 256, 300, 10)
+		###self.histogram_pb = cv_to_pixbuf(self.histogram_cv)
+		###self.histogram_gtk.set_from_pixbuf(self.histogram_pb)
+		self.image.update_histogram()
 
 	# =========== Callbacks =====================
 
@@ -252,9 +264,8 @@ class ImageWindow(Window):
 
 	def _click_cb(self, button, args):
 		print "Clicked"
-		img.grayscale(self.cv_image)
-		self.pixbuf = cv_to_pixbuf(self.cv_image)
-		self.gtk_image.set_from_pixbuf(self.pixbuf)
+		img.grayscale(self.image.cv)
+		self.image.refresh()
 
 		self.update_histogram()
 
@@ -276,5 +287,104 @@ class ImageWindow(Window):
 			return
 
 		self.set_image_file(filename)
+
+
+# ==========================================================
+
+class ImageWidget(gtk.Image):
+
+	def __init__(self):
+		super(ImageWidget, self).__init__()
+		self.cv = None
+		self.pixbuf = None
+		self.show()
+
+	def getWidth(self):
+		"""Get the width of the image."""
+		if not self.cv:
+			return None
+		return self.cv.getWidth()
+
+	def getHeight(self):
+		"""Get the height of the image."""
+		if not self.cv:
+			return None
+		return self.cv.getHeight()
+
+	def clear(self):
+		"""Free the CV and pixbuf memory, which are both non-display, 
+		then clear the GtkImage fields."""
+		super(ImageWidget, self).clear()
+		self.cv = None
+		self.pixbuf = None
+
+	def refresh(self):
+		"""Refresh the GtkImage from the Cv::Image (perhaps we updated 
+		it elsewhere)."""
+		self.pixbuf = cv_to_pixbuf(self.cv)
+		self.set_from_pixbuf(self.pixbuf)
+
+
+	@staticmethod
+	def cv_to_pixbuf(img):
+		"""Convert a Cv::Image (IplImage) to GdkPixbuf."""
+		# XXX/TODO: See if there's a way I can get around SWIG's limitations
+		out = gtk.gdk.pixbuf_new_from_data(
+					img.getImageData(), 
+					gtk.gdk.COLORSPACE_RGB,
+					False, 			# No alpha channel
+					img.getDepth(), # Bits per sample
+					img.getWidth(),
+					img.getHeight(),
+					img.getWidthStep() # Rowstride
+		)
+		return out
+
+
+class MainImageWidget(ImageWidget):
+
+	def __init__(self, filename=None, gen_histogram=False):
+		super(MainImageWidget, self).__init__()
+
+		if filename:
+			self.load_file(filename, gen_histogram)
+
+		self.histogram = HistogramWidget()
+
+	def load_file(self, filename, gen_histogram=False):
+		"""Load an image file."""
+		self.cv = cv.Image(filename)
+		self.pixbuf = self.cv_to_pixbuf(self.cv)
+		self.set_from_pixbuf(self.pixbuf)
+		
+		self.histogram.clear()
+		if gen_histogram:
+			self.update_histogram()
+
+	def update_histogram(self, height=150, padding_top=10):
+		"""Regenerate the histogram for the image."""
+		if not self.histogram:
+			self.histogram = HistogramWidget(self.cv, height, padding_top)
+		else:
+			self.histogram.update_histogram(self.cv, height, padding_top)
+
+class HistogramWidget(ImageWidget):
+
+	def __init__(self, cvimage=None, height=150, padding_top=10, create=True):
+		"""Generate a histogram widget for a Cv::Image."""
+		super(HistogramWidget, self).__init__()
+
+		if create and cvimage:
+			self.update_histogram(cvimage, height, padding_top)
+
+	def update_histogram(self, cvimage, height=150, padding_top=10):
+		"""Update the histogram for a new image and/or params."""
+		self.cv = img.histogram(cvimage, 256, height, padding_top)
+		self.pixbuf = self.cv_to_pixbuf(self.cv)
+		self.set_from_pixbuf(self.pixbuf)
+
+	def exists(self):
+		"""Whether the histogram data exists. False if purged."""
+		return bool(self.cv != None)
 
 
