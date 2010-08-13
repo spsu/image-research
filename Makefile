@@ -65,36 +65,37 @@ negative: source/negative.cpp libs
 # ============================================================================ #
 # 					SWIG Wrappers:
 
+### ALL SWIG WRAPPERS ##################
+
+swig: swig_cv swig_img
+	@$(CD) .
+
 ### CV WRAPPERS ########################
 swig_cv: source/cv/cv.i build/lib/liblocal_cv.so
 	@echo "Generating SWIG wrapper: CV"
-	@$(CD) ./build/wrap && swig -python -c++ -outdir ../lib -o ./cv_wrap.cpp  \
+	@$(CD) ./build/out && swig -python -c++ -outdir ../lib -o ./cv_wrap.cpp  \
 			../../source/cv/cv.i
 	@echo "Compiling generated wrapper: CV"
-	@$(CD) ./build/out && $(C) $(INC) -c ../wrap/cv_wrap.cpp -I/usr/include/python2.6 \
+	@$(CD) ./build/out && $(C) $(INC) -c cv_wrap.cpp -I/usr/include/python2.6 \
 			-I../../source/cv
 	@echo "Linking generated wrapper: CV"
 	@$(CD) ./build/lib && $(SHARED) $(LIB) liblocal_cv.so ../out/cv_wrap.o \
 			-Xlinker -rpath . \
 			-o _cv.so
 	
-### GTK WRAPPERS #######################
-swig_gtk: source/gtk/gtk.i build/lib/liblocal_gtk.so
-	@echo "Generating SWIG wrapper: GTK"
-	$(CD) ./build/wrap && swig -python -c++ -outdir . -o ./gtk_wrap.cpp  \
-			../../source/gtk/gtk.i
-	@echo "Compiling generated wrapper: GTK"
-	$(CD) ./build/out && $(C) $(INC) -c ../wrap/gtk_wrap.cpp -I/usr/include/python2.6 \
-			-I../../source/gtk
-	@echo "Linking generated wrapper: GTK"
-	$(CD) ./build/lib && $(SHARED) $(LIB) liblocal_gtk.so ../out/gtk_wrap.o \
-			-Xlinker -rpath . \
-			-o _gtkw.so
+### IMG WRAPPERS #######################
+swig_img: source/img/img.i build/lib/liblocal_img.so
+	@echo "Generating SWIG wrapper: IMG"
+	@$(CD) ./build/out && swig -python -c++ -outdir ../lib -o ./img_wrap.cpp  \
+			../../source/img/img.i
+	@echo "Compiling generated wrapper: IMG"
+	@$(CD) ./build/out && $(C) $(INC) -c img_wrap.cpp -I/usr/include/python2.6 \
+			-I../../source/img
+	@echo "Linking generated wrapper: IMG"
+	@$(CD) ./build/lib && $(SHARED) $(LIB) liblocal_img.so liblocal_cv.so \
+			../out/img_wrap.o -Xlinker -rpath . \
+			-o _img.so
 	
-
-
-
-
 
 # ============================================================================ #
 # 					Libraries:

@@ -15,8 +15,15 @@ import pygtk
 pygtk.require('2.0')
 
 import gtk
-import cv
+import string
 
+from scripted.keymap import KEYMAP, get_key
+
+# SWIG wrappers for C++ functions
+import cv
+import img
+
+# XXX/TODO: See if there's a way I can get around SWIG's limitations
 def cv_to_pixbuf(img):
 	"""Convert an IplImage to GdkPixbuf."""
 	out = gtk.gdk.pixbuf_new_from_data(
@@ -30,102 +37,241 @@ def cv_to_pixbuf(img):
 	)
 	return out
 
-class HelloWorld:
+class Window(object):
+	"""A basic GTK window."""
 
-	# This is a callback function. The data arguments are ignored
-	# in this example. More on callbacks below.
-	def hello(self, widget, data=None):
-		print "Hello World"
+	def __init__(self, title="Untitled", width=400, height=400):
 
-	def delete_event(self, widget, event, data=None):
-		# If you return FALSE in the "delete_event" signal handler,
-		# GTK will emit the "destroy" signal. Returning TRUE means
-		# you don't want the window to be destroyed.
-		# This is useful for popping up 'are you sure you want to quit?'
-		# type dialogs.
-		print "delete event occurred"
+		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+		window = self.window
+		
+		self.vbox = gtk.VBox()
+		vbox = self.vbox
 
-		# Change FALSE to TRUE and the main window will not be destroyed
-		# with a "delete_event".
-		return False
+		# Signal event handlers
+		window.connect("destroy", self._destroy_cb)
+		window.connect("delete_event", self._delete_cb)
+		window.connect("drag_motion", self._drag_cb)
+		window.connect("drag_motion", self._drop_cb)
+		window.connect("drag_data_get", self._data_get_cb)
+		window.connect("drag_data_received", self._data_received_cb)
+		window.connect("key_press_event", self._key_press_cb)
 
-	def destroy(self, widget, data=None):
-		print "destroy signal occurred"
+		# Window params
+		window.set_title(title)
+		window.set_border_width(0)
+		window.set_default_size(width, height)
+
+		# Drag and drop
+		window.drag_dest_set(gtk.DEST_DEFAULT_ALL, self.TARGET_TYPES, gtk.gdk.ACTION_COPY)
+
+		# VBox	
+		window.add(vbox)
+
+		vbox.show()
+		window.show()
+
+	def clone(self, arg=None):
+		pass
+
+	def close(self, widget, data=None):
+		"""Manually close the window from an event we triggered."""
+		gtk.Widget.destroy(self.window)
+
+	def gtk_start(self):
+		"""Start GTK main loop."""
+		gtk.main()
+	
+	def gtk_quit(self): 
+		"""Quits the GTK main loop."""
 		gtk.main_quit()
 
-	def __init__(self):
-		# create a new window
-		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-    
-		# When the window is given the "delete_event" signal (this is given
-		# by the window manager, usually by the "close" option, or on the
-		# titlebar), we ask it to call the delete_event () function
-		# as defined above. The data passed to the callback
-		# function is NULL and is ignored in the callback function.
-		self.window.connect("delete_event", self.delete_event)
-    
-		# Here we connect the "destroy" event to a signal handler.  
-		# This event occurs when we call gtk_widget_destroy() on the window,
-		# or if we return FALSE in the "delete_event" callback.
-		self.window.connect("destroy", self.destroy)
 
-		# Sets the border width of the window.
-		self.window.set_border_width(10)
-    
-		# Creates a new button with the label "Hello World".
-		self.button = gtk.Button("Hello World")
+	# =========== Callbacks ========================
 
-		# When the button receives the "clicked" signal, it will call the
-		# function hello() passing it None as its argument.  The hello()
-		# function is defined above.
-		self.button.connect("clicked", self.hello, None)
-    
-		# This will cause the window to be destroyed by calling
-		# gtk_widget_destroy(window) when "clicked".  Again, the destroy
-		# signal could come from here, or the window manager.
-		self.button.connect_object("clicked", gtk.Widget.destroy, self.window)
+	def _key_press_cb(self, window, event):
+		"""Handle a key press"""
+		def ctrl():
+			return bool(gtk.gdk.CONTROL_MASK & event.state)
+
+		def alt():
+			return bool(gtk.gdk.MOD1_MASK & event.state)
+
+		def shift():
+			return bool(gtk.gdk.SHIFT_MASK & event.state)
+
+		def super():
+			return bool(gtk.gdk.MOD4_Mask & event.state)
+
+		key = get_key(event.keyval)
+		if not key:
+			key = event.string # XXX: May not always contain a value
+
+		# Exit the application
+		if key.upper() in ['Q', 'W', 'C'] and ctrl():
+			print "Quitting."
+			self.gtk_quit()
+			sys.exit()
+
+		return False
+
+	def _click_cb(self, button, data=None):
+		"""Handle a click event"""
+		pass
+
+	def _delete_cb(self, widget, data=None):
+		# Falls through to destroy_cb.
+		# We may want to ask "Are you sure?"
+		pass
+
+	def _destroy_cb(self, widget, data=None):
+		"""Kill GTK main loop."""
+		# XXX: Old version kept multiple windows alive and only killed GTK
+		# when all windows were closed.
+		self.gtk_quit()
+
+	def _drag_cb(self, widget, context, x, y, time):
+		"""Called at the start of a drag action (when something is 
+		being dragged over the widget)."""
+		context.drag_status(gtk.gdk.ACTION_COPY, time)
+		return True
+
+	def _drop_cb(self, widget, context, x, y, time):
+		pass
+
+	def _data_get_cb(self):
+		pass
+
+	def _data_received_cb(self, widget, context, x, y, selection, target_type, time):
+		"""This completes the drag by receiving the data."""
+		pass
+
+class ImageWindow(Window):
+	"""An Image Window"""
+
+	# Valid drag type codes
+	DND_TARGET_TEXT = 50
+	DND_TARGET_JPG  = 51
+	DND_TARGET_PNG  = 52
+	DND_TARGET_XDIR  = 53
+	DND_TARGET_INODE  = 54
+	DND_TARGET_URILIST = 55
+	DND_TARGET_MOZURL = 56
+
+	# Valid drag type mimetypes
+	TARGET_TYPES = [
+		("text/plain", 0, DND_TARGET_TEXT),
+		("image/jpg", 0, DND_TARGET_JPG),
+		("image/png", 0, DND_TARGET_PNG),
+		("x-directory/normal", 0, DND_TARGET_XDIR),
+		("inode/directory", 0, DND_TARGET_INODE),
+		("text/uri-list", 0, DND_TARGET_URILIST),
+		("text/x-moz-url", 0, DND_TARGET_MOZURL)
+	]
+
+	def __init__(self, filename, title="Untitled Window", width=400, height=400):
+		"""Initialize an ImageWindow"""	
+
+		super(ImageWindow, self).__init__(title, width, height)
+
+		# Define Image
+		self.gtk_image = gtk.Image()
+		self.cv_image = None
+		self.pixbuf = None
+	
+		window = self.window
+
+		# Signal event handlers
+		window.connect("destroy", self._destroy_cb)
+		window.connect("delete_event", self._delete_cb)
+		window.connect("drag_motion", self._drag_cb)
+		window.connect("drag_motion", self._drop_cb)
+		window.connect("drag_data_get", self._data_get_cb)
+		window.connect("drag_data_received", self._data_received_cb)
+		window.connect("key_press_event", self._key_press_cb)
 
 
-		self.image = gtk.Image()
+		self.vbox.pack_start(self.gtk_image)
 
 
-		path = rel_to_abspath('../media/example.jpg', False)
+		# Button
 
-		if len(sys.argv) > 1:
-			path = rel_to_abspath(sys.argv[1])
+		button = gtk.Button('Test')
+		button.show()
+		button.connect("clicked", self._click_cb, None)
 
-		print path
+		self.vbox.pack_start(button)
 
+		# Image
+	
+		self.set_image_file(filename)
 
-		self.im = cv.Image(path)
-		#self.pb = self.im.toPixbuf()
-		#print dir(self.pb)
-		#print type(self.pb)
-		#self.image.set_from_pixbuf(self.pb)
-
-		self.pb = cv_to_pixbuf(self.im)
-		self.image.set_from_pixbuf(self.pb)
-
-		#self.image.set_from_file('../../media/example.jpg')
+		self.gtk_image.show()
 
 
-		# This packs the button into the window (a GTK container).
-		self.window.add(self.image)
+	def set_image_file(self, filename):
+		self.cv_image = cv.Image(filename)
+		self.pixbuf = cv_to_pixbuf(self.cv_image)
+		self.gtk_image.set_from_pixbuf(self.pixbuf)
 
-		# The final step is to display this newly created widget.
-		self.image.show()
-    
-		# and the window
-		self.window.show()
+	# =========== Callbacks =====================
 
-	def main(self):
-		# All PyGTK applications must have a gtk.main(). Control ends here
-		# and waits for an event to occur (like a key press or mouse event).
-		gtk.main()
+	def _key_press_cb(self, window, event):
+		"""Handle a key press"""
+		# Run defaults first
+		if super(ImageWindow, self)._key_press_cb(window, event): 
+			return True
 
-# If the program is run directly or passed as an argument to the python
-# interpreter then create a HelloWorld instance and show it
-if __name__ == "__main__":
-	hello = HelloWorld()
-	hello.main()
+		ctrl = lambda: bool(gtk.gdk.CONTROL_MASK & event.state)
+		alt = lambda: bool(gtk.gdk.MOD1_MASK & event.state)
+		shift = lambda: bool(gtk.gdk.SHIFT_MASK & event.state)
+		logo = lambda: bool(gtk.gdk.MOD4_Mask & event.state)
+
+		key = get_key(event.keyval)
+		if not key:
+			key = event.string # XXX: May not always contain a value
+		
+		
+		return True
+
+	def _click_cb(self, button, args):
+		print "Clicked"
+		img.grayscale(self.cv_image)
+		self.pixbuf = cv_to_pixbuf(self.cv_image)
+		self.gtk_image.set_from_pixbuf(self.pixbuf)
+
+
+	def _data_received_cb(self, widget, context, x, y, selection, target_type, time):
+		"""This completes the drag by receiving the data."""
+		filename = None
+		if target_type in [self.DND_TARGET_URILIST, self.DND_TARGET_MOZURL]:
+			filename = selection.data
+		elif target_type == self.DND_TARGET_TEXT:
+			# TODO: We may need to add extra parsing...
+			filename = selection.data
+
+		if not filename:
+			return False
+		
+		filename = filename.strip().replace("file:///", "/")
+
+		if not os.path.isfile(filename):
+			return
+
+		self.set_image_file(filename)
+
+def main():
+	path = rel_to_abspath('../media/example.jpg', False)
+
+	if len(sys.argv) > 1:
+		path = rel_to_abspath(sys.argv[1])
+
+	print path
+	
+	window = ImageWindow(path)
+	window.gtk_start()
+
+if __name__ == '__main__':
+	main()
+
 
