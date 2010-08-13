@@ -32,46 +32,58 @@ def cv_to_pixbuf(img):
 	return out
 
 
-class Window(object):
+class Window(gtk.Window):
 	"""A basic GTK window."""
+
+	# Valid drag type codes
+	DND_TARGET_TEXT = 50
+	DND_TARGET_JPG  = 51
+	DND_TARGET_PNG  = 52
+	DND_TARGET_XDIR  = 53
+	DND_TARGET_INODE  = 54
+	DND_TARGET_URILIST = 55
+	DND_TARGET_MOZURL = 56
+
+	# Valid drag type mimetypes
+	TARGET_TYPES = [
+		("text/plain", 0, DND_TARGET_TEXT),
+		("image/jpg", 0, DND_TARGET_JPG),
+		("image/png", 0, DND_TARGET_PNG),
+		("x-directory/normal", 0, DND_TARGET_XDIR),
+		("inode/directory", 0, DND_TARGET_INODE),
+		("text/uri-list", 0, DND_TARGET_URILIST),
+		("text/x-moz-url", 0, DND_TARGET_MOZURL)
+	]
 
 	def __init__(self, title="Untitled", width=400, height=400):
 
-		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-		window = self.window
-		
-		self.vbox = gtk.VBox()
-		vbox = self.vbox
+		super(Window, self).__init__(gtk.WINDOW_TOPLEVEL)
 
 		# Signal event handlers
-		window.connect("destroy", self._destroy_cb)
-		window.connect("delete_event", self._delete_cb)
-		window.connect("drag_motion", self._drag_cb)
-		window.connect("drag_motion", self._drop_cb)
-		window.connect("drag_data_get", self._data_get_cb)
-		window.connect("drag_data_received", self._data_received_cb)
-		window.connect("key_press_event", self._key_press_cb)
+		self.connect("destroy", self._destroy_cb)
+		self.connect("delete_event", self._delete_cb)
+		self.connect("drag_motion", self._drag_cb)
+		self.connect("drag_motion", self._drop_cb)
+		self.connect("drag_data_get", self._data_get_cb)
+		self.connect("drag_data_received", self._data_received_cb)
+		self.connect("key_press_event", self._key_press_cb)
 
 		# Window params
-		window.set_title(title)
-		window.set_border_width(0)
-		window.set_default_size(width, height)
+		self.set_title(title)
+		self.set_border_width(0)
+		self.set_default_size(width, height)
 
 		# Drag and drop
-		window.drag_dest_set(gtk.DEST_DEFAULT_ALL, self.TARGET_TYPES, gtk.gdk.ACTION_COPY)
+		self.drag_dest_set(gtk.DEST_DEFAULT_ALL, self.TARGET_TYPES, gtk.gdk.ACTION_COPY)
 
-		# VBox	
-		#window.add(vbox)
-
-		#vbox.show()
-		window.show()
+		self.show()
 
 	def clone(self, arg=None):
 		pass
 
 	def close(self, widget, data=None):
 		"""Manually close the window from an event we triggered."""
-		gtk.Widget.destroy(self.window)
+		gtk.Widget.destroy(self)
 
 	def gtk_start(self):
 		"""Start GTK main loop."""
@@ -144,26 +156,6 @@ class Window(object):
 class ImageWindow(Window):
 	"""An Image Window"""
 
-	# Valid drag type codes
-	DND_TARGET_TEXT = 50
-	DND_TARGET_JPG  = 51
-	DND_TARGET_PNG  = 52
-	DND_TARGET_XDIR  = 53
-	DND_TARGET_INODE  = 54
-	DND_TARGET_URILIST = 55
-	DND_TARGET_MOZURL = 56
-
-	# Valid drag type mimetypes
-	TARGET_TYPES = [
-		("text/plain", 0, DND_TARGET_TEXT),
-		("image/jpg", 0, DND_TARGET_JPG),
-		("image/png", 0, DND_TARGET_PNG),
-		("x-directory/normal", 0, DND_TARGET_XDIR),
-		("inode/directory", 0, DND_TARGET_INODE),
-		("text/uri-list", 0, DND_TARGET_URILIST),
-		("text/x-moz-url", 0, DND_TARGET_MOZURL)
-	]
-
 	def __init__(self, filename, title="Untitled Window", width=400, height=400):
 		"""Initialize an ImageWindow"""	
 
@@ -174,16 +166,20 @@ class ImageWindow(Window):
 		self.cv_image = None
 		self.pixbuf = None
 	
-		window = self.window
+		self.vbox = gtk.VBox()
+		vbox = self.vbox
+		self.add(vbox)
+
+		vbox.show()
 
 		# Signal event handlers
-		window.connect("destroy", self._destroy_cb)
-		window.connect("delete_event", self._delete_cb)
-		window.connect("drag_motion", self._drag_cb)
-		window.connect("drag_motion", self._drop_cb)
-		window.connect("drag_data_get", self._data_get_cb)
-		window.connect("drag_data_received", self._data_received_cb)
-		window.connect("key_press_event", self._key_press_cb)
+		self.connect("destroy", self._destroy_cb)
+		self.connect("delete_event", self._delete_cb)
+		self.connect("drag_motion", self._drag_cb)
+		self.connect("drag_motion", self._drop_cb)
+		self.connect("drag_data_get", self._data_get_cb)
+		self.connect("drag_data_received", self._data_received_cb)
+		self.connect("key_press_event", self._key_press_cb)
 
 		# XXX #self.vbox.pack_start(self.gtk_image)
 
@@ -207,14 +203,14 @@ class ImageWindow(Window):
 		#self.fixed.size_allocate(gtk.gdk.Rectangle(0, 0, 100, 100))
 		
 		self.alignment = gtk.Alignment(0.5, 0.5)
-		window.add(self.alignment)
+		#window.add(self.alignment)
 		self.alignment.add(self.fixed)
 		self.alignment.show()	
-		#self.vbox.pack_start(self.alignment)
+		self.vbox.pack_start(self.alignment)
 		#window.add(self.alignment)
 
 
-		window.modify_bg(gtk.STATE_NORMAL, gtk.gdk.Color(0, 0, 0))	
+		self.modify_bg(gtk.STATE_NORMAL, gtk.gdk.Color(0, 0, 0))	
 
 		# Image
 	
