@@ -7,6 +7,7 @@
 #include "negative.hpp"
 #include "threshold.hpp"
 #include "histogram.hpp"
+#include "resize.hpp"
 %}
 
 %include "std_string.i"
@@ -16,4 +17,5 @@
 %include "negative.hpp"
 %include "threshold.hpp"
 %include "histogram.hpp"
+%include "resize.hpp"
 
