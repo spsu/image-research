@@ -20,24 +20,26 @@ Cv::Image* resize_to_scale(Cv::Image* img, int width, int height)
 	float width_new, height_new;
 	float wr, hr;
 
+	if(width == 0 || height == 0) {
+		fprintf(stderr, "Cannot resize dimensions to zero\n");
+		return 0;
+	}
+
 	width_old = img->getWidth();
 	height_old = img->getHeight();
 
-	wr = width_old / width;
-	hr = height_old / height;
+	wr = width_old / (float)width;
+	hr = height_old / (float)height;
 
-	//printf("Size request: %dx%d\n", width, height);
-	//printf("Image size: %dx%d\n", width_old, height_old);
-
-	//printf("Ratios: %f, %f\n", wr, hr);
+	//printf("[C++] Size request: %dx%d\n", width, height);
+	//printf("[C++] Image size: %dx%d\n", width_old, height_old);
+	//printf("[C++] Ratios: %f, %f\n", wr, hr);
 
 	if(wr > hr) {
-		//printf("A\n");
 		width_new = width;
 		height_new = width_new / width_old * height_old;
 	}
 	else {
-		//printf("B\n");
 		height_new = height;
 		width_new = height_new / height_old * width_old;
 	}
