@@ -40,7 +40,7 @@ class Window(gtk.Window):
 		("text/x-moz-url", 0, DND_TARGET_MOZURL)
 	]
 
-	def __init__(self, title="Untitled", width=400, height=400):
+	def __init__(self, title="Untitled", width=100, height=100):
 
 		super(Window, self).__init__(gtk.WINDOW_TOPLEVEL)
 
@@ -57,6 +57,7 @@ class Window(gtk.Window):
 		self.set_title(title)
 		self.set_border_width(0)
 		self.set_default_size(width, height)
+		self.set_size_request(1, 1) # Make sure we can resize window to any dimension
 
 		# Drag and drop
 		self.drag_dest_set(gtk.DEST_DEFAULT_ALL, self.TARGET_TYPES, gtk.gdk.ACTION_COPY)
@@ -131,58 +132,19 @@ class Window(gtk.Window):
 		"""This completes the drag by receiving the data."""
 		pass
 
+	#def _expose_cb(self, widget, event, data=None):
+	#	"""When the window is exposed or resized."""
+	#	pass
+
 class ImageWindow(Window):
 	"""An Image Window"""
-
-	def __init__(self, filename, title="Untitled Window", width=400, height=400):
-		"""Initialize an ImageWindow"""	
-		super(ImageWindow, self).__init__(title, width, height)
-
-		self.image = MainImageWidget()
-		self.vbox = gtk.VBox()
-		self.fixed = gtk.Fixed()
-		self.alignment = gtk.Alignment(0.5, 0.5)
-	
-		# Additional window params
-		self.modify_bg(gtk.STATE_NORMAL, gtk.gdk.Color(0, 0, 0))	
-	
-		# VBox first
-		vbox = self.vbox
-		vbox.show()
-		self.add(vbox)
-
-		# Next, fixed placement	
-		fixed = self.fixed
-		fixed.show()
-
-		# Alignment allows us to center the image widget
-		alignment = self.alignment
-		alignment.add(self.fixed)
-		alignment.show()	
-		vbox.pack_start(self.alignment)
-
-		# XXX/TEMP: Test Button
-		button = gtk.Button('Test')
-		button.show()
-		button.connect("clicked", self._click_cb, None)
-
-		# TODO: Status message
-		# XXX #self.vbox.pack_start(status)
-
-		# Image
-		image = self.image
-		image.load_file(filename, True)
-
-		fixed.put(image, 0, 0)
-		#fixed.put(button, 100, 100)
-		fixed.put(image.histogram, 0, 0) # Need to position
-		self.position_histogram()
 
 	def load_file(self, filename):
 		"""Load an image from the file specified."""
 		self.image.load_file(filename, True)
 
 	def toggle_histogram(self):
+		# XXX/TODO: Move to MainImageWidget, as that's where this belongs. 
 		self.image.toggle_histogram()
 		self.position_histogram()
 
@@ -205,7 +167,129 @@ class ImageWindow(Window):
 		self.fixed.move(self.image.histogram, x, y)
 
 
+	def __init__(self, filename, title="Untitled Window", width=100, height=100):
+		"""Initialize an ImageWindow"""	
+		super(ImageWindow, self).__init__(title, width, height)
+
+		self.image = MainImageWidget()
+		self.vbox = gtk.VBox()
+		self.fixed = gtk.Fixed()
+		self.alignment = gtk.Alignment(0.5, 0.5)
+
+		# Signal event handlers
+		#self.alignment.connect("expose_event", self._expose_cb)
+		#self.alignment.connect("size-allocate", self._size_allocate_cb)
+
+		# Additional window params
+		self.modify_bg(gtk.STATE_NORMAL, gtk.gdk.Color(0, 0, 0))	
+	
+		# VBox first
+		vbox = self.vbox
+		vbox.show()
+		#self.add(vbox)
+
+		# Next, fixed placement	
+		fixed = self.fixed
+		fixed.show()
+
+		# Alignment allows us to center the image widget
+		alignment = self.alignment
+		alignment.add(self.fixed)
+		alignment.show()	
+		#vbox.pack_start(self.alignment)
+		self.add(alignment)
+
+		# TODO: Status message
+		# XXX #self.vbox.pack_start(status)
+
+		# Image
+		image = self.image
+		#image.load_file(filename, True)
+		self.load_file(filename)
+
+		fixed.put(image, 0, 0)
+		#fixed.put(button, 100, 100)
+		fixed.put(image.histogram, 0, 0) # Need to position
+		self.position_histogram()
+
+	# =========== Debug Methods =================
+
+	def print_allocations(self):
+		"""Print the allocation boxes for each widget to better
+		understand dynamic resizing."""	
+
+		print '\n-------- Allocations ----------'
+		def print_allocation(title, widget):
+			alloc = widget.get_allocation()
+			print "%s: %d, %d, %d, %d" % (title, alloc.width, alloc.height, 
+											alloc.x, alloc.y)
+		print "WIDTH, HEIGHT, X, Y"
+		print_allocation("Window", self)
+		print_allocation("Vbox", self.vbox)
+		print_allocation("Alignment", self.alignment)
+		print_allocation("Fixed", self.fixed)
+		print_allocation("Image", self.image)
+		print "\n"	
+
+	def random_resize(self):
+		"""Randomly resize the image to test thumb generation."""
+		import random
+		w = random.randint(80, 600)
+		h = random.randint(80, 600)
+		print "Random Resize dimensions: %dx%d" % (w, h)
+		self.image.resize(w, h)
+
+
 	# =========== Callbacks =====================
+
+	def _size_allocate_cb(self, widget, allocation, data=None):
+		self.print_allocations()
+
+		width = allocation.width
+		height = allocation.height
+
+		print "%dx%d" % (width, height)
+
+		print "----------"
+
+		self.image.resize(width, height)
+
+		
+
+
+	def _expose_cb(self, widget, event, data=None):
+		"""When the window is exposed or resized."""
+
+		self.print_allocations()
+
+		#area = event.area
+		#print "%dx%d" % (area.width, area.height)
+		#print "x,y: %d,%d" %(area.x, area.y)
+	
+		#x = area.width + area.x
+		#y = area.height + area.y
+
+		#print "X,Y: %d, %d" %(x, y)
+
+		width = widget.allocation.width
+		height = widget.allocation.height
+
+		print "%dx%d" % (width, height)
+
+		print "----------"
+
+		self.image.resize(width, height)
+
+		return False
+		
+		
+
+
+		#self.image.refresh()
+
+
+		#print dir(event)
+
 
 	def _key_press_cb(self, window, event):
 		"""Handle a key press"""
@@ -227,6 +311,9 @@ class ImageWindow(Window):
 		# XXX
 		if key.upper() == 'H':
 			self.toggle_histogram()
+
+		if key.upper() == 'R':
+			self.random_resize()
 
 		return True
 
@@ -289,21 +376,102 @@ class ImageWidget(gtk.Image):
 	def refresh(self):
 		"""Refresh the GtkImage from the Cv::Image (perhaps we updated 
 		it elsewhere)."""
+		print "ImageWidget.refresh()"
 		self.pixbuf = self.cv_to_pixbuf(self.cv)
 		self.set_from_pixbuf(self.pixbuf)
 
+
+
+	def resize(self, width, height): # XXX: TODO
+		"""Resize the widget"""
+
+		if width < 2 or height < 2:
+			print "Can't resize any smaller."
+			return
+
+		# XXX: Make it so we can't resize any 'bigger' (TODO/TEMP)
+		norm_width = self.cv.getWidth()
+		norm_height = self.cv.getHeight()
+
+		width = min(width, norm_width)
+		height = min(height, norm_height)	
+
+		print "Original Image Size: %dx%d, Resize Asked: %dx%d" % (norm_width, norm_height, width, height)
+
+		if width >= norm_width and height >= norm_height:
+			print "No need to resize. Window is large enough for original"
+			return
+
+		cv_temp = img.resize_to_scale(self.cv, width, height)
+
+		w = cv_temp.getWidth()
+		h = cv_temp.getHeight()
+
+		print "cv resized: %dx%d" % (w, h)
+
+		pb = self.cv_to_pixbuf(cv_temp)
+
+		print pb
+
+		self.set_from_pixbuf(pb)
+
+
+	# XXX XXX: Rowstride-related byte padding issues!! Please fix!!
 	@staticmethod
-	def cv_to_pixbuf(img):
+	def cv_to_pixbuf(cv_img):
 		"""Convert a Cv::Image (IplImage) to GdkPixbuf."""
 		# XXX/TODO: See if there's a way I can get around SWIG's limitations
+
+		# XXX DEBUG
+		width = cv_img.getWidth()
+		height = cv_img.getHeight()
+		wstep = cv_img.getWidthStep()
+		depth = cv_img.getDepth()
+
+		#print "\n--------- cv_to_pixbuf ----------"
+		#print "WidthStep: %d" % cv_img.getWidthStep()
+		#print "Depth: %d" % cv_img.getDepth()
+		#print "Size: %dx%d" % (cv_img.getWidth(), cv_img.getHeight())
+		
+		data = cv_img.getImageData()
+		#print "IMAGE DATA LEN: %d" % len(data)
+
+		calc = width * height * 3 
+		#print "Calculated req: %d" % calc
+
+		rem = calc % wstep
+		#print "Remainder: %d" % rem
+
+		fill = wstep - rem
+		#print "Fill: %d" % fill
+
+		full = calc + fill
+		#print "Full: %d" % full
+
+		#print "\n"
+
+		channels = 3
+
+		# XXX: Pixbuf requires padding if data doesn't fit within integer 
+		# multiples of the widthstep/rowstride
+		##required = width * height * channels	
+		datalen = len(data)
+		##if actual < required:
+		if datalen % wstep != 0:
+			padlen = wstep - (datalen % wstep)
+			data += "\0" * padlen
+
+		#print "New data len: %d" % len(data)
+
 		out = gtk.gdk.pixbuf_new_from_data(
-					img.getImageData(), 
+					#cv_img.getImageData(), 
+					data,
 					gtk.gdk.COLORSPACE_RGB,
-					False, 			# No alpha channel
-					img.getDepth(), # Bits per sample
-					img.getWidth(),
-					img.getHeight(),
-					img.getWidthStep() # Rowstride
+					False,			   # No alpha channel
+					cv_img.getDepth(), # Bits per sample
+					cv_img.getWidth(),
+					cv_img.getHeight(),
+					cv_img.getWidthStep() # Rowstride
 		)
 		return out
 
@@ -323,12 +491,13 @@ class MainImageWidget(ImageWidget):
 		self.pixbuf = self.cv_to_pixbuf(self.cv)
 		self.set_from_pixbuf(self.pixbuf)
 		
-		self.histogram.clear()
-		if gen_histogram:
-			self.update_histogram()
+		#self.histogram.clear()
+		#if gen_histogram:
+		#	self.update_histogram()
 
 	def update_histogram(self):
 		"""Regenerate the histogram for the image."""
+		return
 		if not self.histogram:
 			self.histogram = HistogramWidget(self.cv)
 		else:
@@ -336,10 +505,13 @@ class MainImageWidget(ImageWidget):
 
 	def toggle_histogram(self):
 		"""Toggle the histogram visibility."""
+		return
 		if self.histogram.get_property('visible'):
 			self.histogram.hide()
 		else:
 			self.histogram.show()
+
+
 class HistogramWidget(ImageWidget):
 
 	def __init__(self, cvimage=None, height=40, padding_top=4, create=True):

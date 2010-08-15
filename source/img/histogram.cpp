@@ -60,13 +60,13 @@ Cv::Image* histogram(Cv::Image* img, int width, int height, int padTop, int test
 
 	_max = max(bmax, max(gmax, rmax));
 
-	printf("Max: %d (%d/%d/%d)\n", _max, bmax, gmax, rmax);
+	//printf("Max: %d (%d/%d/%d)\n", _max, bmax, gmax, rmax);
 
 	// pixel increment to compress height 
 	if(incr == 0) {
 		incr = _max / (height - padTop);
 	}
-	printf("Increment: %d\n", incr);
+	//printf("Increment: %d\n", incr);
 
 
 	// Build histogram image
@@ -76,7 +76,7 @@ Cv::Image* histogram(Cv::Image* img, int width, int height, int padTop, int test
 		rv = red[i] / incr;
 
 		//printf("Bv[%d] = %d   Gv[%d] = %d   Rv[%d] = %d\n", i, bv, i, gv, i, rv);
-		printf("b[%d] = %d   g[%d] = %d   r[%d] = %d\n", i, blue[i], i, green[i], i, red[i]);
+		//printf("b[%d] = %d   g[%d] = %d   r[%d] = %d\n", i, blue[i], i, green[i], i, red[i]);
 
 		for(j = 0; j < height; j++) {
 			k = height - 1 - j;
